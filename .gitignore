@@ -1,0 +1,34 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+target/
+*.class
+
+# IDEs
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Spring Boot
+*.log
+application-local.yml
+application-local.properties
+
+# Angular
+.angular/cache/
+
+# Env
+.env
+.env.local
+
+# VS Code (mantener solo settings compartidos)
+.vscode/settings.json

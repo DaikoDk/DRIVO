@@ -1,0 +1,275 @@
+import { Component, OnInit, signal, computed } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { AutoService, AutoFormData } from '../../core/services/auto.service';
+import { MarcaService } from '../../core/services/marca.service';
+import { ModeloService } from '../../core/services/modelo.service';
+import { ToastService } from '../../core/services/toast.service';
+import { Auto, Marca, Modelo } from '../../models';
+
+@Component({
+  selector: 'app-vehicles',
+  standalone: true,
+  imports: [FormsModule, StatusBadgeComponent, ModalComponent, ConfirmDialogComponent, PaginationComponent],
+  template: `
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">Vehiculos</h1>
+        <p class="text-sm text-slate-500 mt-1">Gestion de flota vehicular</p>
+      </div>
+      <button class="btn-primary flex items-center gap-2" (click)="openAddModal()">
+        <span class="material-symbols-outlined text-lg">add</span>
+        Agregar Vehiculo
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      @for (auto of filteredAutos(); track auto.idAuto) {
+        <div class="card">
+          <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center" [style.background]="'linear-gradient(135deg, ' + getGradient(auto) + ')'">
+            <span class="material-symbols-outlined text-5xl text-white/80">directions_car</span>
+          </div>
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <h3 class="text-base font-semibold text-slate-800">{{ auto.placa }}</h3>
+              <p class="text-sm text-slate-500">{{ auto.marca?.nombre || '' }} {{ auto.modelo?.nombre || '' }}</p>
+            </div>
+            <app-status-badge [status]="auto.estado" [label]="auto.estado"></app-status-badge>
+          </div>
+          <div class="flex items-center gap-4 text-xs text-slate-500 mb-4">
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">calendar_today</span>{{ auto.anio }}</span>
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">speed</span>{{ auto.kilometrajeActual.toLocaleString() }} km</span>
+          </div>
+          <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+            <p class="text-lg font-bold text-slate-800">\${{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
+            <div class="flex items-center gap-2">
+              <button class="btn-sm btn-secondary" (click)="openEditModal(auto)" title="Editar">
+                <span class="material-symbols-outlined text-sm">edit</span>
+              </button>
+              <button class="btn-sm btn-danger" (click)="prepareDelete(auto)" title="Eliminar">
+                <span class="material-symbols-outlined text-sm">delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+      @if (filteredAutos().length === 0) {
+        <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
+          <span class="material-symbols-outlined text-5xl text-slate-300 mb-4">directions_car</span>
+          <p class="text-sm text-slate-400">No se encontraron vehiculos</p>
+        </div>
+      }
+    </div>
+
+    <app-pagination [currentPage]="currentPage()" [totalPages]="5" [totalItems]="autos().length" [pageSize]="6" (pageChange)="currentPage.set($event)"></app-pagination>
+
+    <app-modal [open]="showForm()" [title]="editingAuto() ? 'Editar Vehiculo' : 'Agregar Vehiculo'" (closed)="closeForm()">
+      <div class="space-y-4">
+        <div>
+          <label class="input-label">Placa *</label>
+          <input class="input-field" [(ngModel)]="formData.placa" placeholder="ABC-123" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="input-label">Marca *</label>
+            <select class="input-field" [(ngModel)]="formData.idMarca" (change)="onMarcaChange()">
+              <option [ngValue]="0" disabled>Seleccionar...</option>
+              @for (m of marcas(); track m.idMarca) {
+                <option [ngValue]="m.idMarca">{{ m.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="input-label">Modelo *</label>
+            <select class="input-field" [(ngModel)]="formData.idModelo">
+              <option [ngValue]="0" disabled>Seleccionar...</option>
+              @for (m of modelos(); track m.idModelo) {
+                <option [ngValue]="m.idModelo">{{ m.nombre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="input-label">Año *</label>
+            <input class="input-field" type="number" [(ngModel)]="formData.anio" />
+          </div>
+          <div>
+            <label class="input-label">Color</label>
+            <input class="input-field" [(ngModel)]="formData.color" />
+          </div>
+        </div>
+        <div>
+          <label class="input-label">Numero de Motor</label>
+          <input class="input-field" [(ngModel)]="formData.numeroMotor" />
+        </div>
+        <div>
+          <label class="input-label">Numero de Chasis</label>
+          <input class="input-field" [(ngModel)]="formData.numeroChasis" />
+        </div>
+        <div>
+          <label class="input-label">Kilometraje Actual *</label>
+          <input class="input-field" type="number" [(ngModel)]="formData.kilometrajeActual" />
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="input-label">Precio/Dia *</label>
+            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.precioPorDia" />
+          </div>
+          <div>
+            <label class="input-label">Precio/Hora</label>
+            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.precioPorHora" />
+          </div>
+          <div>
+            <label class="input-label">Mora/Dia *</label>
+            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.moraPorDia" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button class="btn-secondary" (click)="closeForm()">Cancelar</button>
+          <button class="btn-primary" (click)="saveAuto()">{{ editingAuto() ? 'Actualizar' : 'Guardar' }}</button>
+        </div>
+      </div>
+    </app-modal>
+
+    <app-confirm-dialog
+      [open]="showDeleteConfirm()"
+      title="Eliminar Vehiculo"
+      message="¿Esta seguro de eliminar este vehiculo?"
+      confirmLabel="Eliminar"
+      [danger]="true"
+      (confirmed)="deleteAuto()"
+      (cancelled)="showDeleteConfirm.set(false)">
+    </app-confirm-dialog>
+  `
+})
+export class VehiclesComponent implements OnInit {
+  readonly autos = signal<Auto[]>([]);
+  readonly marcas = signal<Marca[]>([]);
+  readonly modelos = signal<Modelo[]>([]);
+  readonly currentPage = signal(1);
+  readonly searchTerm = signal('');
+  readonly showForm = signal(false);
+  readonly editingAuto = signal<Auto | null>(null);
+  readonly showDeleteConfirm = signal(false);
+  readonly deletingId = signal<number | null>(null);
+
+  formData: AutoFormData = this.emptyForm();
+
+  constructor(
+    private readonly autoService: AutoService,
+    private readonly marcaService: MarcaService,
+    private readonly modeloService: ModeloService,
+    private readonly toast: ToastService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadAutos();
+    this.marcaService.getActivos().subscribe({ next: (d) => this.marcas.set(d) });
+  }
+
+  readonly filteredAutos = computed(() => {
+    const term = this.searchTerm().toLowerCase();
+    if (!term) return this.autos();
+    return this.autos().filter(a =>
+      a.placa.toLowerCase().includes(term) ||
+      (a.marca?.nombre || '').toLowerCase().includes(term) ||
+      (a.modelo?.nombre || '').toLowerCase().includes(term)
+    );
+  });
+
+  loadAutos(): void {
+    this.autoService.getAll().subscribe({ next: (data) => this.autos.set(data) });
+  }
+
+  emptyForm(): AutoFormData {
+    return { placa: '', idMarca: 0, idModelo: 0, anio: new Date().getFullYear(), kilometrajeActual: 0, precioPorDia: 0, moraPorDia: 0 };
+  }
+
+  openAddModal(): void {
+    this.formData = this.emptyForm();
+    this.editingAuto.set(null);
+    this.showForm.set(true);
+  }
+
+  openEditModal(auto: Auto): void {
+    this.formData = {
+      placa: auto.placa,
+      idMarca: auto.marca?.idMarca || 0,
+      idModelo: auto.modelo?.idModelo || 0,
+      anio: auto.anio,
+      color: auto.color,
+      numeroMotor: auto.numeroMotor,
+      numeroChasis: auto.numeroChasis,
+      kilometrajeActual: auto.kilometrajeActual,
+      precioPorDia: auto.precioPorDia,
+      precioPorHora: auto.precioPorHora,
+      moraPorDia: auto.moraPorDia,
+    };
+    this.editingAuto.set(auto);
+    if (this.formData.idMarca) this.onMarcaChange();
+    this.showForm.set(true);
+  }
+
+  closeForm(): void {
+    this.showForm.set(false);
+    this.editingAuto.set(null);
+  }
+
+  onMarcaChange(): void {
+    if (this.formData.idMarca) {
+      this.modeloService.getByMarca(this.formData.idMarca).subscribe({ next: (d) => this.modelos.set(d) });
+    }
+  }
+
+  saveAuto(): void {
+    if (!this.formData.placa || !this.formData.idMarca || !this.formData.idModelo) {
+      this.toast.warning('Complete los campos obligatorios');
+      return;
+    }
+
+    const request = this.editingAuto()
+      ? this.autoService.update(this.editingAuto()!.idAuto, this.formData)
+      : this.autoService.create(this.formData);
+
+    request.subscribe({
+      next: () => {
+        this.toast.success(this.editingAuto() ? 'Vehiculo actualizado' : 'Vehiculo creado');
+        this.closeForm();
+        this.loadAutos();
+      },
+      error: (err) => this.toast.error(err.message)
+    });
+  }
+
+  prepareDelete(auto: Auto): void {
+    this.deletingId.set(auto.idAuto);
+    this.showDeleteConfirm.set(true);
+  }
+
+  deleteAuto(): void {
+    const id = this.deletingId();
+    if (!id) return;
+    this.autoService.delete(id).subscribe({
+      next: () => {
+        this.toast.success('Vehiculo eliminado');
+        this.showDeleteConfirm.set(false);
+        this.loadAutos();
+      },
+      error: (err) => this.toast.error(err.message)
+    });
+  }
+
+  getGradient(auto: Auto): string {
+    const colors: Record<string, string> = {
+      'Disponible': '#10b981, #059669',
+      'En reserva': '#3b82f6, #2563eb',
+      'En reparacion': '#f59e0b, #d97706',
+      'Mantenimiento': '#8b5cf6, #7c3aed',
+    };
+    return colors[auto.estado] || '#64748b, #475569';
+  }
+}

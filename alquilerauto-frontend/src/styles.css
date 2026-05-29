@@ -1,1 +1,144 @@
-/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    background-color: #f8fafc;
+    color: #1e293b;
+  }
+}
+
+@layer components {
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors;
+    color: #e2e8f0;
+  }
+  .sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+  .sidebar-link.active {
+    background-color: rgba(79, 70, 229, 0.2);
+    color: #ffffff;
+    border-left: 3px solid #4f46e5;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors;
+    background-color: #4f46e5;
+    color: #ffffff;
+  }
+  .btn-primary:hover {
+    background-color: #4338ca;
+  }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 text-sm font-medium rounded-lg border transition-colors;
+    border-color: #cbd5e1;
+    background-color: #ffffff;
+    color: #334155;
+  }
+  .btn-secondary:hover {
+    background-color: #f1f5f9;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 text-sm font-medium rounded-lg transition-colors;
+    background-color: #ef4444;
+    color: #ffffff;
+  }
+  .btn-danger:hover {
+    opacity: 0.85;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs font-medium rounded-md transition-colors;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 text-sm rounded-lg border transition-colors;
+    border-color: #cbd5e1;
+    background-color: #ffffff;
+    color: #1e293b;
+  }
+  .input-field:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+  .input-field.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+
+  .input-label {
+    @apply block text-sm font-medium mb-1;
+    color: #334155;
+  }
+
+  .card {
+    @apply rounded-xl p-6 transition-shadow;
+    background-color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  .card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full;
+  }
+  .badge-success {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+  .badge-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+  .badge-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+  .badge-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+  .badge-neutral {
+    background-color: #f1f5f9;
+    color: #475569;
+  }
+
+  .backdrop {
+    @apply fixed inset-0 z-40 transition-opacity;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded;
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}

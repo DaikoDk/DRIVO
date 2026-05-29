@@ -1,0 +1,192 @@
+import { Component, OnInit, signal, computed } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { MantenimientoService, MantenimientoFormData } from '../../core/services/mantenimiento.service';
+import { AutoService } from '../../core/services/auto.service';
+import { ToastService } from '../../core/services/toast.service';
+import { Mantenimiento, Auto } from '../../models';
+
+@Component({
+  selector: 'app-maintenance',
+  standalone: true,
+  imports: [FormsModule, DatePipe, StatCardComponent, ModalComponent],
+  template: `
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">Mantenimientos</h1>
+        <p class="text-sm text-slate-500 mt-1">Programacion y seguimiento de mantenimientos</p>
+      </div>
+      <button class="btn-primary flex items-center gap-2" (click)="openScheduleModal()">
+        <span class="material-symbols-outlined text-lg">engineering</span>
+        Programar Mantenimiento
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <app-stat-card label="En Curso" [value]="stats().enCurso" icon="progress_activity" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
+      <app-stat-card label="Completados" [value]="stats().completados" icon="check_circle" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
+      <app-stat-card label="Urgentes" value="0" icon="warning" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
+      <app-stat-card label="Gasto Mensual" value="$0" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
+    </div>
+
+    <div class="flex items-center gap-4 mb-4">
+      <div class="inline-flex rounded-lg border border-slate-200 overflow-hidden">
+        <button class="px-4 py-2 text-sm font-medium transition-colors"
+                [class.btn-primary]="activeTab() === 'en-curso'"
+                [class.bg-white]="activeTab() !== 'en-curso'"
+                [class.text-slate-600]="activeTab() !== 'en-curso'"
+                (click)="activeTab.set('en-curso')">En curso
+          <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full" [class.bg-blue-100]="activeTab() !== 'en-curso'" [class.bg-white/20]="activeTab() === 'en-curso'">{{ stats().enCurso }}</span>
+        </button>
+        <button class="px-4 py-2 text-sm font-medium transition-colors"
+                [class.btn-primary]="activeTab() === 'historial'"
+                [class.bg-white]="activeTab() !== 'historial'"
+                [class.text-slate-600]="activeTab() !== 'historial'"
+                (click)="activeTab.set('historial')">Historial</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200">
+              <th class="px-4 py-3 text-left font-medium text-slate-600">ID</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehiculo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Ingreso</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Salida</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Tipo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Costo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Detalle</th>
+              <th class="px-4 py-3 text-right font-medium text-slate-600">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (m of filteredMantenimientos(); track m.idMantenimiento) {
+              <tr class="hover:bg-slate-50 group">
+                <td class="px-4 py-3 text-slate-700">#{{ m.idMantenimiento }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ m.auto?.placa }} - {{ m.auto?.modelo?.nombre }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ m.fechaIngreso | date:'dd/MM/yy' }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ m.fechaSalida ? (m.fechaSalida | date:'dd/MM/yy') : 'En curso' }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ m.tipo }}</td>
+                <td class="px-4 py-3 font-medium text-slate-700">\${{ m.costo.toFixed(2) }}</td>
+                <td class="px-4 py-3 text-slate-500 max-w-[200px] truncate">{{ m.detalle || '-' }}</td>
+                <td class="px-4 py-3 text-right">
+                  @if (!m.fechaSalida) {
+                    <button class="btn-sm btn-primary" (click)="finalizarMantenimiento(m)">Finalizar</button>
+                  }
+                </td>
+              </tr>
+            }
+            @if (filteredMantenimientos().length === 0) {
+              <tr><td colspan="8" class="px-4 py-16 text-center text-slate-400">No hay mantenimientos</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <app-modal [open]="showScheduleModal()" title="Programar Mantenimiento" (closed)="showScheduleModal.set(false)">
+      <div class="space-y-4">
+        <div>
+          <label class="input-label">Vehiculo *</label>
+          <select class="input-field" [(ngModel)]="formData.idAuto">
+            <option [ngValue]="0" disabled>Seleccionar...</option>
+            @for (a of autos(); track a.idAuto) {
+              <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca?.nombre }} {{ a.modelo?.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="input-label">Fecha Ingreso *</label>
+          <input class="input-field" type="date" [(ngModel)]="formData.fechaIngreso" />
+        </div>
+        <div>
+          <label class="input-label">Tipo *</label>
+          <select class="input-field" [(ngModel)]="formData.tipo">
+            <option value="" disabled>Seleccionar...</option>
+            <option value="Preventivo">Preventivo</option>
+            <option value="Correctivo">Correctivo</option>
+            <option value="Revision">Revision Tecnica</option>
+          </select>
+        </div>
+        <div>
+          <label class="input-label">Costo *</label>
+          <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.costo" />
+        </div>
+        <div>
+          <label class="input-label">Detalle</label>
+          <textarea class="input-field" rows="3" [(ngModel)]="formData.detalle" placeholder="Describa el mantenimiento..."></textarea>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button class="btn-secondary" (click)="showScheduleModal.set(false)">Cancelar</button>
+          <button class="btn-primary" (click)="scheduleMaintenance()">Programar</button>
+        </div>
+      </div>
+    </app-modal>
+  `
+})
+export class MaintenanceComponent implements OnInit {
+  readonly mantenimientos = signal<Mantenimiento[]>([]);
+  readonly autos = signal<Auto[]>([]);
+  readonly activeTab = signal<'en-curso' | 'historial'>('en-curso');
+  readonly showScheduleModal = signal(false);
+
+  formData: MantenimientoFormData = { idAuto: 0, fechaIngreso: '', tipo: '', costo: 0 };
+
+  readonly stats = computed(() => ({
+    enCurso: this.mantenimientos().filter(m => !m.fechaSalida).length,
+    completados: this.mantenimientos().filter(m => m.fechaSalida).length,
+  }));
+
+  readonly filteredMantenimientos = computed(() => {
+    if (this.activeTab() === 'en-curso') {
+      return this.mantenimientos().filter(m => !m.fechaSalida);
+    }
+    return this.mantenimientos().filter(m => m.fechaSalida);
+  });
+
+  constructor(
+    private readonly mantenimientoService: MantenimientoService,
+    private readonly autoService: AutoService,
+    private readonly toast: ToastService
+  ) {}
+
+  ngOnInit(): void {
+    this.mantenimientoService.getAll().subscribe({ next: (data) => this.mantenimientos.set(data) });
+    this.autoService.getAll().subscribe({ next: (data) => this.autos.set(data) });
+  }
+
+  openScheduleModal(): void {
+    this.formData = { idAuto: 0, fechaIngreso: new Date().toISOString().split('T')[0], tipo: '', costo: 0 };
+    this.showScheduleModal.set(true);
+  }
+
+  scheduleMaintenance(): void {
+    if (!this.formData.idAuto || !this.formData.fechaIngreso || !this.formData.tipo) {
+      this.toast.warning('Complete los campos obligatorios');
+      return;
+    }
+    this.mantenimientoService.create(this.formData).subscribe({
+      next: () => {
+        this.toast.success('Mantenimiento programado');
+        this.showScheduleModal.set(false);
+        this.mantenimientoService.getAll().subscribe({ next: (data) => this.mantenimientos.set(data) });
+      },
+      error: (err) => this.toast.error(err.message)
+    });
+  }
+
+  finalizarMantenimiento(m: Mantenimiento): void {
+    const fechaSalida = new Date().toISOString().split('T')[0];
+    this.mantenimientoService.finalizar(m.idMantenimiento, fechaSalida).subscribe({
+      next: () => {
+        this.toast.success('Mantenimiento finalizado');
+        this.mantenimientoService.getAll().subscribe({ next: (data) => this.mantenimientos.set(data) });
+      },
+      error: (err) => this.toast.error(err.message)
+    });
+  }
+}

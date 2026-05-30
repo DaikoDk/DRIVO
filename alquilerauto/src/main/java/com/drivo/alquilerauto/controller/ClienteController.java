@@ -43,13 +43,13 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}/bloqueo")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Cliente> toggleBloqueo(@PathVariable Integer id) {
         return ResponseEntity.ok(clienteService.toggleBloqueo(id));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         clienteService.delete(id);
         return ResponseEntity.noContent().build();

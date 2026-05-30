@@ -5,11 +5,18 @@
 --  Fecha:   25/05/2026
 -- ============================================================
 
--- CREAR BASE DE DATOS
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'BD_RentCar')
+-- CREAR BASE DE DATOS (elimina version anterior si existe)
+USE master;
+go
+
+IF EXISTS (SELECT name FROM sys.databases WHERE name = N'BD_RentCar')
 BEGIN
-    CREATE DATABASE BD_RentCar;
+    ALTER DATABASE BD_RentCar SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE BD_RentCar;
 END
+GO
+
+CREATE DATABASE BD_RentCar;
 GO
 
 USE BD_RentCar;
@@ -293,7 +300,7 @@ CREATE TABLE tb_usuario (
     FechaRegistro   DATETIME            NOT NULL DEFAULT GETDATE(),
     CONSTRAINT PK_Usuario PRIMARY KEY CLUSTERED (IdUsuario),
     CONSTRAINT UQ_Usuario_Correo UNIQUE (Correo),
-    CONSTRAINT CK_Usuario_Rol CHECK (Rol IN ('Administrador','Trabajador'))
+    CONSTRAINT CK_Usuario_Rol CHECK (Rol IN ('ADMIN','TRABAJADOR','CLIENTE'))
 );
 GO
 
@@ -853,12 +860,13 @@ INSERT INTO tb_configuracion (clave, valor, descripcion, tipo) VALUES
 GO
 
 -- 6.13 Usuarios ------------------------------------------------
+-- Contraseñas (BCrypt):
+--   admin123   -> $2a$10$txCV75IDyzhVolXP1WiHxO8yKJz578AtDfaEbTRPLww3RfvIf3D9y
+--   cliente123 -> $2a$10$GJKccfi4IMsR1n.Qkim30eLsBURpVGBdo3dsxqs9YxUIhBmgJU/hi
 INSERT INTO tb_usuario (Nombre, Correo, Clave, Rol) VALUES
-('Administrador', 'admin@drivo.com', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'Administrador'),
-('Trabajador', 'trabajador@drivo.com', '$2a$10$7JBj4nPLvXQxBj0gYK5VGhZmPZ5GdO.pL1mJkpU7rQq3YMxsLlFqKH', 'Trabajador');
--- NOTA: Los hashes BCrypt son placeholders. Generar los reales en backend con:
---   new BCryptPasswordEncoder().encode("admin123")
---   new BCryptPasswordEncoder().encode("trab123")
+('Admin DRIVO',   'admin@drivo.com',   '$2a$10$txCV75IDyzhVolXP1WiHxO8yKJz578AtDfaEbTRPLww3RfvIf3D9y', 'ADMIN'),
+('Carlos Lopez',  'carlos@email.com',  '$2a$10$GJKccfi4IMsR1n.Qkim30eLsBURpVGBdo3dsxqs9YxUIhBmgJU/hi', 'CLIENTE'),
+('Maria Garcia',  'maria@email.com',   '$2a$10$GJKccfi4IMsR1n.Qkim30eLsBURpVGBdo3dsxqs9YxUIhBmgJU/hi', 'CLIENTE');
 GO
 
 -- ============================================================

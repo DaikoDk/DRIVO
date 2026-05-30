@@ -1,0 +1,19 @@
+meta {
+  name: 05 Token Expirado
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/autos
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBkcml2by5jb20iLCJyb2wiOiJBRE1JTiIsImlhdCI6MTY5MDAwMDAwMCwiZXhwIjoxNjkwMDAwMDAxfQ.fake
+}
+
+assert {
+  res.status: eq 401
+}

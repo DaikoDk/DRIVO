@@ -50,19 +50,19 @@ public class AutoController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Auto> create(@Valid @RequestBody Auto auto) {
         return ResponseEntity.ok(autoService.create(auto));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Auto> update(@PathVariable Integer id, @RequestBody Auto auto) {
         return ResponseEntity.ok(autoService.update(id, auto));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         autoService.delete(id);
         return ResponseEntity.noContent().build();

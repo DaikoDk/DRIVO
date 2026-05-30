@@ -17,13 +17,13 @@ public class ConfiguracionController {
     private final ConfiguracionService service;
 
     @GetMapping
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Configuracion>> findAll() {
         return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Configuracion> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(service.findById(id));
     }
@@ -34,13 +34,13 @@ public class ConfiguracionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Configuracion> create(@RequestBody Configuracion config) {
         return ResponseEntity.ok(service.create(config));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Configuracion> update(@PathVariable Integer id, @RequestBody Configuracion config) {
         return ResponseEntity.ok(service.update(id, config));
     }

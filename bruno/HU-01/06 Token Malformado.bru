@@ -1,0 +1,19 @@
+meta {
+  name: 06 Token Malformado
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/autos
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: esto-es-basura-no-es-un-jwt
+}
+
+assert {
+  res.status: eq 401
+}

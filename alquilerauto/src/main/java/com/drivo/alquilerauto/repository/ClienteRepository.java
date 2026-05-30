@@ -23,6 +23,4 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
     boolean existsByEmail(String email);
 
     List<Cliente> findByBloqueadoTrue();
-
-    Optional<Cliente> findByUsuarioIdUsuario(Integer idUsuario);
 }

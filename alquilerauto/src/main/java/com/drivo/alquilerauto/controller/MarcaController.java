@@ -28,19 +28,19 @@ public class MarcaController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Marca> create(@Valid @RequestBody Marca marca) {
         return ResponseEntity.ok(marcaService.create(marca));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Marca> update(@PathVariable Integer id, @RequestBody Marca marca) {
         return ResponseEntity.ok(marcaService.update(id, marca));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         marcaService.delete(id);
         return ResponseEntity.noContent().build();

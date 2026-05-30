@@ -32,19 +32,19 @@ public class ModeloController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Modelo> create(@RequestBody Modelo modelo) {
         return ResponseEntity.ok(modeloService.create(modelo));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Modelo> update(@PathVariable Integer id, @RequestBody Modelo modelo) {
         return ResponseEntity.ok(modeloService.update(id, modelo));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         modeloService.delete(id);
         return ResponseEntity.noContent().build();

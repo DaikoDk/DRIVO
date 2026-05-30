@@ -32,7 +32,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/autos/disponibles", "/api/autos/disponibles-rango").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("Administrador")
+                .requestMatchers(HttpMethod.GET, "/api/marcas/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/modelos/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

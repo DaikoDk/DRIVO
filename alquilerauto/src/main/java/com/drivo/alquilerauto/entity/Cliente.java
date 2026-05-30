@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(exclude = {"licencia", "reservas", "usuario"})
+@ToString(exclude = {"licencia", "reservas"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Cliente {
 
@@ -64,10 +64,6 @@ public class Cliente {
 
     @Column(updatable = false)
     private LocalDateTime fechaRegistro;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idUsuario")
-    private Usuario usuario;
 
     @OneToMany(mappedBy = "cliente")
     @JsonIgnore

@@ -28,20 +28,20 @@ public class CatalogoReparacionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CatalogoReparacion> create(@Valid @RequestBody CatalogoReparacion catalogo) {
         return ResponseEntity.ok(service.create(catalogo));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CatalogoReparacion> update(@PathVariable Integer id,
                                                       @RequestBody CatalogoReparacion catalogo) {
         return ResponseEntity.ok(service.update(id, catalogo));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('Administrador')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

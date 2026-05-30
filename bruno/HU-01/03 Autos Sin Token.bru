@@ -1,0 +1,15 @@
+meta {
+  name: 03 Autos Sin Token
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/autos
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}

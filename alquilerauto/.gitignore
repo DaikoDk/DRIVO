@@ -35,4 +35,4 @@ build/
 ### Environment ###
 .env
 .env.local
-
+application.yaml

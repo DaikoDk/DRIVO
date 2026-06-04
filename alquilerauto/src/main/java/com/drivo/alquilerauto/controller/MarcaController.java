@@ -1,5 +1,8 @@
 package com.drivo.alquilerauto.controller;
 
+import com.drivo.alquilerauto.dto.ApiResponse;
+import com.drivo.alquilerauto.dto.request.MarcaRequest;
+import com.drivo.alquilerauto.dto.response.MarcaResponse;
 import com.drivo.alquilerauto.entity.Marca;
 import com.drivo.alquilerauto.service.MarcaService;
 import jakarta.validation.Valid;
@@ -17,32 +20,39 @@ public class MarcaController {
 
     private final MarcaService marcaService;
 
-    @GetMapping
-    public ResponseEntity<List<Marca>> findAll() {
-        return ResponseEntity.ok(marcaService.findAll());
+
+    @GetMapping("/activos")
+    public ResponseEntity<ApiResponse<List<MarcaResponse>>> findAllActivos() {
+        List<MarcaResponse> marcas = marcaService.findAllActivos();
+        return ResponseEntity.ok(ApiResponse.ok(marcas, "Marcas activas obtenidas"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Marca> findById(@PathVariable Integer id) {
-        return ResponseEntity.ok(marcaService.findById(id));
+    public ResponseEntity<ApiResponse<MarcaResponse>> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.ok(marcaService.findById(id), "Marca encontrada"));
     }
+
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Marca> create(@Valid @RequestBody Marca marca) {
-        return ResponseEntity.ok(marcaService.create(marca));
+    public ResponseEntity<ApiResponse<MarcaResponse>> create(@Valid @RequestBody MarcaRequest request) {
+        MarcaResponse creada = marcaService.create(request);
+        return ResponseEntity.ok(ApiResponse.ok(creada, "Marca creada exitosamente"));
     }
+
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Marca> update(@PathVariable Integer id, @RequestBody Marca marca) {
-        return ResponseEntity.ok(marcaService.update(id, marca));
+    public ResponseEntity<ApiResponse<MarcaResponse>> update(
+            @PathVariable Integer id,
+            @Valid @RequestBody MarcaRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(marcaService.update(id, request), "Marca actualizada"));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
         marcaService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok("Marca desactivada exitosamente"));
     }
 }

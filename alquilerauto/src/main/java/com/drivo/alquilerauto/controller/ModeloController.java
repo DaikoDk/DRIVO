@@ -1,7 +1,11 @@
 package com.drivo.alquilerauto.controller;
 
+import com.drivo.alquilerauto.dto.ApiResponse;
+import com.drivo.alquilerauto.dto.request.ModeloRequest;
+import com.drivo.alquilerauto.dto.response.ModeloResponse;
 import com.drivo.alquilerauto.entity.Modelo;
 import com.drivo.alquilerauto.service.ModeloService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,37 +20,45 @@ public class ModeloController {
 
     private final ModeloService modeloService;
 
-    @GetMapping
-    public ResponseEntity<List<Modelo>> findAll() {
-        return ResponseEntity.ok(modeloService.findAll());
+
+    @GetMapping("/activos")
+    public ResponseEntity<ApiResponse<List<ModeloResponse>>> findAllActivos() {
+        return ResponseEntity.ok(ApiResponse.ok(modeloService.findAllActivos(), "Modelos activos obtenidos"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Modelo> findById(@PathVariable Integer id) {
-        return ResponseEntity.ok(modeloService.findById(id));
+    public ResponseEntity<ApiResponse<ModeloResponse>> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.ok(modeloService.findById(id), "Modelo encontrado"));
     }
 
-    @GetMapping("/marca/{idMarca}")
-    public ResponseEntity<List<Modelo>> findByMarca(@PathVariable Integer idMarca) {
-        return ResponseEntity.ok(modeloService.findByMarca(idMarca));
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ModeloResponse>>> findByMarca(
+            @RequestParam(required = false) Integer idMarca) {
+        if (idMarca != null) {
+            return ResponseEntity.ok(
+                    ApiResponse.ok(modeloService.findByMarca(idMarca), "Modelos de la marca obtenidos"));
+        }
+        return ResponseEntity.ok(ApiResponse.ok(modeloService.findAllActivos(), "Modelos activos obtenidos"));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Modelo> create(@RequestBody Modelo modelo) {
-        return ResponseEntity.ok(modeloService.create(modelo));
+    public ResponseEntity<ApiResponse<ModeloResponse>> create(@Valid @RequestBody ModeloRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(modeloService.create(request), "Modelo creado exitosamente"));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Modelo> update(@PathVariable Integer id, @RequestBody Modelo modelo) {
-        return ResponseEntity.ok(modeloService.update(id, modelo));
+    public ResponseEntity<ApiResponse<ModeloResponse>> update(
+            @PathVariable Integer id,
+            @Valid @RequestBody ModeloRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(modeloService.update(id, request), "Modelo actualizado"));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
         modeloService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok("Modelo desactivado exitosamente"));
     }
 }

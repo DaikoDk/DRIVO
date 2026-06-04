@@ -6,7 +6,7 @@ spring:
     name: alquilerauto
 
   datasource:
-    url: ${DB_URL}
+    url: ${DB_RENTCAR}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

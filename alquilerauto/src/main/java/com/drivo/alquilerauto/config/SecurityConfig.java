@@ -41,6 +41,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+    // commit de prueba
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

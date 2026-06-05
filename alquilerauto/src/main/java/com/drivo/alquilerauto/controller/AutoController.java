@@ -1,8 +1,8 @@
 package com.drivo.alquilerauto.controller;
 
+import com.drivo.alquilerauto.dto.ApiResponse;
+import com.drivo.alquilerauto.dto.request.AutoRequest;
 import com.drivo.alquilerauto.dto.response.AutoResponse;
-import com.drivo.alquilerauto.entity.Auto;
-import com.drivo.alquilerauto.mapper.AutoMapper;
 import com.drivo.alquilerauto.service.AutoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,51 +20,51 @@ import java.util.List;
 public class AutoController {
 
     private final AutoService autoService;
-    private final AutoMapper autoMapper;
 
     @GetMapping
-    public ResponseEntity<List<AutoResponse>> findAll() {
-        return ResponseEntity.ok(autoMapper.toResponseList(autoService.findAll()));
+    public ResponseEntity<ApiResponse<List<AutoResponse>>> findAllActivos() {
+        List<AutoResponse> autos = autoService.findAllActivos();
+        return ResponseEntity.ok(ApiResponse.ok(autos, "Autos activos obtenidos"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Auto> findById(@PathVariable Integer id) {
-        return ResponseEntity.ok(autoService.findById(id));
+    public ResponseEntity<ApiResponse<AutoResponse>> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.ok(autoService.findById(id), "Auto encontrado"));
     }
 
     @GetMapping("/disponibles")
-    public ResponseEntity<List<AutoResponse>> findDisponibles() {
-        return ResponseEntity.ok(autoMapper.toResponseList(autoService.findDisponibles()));
+    public ResponseEntity<ApiResponse<List<AutoResponse>>> findDisponibles() {
+        return ResponseEntity.ok(ApiResponse.ok(autoService.findDisponibles(), "Autos disponibles obtenidos"));
     }
 
     @GetMapping("/disponibles-rango")
-    public ResponseEntity<List<AutoResponse>> findDisponiblesEnRango(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fin) {
-        return ResponseEntity.ok(autoMapper.toResponseList(autoService.findDisponiblesEnRango(inicio, fin)));
-    }
-
-    @GetMapping("/estado/{estado}")
-    public ResponseEntity<List<Auto>> findByEstado(@PathVariable String estado) {
-        return ResponseEntity.ok(autoService.findByEstado(estado));
+    public ResponseEntity<ApiResponse<List<AutoResponse>>> findDisponiblesEnRango(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
+        return ResponseEntity.ok(
+                ApiResponse.ok(autoService.findDisponiblesEnRango(fechaInicio, fechaFin),
+                        "Autos disponibles en el rango obtenidos"));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Auto> create(@Valid @RequestBody Auto auto) {
-        return ResponseEntity.ok(autoService.create(auto));
+    public ResponseEntity<ApiResponse<AutoResponse>> create(@Valid @RequestBody AutoRequest request) {
+        AutoResponse creado = autoService.create(request);
+        return ResponseEntity.ok(ApiResponse.ok(creado, "Auto creado exitosamente"));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Auto> update(@PathVariable Integer id, @RequestBody Auto auto) {
-        return ResponseEntity.ok(autoService.update(id, auto));
+    public ResponseEntity<ApiResponse<AutoResponse>> update(
+            @PathVariable Integer id,
+            @Valid @RequestBody AutoRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(autoService.update(id, request), "Auto actualizado exitosamente"));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
         autoService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok("Auto desactivado exitosamente"));
     }
 }

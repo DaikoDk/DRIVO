@@ -1,6 +1,8 @@
 package com.drivo.alquilerauto.controller;
 
-import com.drivo.alquilerauto.entity.Cliente;
+import com.drivo.alquilerauto.dto.ApiResponse;
+import com.drivo.alquilerauto.dto.request.ClienteRequest;
+import com.drivo.alquilerauto.dto.response.ClienteResponse;
 import com.drivo.alquilerauto.service.ClienteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,40 +20,42 @@ public class ClienteController {
     private final ClienteService clienteService;
 
     @GetMapping
-    public ResponseEntity<List<Cliente>> findAll() {
-        return ResponseEntity.ok(clienteService.findAll());
+    public ResponseEntity<ApiResponse<List<ClienteResponse>>> findAllActivos() {
+        List<ClienteResponse> clientes = clienteService.findAllActivos();
+        return ResponseEntity.ok(ApiResponse.ok(clientes, "Clientes activos obtenidos"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> findById(@PathVariable Integer id) {
-        return ResponseEntity.ok(clienteService.findById(id));
-    }
-
-    @GetMapping("/activos")
-    public ResponseEntity<List<Cliente>> findActivos() {
-        return ResponseEntity.ok(clienteService.findActivos());
+    public ResponseEntity<ApiResponse<ClienteResponse>> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.ok(clienteService.findById(id), "Cliente encontrado"));
     }
 
     @PostMapping
-    public ResponseEntity<Cliente> create(@Valid @RequestBody Cliente cliente) {
-        return ResponseEntity.ok(clienteService.create(cliente));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ClienteResponse>> create(@Valid @RequestBody ClienteRequest request) {
+        ClienteResponse creado = clienteService.create(request);
+        return ResponseEntity.ok(ApiResponse.ok(creado, "Cliente creado exitosamente"));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Cliente> update(@PathVariable Integer id, @RequestBody Cliente cliente) {
-        return ResponseEntity.ok(clienteService.update(id, cliente));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ClienteResponse>> update(
+            @PathVariable Integer id,
+            @Valid @RequestBody ClienteRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(clienteService.update(id, request), "Cliente actualizado exitosamente"));
     }
 
-    @PutMapping("/{id}/bloqueo")
+    @PatchMapping("/{id}/bloquear")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Cliente> toggleBloqueo(@PathVariable Integer id) {
-        return ResponseEntity.ok(clienteService.toggleBloqueo(id));
+    public ResponseEntity<ApiResponse<ClienteResponse>> bloquear(@PathVariable Integer id) {
+        ClienteResponse bloqueado = clienteService.bloquear(id);
+        return ResponseEntity.ok(ApiResponse.ok(bloqueado, "Cliente bloqueado exitosamente"));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
         clienteService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok("Cliente desactivado exitosamente"));
     }
 }

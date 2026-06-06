@@ -2,8 +2,8 @@ package com.drivo.alquilerauto.dto.response;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public record ReservaResponse(
         Integer idReserva,
@@ -27,6 +27,8 @@ public record ReservaResponse(
         String estado,
         String estadoEntrega,
         String observacionesEntrega,
+        LocalDateTime fechaHoraInicioReal,
+        LocalDateTime fechaHoraFinReal,
         LocalDateTime fechaCreacion,
         String usuarioCreacion,
         LocalDateTime fechaFinalizacion,

@@ -27,7 +27,15 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
            "ORDER BY r.fechaCreacion DESC")
     List<Reserva> findAllWithDetails();
 
-    @Query("SELECT r FROM Reserva r JOIN FETCH r.cliente JOIN FETCH r.auto " +
+    @Query("SELECT r FROM Reserva r JOIN FETCH r.cliente JOIN FETCH r.auto a JOIN FETCH a.marca JOIN FETCH a.modelo " +
+           "WHERE r.estado = :estado ORDER BY r.fechaCreacion DESC")
+    List<Reserva> findByEstadoWithDetails(@Param("estado") String estado);
+
+    @Query("SELECT r FROM Reserva r JOIN FETCH r.cliente JOIN FETCH r.auto a JOIN FETCH a.marca JOIN FETCH a.modelo " +
+           "WHERE r.idReserva = :id")
+    java.util.Optional<Reserva> findByIdWithDetails(@Param("id") Integer id);
+
+    @Query("SELECT r FROM Reserva r JOIN FETCH r.cliente JOIN FETCH r.auto a JOIN FETCH a.marca JOIN FETCH a.modelo " +
            "WHERE r.estado IN (:estados)")
     List<Reserva> findByEstadoInWithDetails(@Param("estados") List<String> estados);
 

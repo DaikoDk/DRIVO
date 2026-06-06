@@ -1,18 +1,31 @@
 package com.drivo.alquilerauto.dto.request;
 
-import jakarta.validation.constraints.*;
-import java.math.BigDecimal;
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record ReservaCreateRequest(
-        @NotNull Integer idCliente,
-        @NotNull Integer idAuto,
-        @NotNull LocalDate fechaInicio,
-        @NotNull LocalTime horaInicio,
-        @NotNull LocalDate fechaFin,
-        @NotNull LocalTime horaFin,
-        @NotNull @DecimalMin("0.01") BigDecimal subtotal,
-        @NotNull @DecimalMin("0.01") BigDecimal total,
+        @NotNull(message = "El id del cliente es obligatorio")
+        Integer idCliente,
+
+        @NotNull(message = "El id del auto es obligatorio")
+        Integer idAuto,
+
+        @NotNull(message = "La fecha de inicio es obligatoria")
+        @FutureOrPresent(message = "La fecha de inicio debe ser presente o futura")
+        LocalDate fechaInicio,
+
+        @NotNull(message = "La hora de inicio es obligatoria")
+        LocalTime horaInicio,
+
+        @NotNull(message = "La fecha de fin es obligatoria")
+        @FutureOrPresent(message = "La fecha de fin debe ser presente o futura")
+        LocalDate fechaFin,
+
+        @NotNull(message = "La hora de fin es obligatoria")
+        LocalTime horaFin,
+
         String usuarioCreacion
 ) {}

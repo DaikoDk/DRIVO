@@ -25,6 +25,8 @@ public interface ReservaMapper {
     @Mapping(target = "idReserva", ignore = true)
     @Mapping(target = "cliente", ignore = true)
     @Mapping(target = "auto", ignore = true)
+    @Mapping(target = "subtotal", ignore = true)
+    @Mapping(target = "total", ignore = true)
     @Mapping(target = "kilometrajeInicio", ignore = true)
     @Mapping(target = "kilometrajeFin", ignore = true)
     @Mapping(target = "mora", ignore = true)

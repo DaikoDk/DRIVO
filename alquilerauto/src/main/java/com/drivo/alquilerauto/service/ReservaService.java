@@ -1,16 +1,22 @@
 package com.drivo.alquilerauto.service;
 
+import com.drivo.alquilerauto.dto.request.IniciarRequest;
 import com.drivo.alquilerauto.dto.request.ReservaCreateRequest;
 import com.drivo.alquilerauto.dto.request.ReservaFinalizarRequest;
+import com.drivo.alquilerauto.dto.response.ReservaResponse;
 import com.drivo.alquilerauto.entity.*;
 import com.drivo.alquilerauto.exception.BadRequestException;
 import com.drivo.alquilerauto.exception.ResourceNotFoundException;
+import com.drivo.alquilerauto.mapper.ReservaMapper;
 import com.drivo.alquilerauto.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -22,16 +28,22 @@ public class ReservaService {
     private final AutoRepository autoRepository;
     private final ClienteRepository clienteRepository;
     private final HistorialKilometrajeRepository historialKmRepository;
+    private final ReservaMapper reservaMapper;
 
     @Transactional(readOnly = true)
-    public List<Reserva> findAll() {
+    public List<Reserva> findAllWithDetails() {
         return reservaRepository.findAllWithDetails();
     }
 
     @Transactional(readOnly = true)
     public Reserva findById(Integer id) {
-        return reservaRepository.findById(id)
+        return reservaRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada con id: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Reserva> findByEstado(String estado) {
+        return reservaRepository.findByEstadoWithDetails(estado);
     }
 
     @Transactional(readOnly = true)
@@ -40,51 +52,64 @@ public class ReservaService {
     }
 
     @Transactional(readOnly = true)
-    public List<Reserva> findByEstado(String estado) {
-        return reservaRepository.findByEstado(estado);
-    }
-
-    @Transactional(readOnly = true)
     public List<Reserva> findActivas() {
         return reservaRepository.findByEstadoInWithDetails(
-                List.of("Pendiente", "Confirmada", "En proceso"));
+                List.of("Pendiente", "En proceso"));
     }
 
-    public Reserva create(ReservaCreateRequest request) {
-        Cliente cliente = clienteRepository.findById(request.idCliente())
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
-        Auto auto = autoRepository.findById(request.idAuto())
-                .orElseThrow(() -> new ResourceNotFoundException("Auto no encontrado"));
-
-        if (cliente.getBloqueado()) {
-            throw new BadRequestException("El cliente está bloqueado y no puede realizar reservas");
+    public ReservaResponse create(ReservaCreateRequest request) {
+        if (request.fechaFin().isBefore(request.fechaInicio())) {
+            throw new BadRequestException("La fecha de fin debe ser posterior a la fecha de inicio");
+        }
+        if (request.fechaFin().equals(request.fechaInicio()) && !request.horaFin().isAfter(request.horaInicio())) {
+            throw new BadRequestException("La hora de fin debe ser posterior a la hora de inicio");
         }
 
+        Cliente cliente = clienteRepository.findById(request.idCliente())
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id: " + request.idCliente()));
+
+        if (cliente.getBloqueado()) {
+            throw new BadRequestException("Cliente bloqueado");
+        }
+
+        Auto auto = autoRepository.findById(request.idAuto())
+                .orElseThrow(() -> new ResourceNotFoundException("Auto no encontrado con id: " + request.idAuto()));
+
         if (!"Disponible".equals(auto.getEstado())) {
-            throw new BadRequestException("El auto no está disponible (estado: " + auto.getEstado() + ")");
+            throw new BadRequestException("Auto no disponible en ese rango");
         }
 
         List<Reserva> solapadas = reservaRepository.findReservasSolapadas(
                 request.idAuto(), request.fechaInicio(), request.fechaFin(), null);
         if (!solapadas.isEmpty()) {
-            throw new BadRequestException("El auto ya tiene una reserva en ese rango de fechas");
+            throw new BadRequestException("Auto no disponible en ese rango");
         }
 
-        if (request.fechaFin().isBefore(request.fechaInicio())) {
-            throw new BadRequestException("La fecha de fin debe ser posterior a la fecha de inicio");
-        }
-
-        Reserva reserva = new Reserva();
+        Reserva reserva = reservaMapper.toEntity(request);
         reserva.setCliente(cliente);
         reserva.setAuto(auto);
-        reserva.setFechaInicio(request.fechaInicio());
-        reserva.setHoraInicio(request.horaInicio());
-        reserva.setFechaFin(request.fechaFin());
-        reserva.setHoraFin(request.horaFin());
-        reserva.setSubtotal(request.subtotal());
-        reserva.setTotal(request.total());
-        reserva.setEstado("Confirmada");
-        reserva.setUsuarioCreacion(request.usuarioCreacion());
+
+        long dias = ChronoUnit.DAYS.between(request.fechaInicio(), request.fechaFin());
+        if (dias == 0) dias = 1;
+
+        LocalDateTime inicioDateTime = LocalDateTime.of(request.fechaInicio(), request.horaInicio());
+        LocalDateTime finDateTime = LocalDateTime.of(request.fechaFin(), request.horaFin());
+        long horasReales = ChronoUnit.HOURS.between(inicioDateTime, finDateTime);
+        long horasNormales = dias * 24;
+        long horasExtra = Math.max(0, horasReales - horasNormales);
+
+        BigDecimal subtotal = auto.getPrecioPorDia().multiply(BigDecimal.valueOf(dias))
+                .add(auto.getPrecioPorHora() != null
+                        ? auto.getPrecioPorHora().multiply(BigDecimal.valueOf(horasExtra))
+                        : BigDecimal.ZERO);
+
+        reserva.setSubtotal(subtotal);
+        reserva.setMora(BigDecimal.ZERO);
+        reserva.setCostoReparaciones(BigDecimal.ZERO);
+        reserva.setTotal(subtotal);
+        reserva.setEstado("Pendiente");
+        reserva.setEstadoEntrega("Sin entregar");
+        reserva.setFechaCreacion(LocalDateTime.now());
 
         reserva = reservaRepository.save(reserva);
 
@@ -94,67 +119,89 @@ public class ReservaService {
         cliente.setNumeroReservas(cliente.getNumeroReservas() + 1);
         clienteRepository.save(cliente);
 
-        return reserva;
+        return reservaMapper.toResponse(reserva);
     }
 
-    public Reserva finalizar(Integer idReserva, ReservaFinalizarRequest request) {
+    public ReservaResponse iniciar(Integer idReserva, IniciarRequest request) {
         Reserva reserva = findById(idReserva);
 
-        if ("Finalizada".equals(reserva.getEstado())) {
-            throw new BadRequestException("La reserva ya está finalizada");
+        if (!"Pendiente".equals(reserva.getEstado())) {
+            throw new BadRequestException("Solo se puede iniciar una reserva Pendiente");
         }
-        if ("Cancelada".equals(reserva.getEstado())) {
-            throw new BadRequestException("No se puede finalizar una reserva cancelada");
+
+        reserva.setKilometrajeInicio(request.kilometrajeInicio());
+        reserva.setFechaHoraInicioReal(LocalDateTime.now());
+        reserva.setEstado("En proceso");
+        return reservaMapper.toResponse(reservaRepository.save(reserva));
+    }
+
+    public ReservaResponse finalizar(Integer idReserva, ReservaFinalizarRequest request) {
+        Reserva reserva = findById(idReserva);
+
+        if (!"En proceso".equals(reserva.getEstado())) {
+            throw new BadRequestException("Solo se puede finalizar una reserva En proceso");
         }
 
         Auto auto = reserva.getAuto();
 
-        reserva.setEstado("Finalizada");
-        reserva.setEstadoEntrega(request.estadoEntrega());
+        LocalDateTime plannedEnd = LocalDateTime.of(reserva.getFechaFin(), reserva.getHoraFin());
+        LocalDateTime now = LocalDateTime.now();
+
+        BigDecimal mora = BigDecimal.ZERO;
+        reserva.setFechaHoraFinReal(now);
+
+        if (now.isAfter(plannedEnd)) {
+            long horasRetraso = ChronoUnit.HOURS.between(plannedEnd, now);
+            long diasRetraso = (horasRetraso + 23) / 24;
+            mora = auto.getMoraPorDia().multiply(BigDecimal.valueOf(diasRetraso));
+        }
+
+        BigDecimal nuevoTotal = reserva.getSubtotal().add(mora).add(reserva.getCostoReparaciones());
+
         reserva.setKilometrajeFin(request.kilometrajeFin());
+        reserva.setMora(mora);
+        reserva.setTotal(nuevoTotal);
         reserva.setObservacionesEntrega(request.observaciones());
-        reserva.setFechaHoraFinReal(java.time.LocalDateTime.now());
-        reserva.setFechaFinalizacion(java.time.LocalDateTime.now());
+        reserva.setEstado("Finalizada");
+        reserva.setEstadoEntrega("Entregado OK");
+        reserva.setFechaFinalizacion(now);
         reserva.setUsuarioFinalizacion(request.usuario());
         reservaRepository.save(reserva);
+
+        HistorialKilometraje historial = new HistorialKilometraje();
+        historial.setAuto(auto);
+        historial.setReserva(reserva);
+        historial.setKilometrajeAnterior(auto.getKilometrajeActual());
+        historial.setKilometrajeNuevo(request.kilometrajeFin());
+        historial.setTipoRegistro("Reserva");
+        historial.setObservaciones(request.observaciones());
+        historial.setFechaRegistro(now);
+        historial.setUsuarioRegistro(request.usuario());
+        historialKmRepository.save(historial);
 
         auto.setKilometrajeActual(request.kilometrajeFin());
         auto.setEstado("Disponible");
         autoRepository.save(auto);
 
-        if (reserva.getKilometrajeInicio() != null) {
-            HistorialKilometraje historial = new HistorialKilometraje();
-            historial.setAuto(auto);
-            historial.setReserva(reserva);
-            historial.setKilometrajeAnterior(reserva.getKilometrajeInicio());
-            historial.setKilometrajeNuevo(request.kilometrajeFin());
-            historial.setTipoRegistro("Reserva");
-            historial.setUsuarioRegistro(request.usuario());
-            historialKmRepository.save(historial);
-        }
-
-        return reserva;
+        return reservaMapper.toResponse(reserva);
     }
 
-    public Reserva cancelar(Integer idReserva, String usuario) {
+    public ReservaResponse cancelar(Integer idReserva) {
         Reserva reserva = findById(idReserva);
 
-        if ("Finalizada".equals(reserva.getEstado())) {
-            throw new BadRequestException("No se puede cancelar una reserva ya finalizada");
+        if (!"Pendiente".equals(reserva.getEstado())) {
+            throw new BadRequestException("No se puede cancelar");
         }
 
         reserva.setEstado("Cancelada");
-        reserva.setUsuarioFinalizacion(usuario);
-        reserva.setFechaFinalizacion(java.time.LocalDateTime.now());
+        reserva.setFechaFinalizacion(LocalDateTime.now());
         reservaRepository.save(reserva);
 
         Auto auto = reserva.getAuto();
-        if ("Reservado".equals(auto.getEstado()) || "En proceso".equals(auto.getEstado())) {
-            auto.setEstado("Disponible");
-            autoRepository.save(auto);
-        }
+        auto.setEstado("Disponible");
+        autoRepository.save(auto);
 
-        return reserva;
+        return reservaMapper.toResponse(reserva);
     }
 
     @Transactional(readOnly = true)
@@ -163,7 +210,7 @@ public class ReservaService {
     }
 
     @Transactional(readOnly = true)
-    public java.math.BigDecimal sumIngresosMesActual() {
+    public BigDecimal sumIngresosMesActual() {
         return reservaRepository.sumIngresosMesActual();
     }
 }

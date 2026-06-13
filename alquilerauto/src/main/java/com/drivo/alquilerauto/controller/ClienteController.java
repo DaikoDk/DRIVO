@@ -72,6 +72,13 @@ public class ClienteController {
         return ResponseEntity.ok(ApiResponse.ok(bloqueado, "Cliente bloqueado exitosamente"));
     }
 
+    @PatchMapping("/{id}/desbloquear")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ClienteResponse>> desbloquear(@PathVariable Integer id) {
+        ClienteResponse desbloqueado = clienteService.desbloquear(id);
+        return ResponseEntity.ok(ApiResponse.ok(desbloqueado, "Cliente desbloqueado exitosamente"));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {

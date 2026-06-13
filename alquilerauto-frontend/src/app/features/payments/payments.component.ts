@@ -102,7 +102,7 @@ import { Pago } from '../../models';
           </div>
         </div>
         <div>
-          <label class="input-label">Total: <span class="font-bold text-primary">\${{ (formData.montoBase + formData.montoMora + formData.montoDanos).toFixed(2) }}</span></label>
+          <label class="input-label">Total: <span class="font-bold text-primary">S/{{ (formData.montoBase + formData.montoMora + formData.montoDanos).toFixed(2) }}</span></label>
         </div>
         <div>
           <label class="input-label">Metodo de Pago *</label>

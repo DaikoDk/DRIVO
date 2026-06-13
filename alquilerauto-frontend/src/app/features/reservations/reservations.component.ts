@@ -62,7 +62,7 @@ import { Reserva, Cliente, Auto } from '../../models';
                 <td class="px-4 py-3 text-slate-700">{{ r.auto?.placa }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio | date:'dd/MM' }} {{ r.horaInicio }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd/MM' }} {{ r.horaFin }}</td>
-                <td class="px-4 py-3 font-medium text-slate-700">\${{ r.total.toFixed(2) }}</td>
+                <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.total.toFixed(2) }}</td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estado" [label]="r.estado"></app-status-badge></td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estadoEntrega" [label]="r.estadoEntrega"></app-status-badge></td>
                 <td class="px-4 py-3 text-right">
@@ -122,7 +122,7 @@ import { Reserva, Cliente, Auto } from '../../models';
             <select class="input-field" [(ngModel)]="newData.idAuto">
               <option [ngValue]="0" disabled>Seleccionar...</option>
               @for (a of vehiculosDisponibles(); track a.idAuto) {
-                <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca?.nombre }} {{ a.modelo?.nombre }} (\${{ a.precioPorDia }}/dia)</option>
+                <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }} (S/{{ a.precioPorDia }}/dia)</option>
               }
             </select>
             <div class="flex justify-between mt-4">
@@ -173,7 +173,7 @@ import { Reserva, Cliente, Auto } from '../../models';
             </div>
             <div>
               <p class="text-slate-500">Vehiculo</p>
-              <p class="font-medium text-slate-800">{{ selectedReserva()?.auto?.placa }} - {{ selectedReserva()?.auto?.marca?.nombre }}</p>
+              <p class="font-medium text-slate-800">{{ selectedReserva()?.auto?.placa }} - {{ selectedReserva()?.auto?.marca }}</p>
             </div>
             <div>
               <p class="text-slate-500">Fecha/Hora Inicio</p>
@@ -189,7 +189,7 @@ import { Reserva, Cliente, Auto } from '../../models';
             </div>
             <div>
               <p class="text-slate-500">Costo Total</p>
-              <p class="font-medium text-slate-800">\${{ selectedReserva()!.total.toFixed(2) }}</p>
+              <p class="font-medium text-slate-800">S/{{ selectedReserva()!.total.toFixed(2) }}</p>
             </div>
           </div>
         </div>
@@ -277,7 +277,7 @@ export class ReservationsComponent implements OnInit {
   }
 
   iniciarReserva(r: Reserva): void {
-    this.reservaService.iniciar(r.idReserva).subscribe({
+    this.reservaService.iniciar(r.idReserva, 0).subscribe({
       next: () => {
         this.toast.success('Reserva iniciada');
         this.loadReservas();

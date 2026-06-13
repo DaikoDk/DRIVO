@@ -79,16 +79,16 @@ import { Auto } from '../../../models';
                 <span class="material-symbols-outlined text-6xl text-slate-400">directions_car</span>
               </div>
               <div class="flex items-start justify-between mb-1">
-                <h3 class="text-base font-semibold text-slate-800">{{ auto.marca?.nombre }} {{ auto.modelo?.nombre }}</h3>
+                <h3 class="text-base font-semibold text-slate-800">{{ auto.marca }} {{ auto.modelo }}</h3>
                 <span class="badge badge-success text-2xs">{{ auto.estado }}</span>
               </div>
-              <p class="text-sm text-slate-500 mb-3">{{ auto.anio }} | {{ auto.color || 'N/A' }} | {{ auto.modelo?.categoria || 'S/C' }}</p>
+              <p class="text-sm text-slate-500 mb-3">{{ auto.anio }} | {{ auto.color || 'N/A' }} | {{ auto.categoria || 'S/C' }}</p>
               <div class="flex items-center gap-3 text-xs text-slate-500 mb-3">
-                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> {{ auto.modelo?.numeroPasajeros || 5 }}</span>
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> 5</span>
                 <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">speed</span> {{ auto.kilometrajeActual.toLocaleString() }} km</span>
               </div>
               <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                <p class="text-xl font-bold text-slate-800">\${{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
+                <p class="text-xl font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
                 <span class="text-primary font-medium text-sm group-hover:underline">Ver detalle</span>
               </div>
             </div>

@@ -22,19 +22,19 @@ import { Auto, Cliente } from '../../../models';
             <div class="w-full h-64 lg:h-80 rounded-xl mb-6 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
               <span class="material-symbols-outlined text-8xl text-slate-400">directions_car</span>
             </div>
-            <h1 class="text-3xl font-bold text-slate-800 mb-2">{{ auto()?.marca?.nombre }} {{ auto()?.modelo?.nombre }} {{ auto()?.anio }}</h1>
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">{{ auto()?.marca }} {{ auto()?.modelo }} {{ auto()?.anio }}</h1>
             <p class="text-slate-500 mb-6">{{ auto()?.color || 'N/A' }} | Placa: {{ auto()?.placa }}</p>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div class="card text-center">
                 <span class="material-symbols-outlined text-2xl text-primary mb-2">person</span>
                 <p class="text-xs text-slate-500">Pasajeros</p>
-                <p class="font-semibold text-slate-800">{{ auto()?.modelo?.numeroPasajeros || 5 }}</p>
+                <p class="font-semibold text-slate-800">{{ 5 }}</p>
               </div>
               <div class="card text-center">
                 <span class="material-symbols-outlined text-2xl text-primary mb-2">category</span>
                 <p class="text-xs text-slate-500">Categoria</p>
-                <p class="font-semibold text-slate-800">{{ auto()?.modelo?.categoria || 'Estandar' }}</p>
+                <p class="font-semibold text-slate-800">{{ auto()?.categoria || 'Estandar' }}</p>
               </div>
               <div class="card text-center">
                 <span class="material-symbols-outlined text-2xl text-primary mb-2">speed</span>
@@ -52,7 +52,7 @@ import { Auto, Cliente } from '../../../models';
               <h3 class="text-lg font-semibold text-slate-800 mb-4">Especificaciones</h3>
               <div class="grid grid-cols-2 gap-4 text-sm">
                 <div><span class="text-slate-500">Chasis:</span> <span class="font-medium text-slate-700">{{ auto()?.numeroChasis || 'N/A' }}</span></div>
-                <div><span class="text-slate-500">Mora por dia:</span> <span class="font-medium text-slate-700">\${{ auto()?.moraPorDia?.toFixed(2) }}</span></div>
+                <div><span class="text-slate-500">Mora por dia:</span> <span class="font-medium text-slate-700">S/{{ auto()?.moraPorDia?.toFixed(2) }}</span></div>
                 <div><span class="text-slate-500">Ultima revision:</span> <span class="font-medium text-slate-700">{{ auto()?.ultimaRevisionKm?.toLocaleString() || 'N/A' }} km</span></div>
                 <div><span class="text-slate-500">Proxima revision:</span> <span class="font-medium text-slate-700">{{ auto()?.proximaRevisionKm?.toLocaleString() || 'N/A' }} km</span></div>
               </div>
@@ -63,7 +63,7 @@ import { Auto, Cliente } from '../../../models';
           <div>
             <div class="card sticky top-24">
               <div class="mb-4">
-                <p class="text-3xl font-bold text-slate-800">\${{ auto()?.precioPorDia?.toFixed(2) }}</p>
+                <p class="text-3xl font-bold text-slate-800">S/{{ auto()?.precioPorDia?.toFixed(2) }}</p>
                 <p class="text-sm text-slate-500">por dia</p>
               </div>
 
@@ -92,18 +92,18 @@ import { Auto, Cliente } from '../../../models';
                 @if (dias() > 0) {
                   <div class="bg-slate-50 rounded-lg p-4 space-y-2 text-sm">
                     <div class="flex justify-between">
-                      <span class="text-slate-500">\${{ auto()?.precioPorDia?.toFixed(2) }} x {{ dias() }} dias</span>
-                      <span class="font-medium text-slate-700">\${{ (dias() * (auto()?.precioPorDia || 0)).toFixed(2) }}</span>
+                      <span class="text-slate-500">S/{{ auto()?.precioPorDia?.toFixed(2) }} x {{ dias() }} dias</span>
+                      <span class="font-medium text-slate-700">S/{{ (dias() * (auto()?.precioPorDia || 0)).toFixed(2) }}</span>
                     </div>
                     @if (horasExtra() > 0) {
                       <div class="flex justify-between">
-                        <span class="text-slate-500">\${{ (auto()?.precioPorHora || auto()?.precioPorDia || 0 / 8).toFixed(2) }} x {{ horasExtra() }} horas extra</span>
-                        <span class="font-medium text-slate-700">\${{ (horasExtra() * (auto()?.precioPorHora || 0)).toFixed(2) }}</span>
+                        <span class="text-slate-500">S/{{ (auto()?.precioPorHora || auto()?.precioPorDia || 0 / 8).toFixed(2) }} x {{ horasExtra() }} horas extra</span>
+                        <span class="font-medium text-slate-700">S/{{ (horasExtra() * (auto()?.precioPorHora || 0)).toFixed(2) }}</span>
                       </div>
                     }
                     <div class="flex justify-between pt-2 border-t border-slate-200 font-semibold">
                       <span>Total estimado</span>
-                      <span class="text-primary">\${{ totalEstimado().toFixed(2) }}</span>
+                      <span class="text-primary">S/{{ totalEstimado().toFixed(2) }}</span>
                     </div>
                   </div>
                 }

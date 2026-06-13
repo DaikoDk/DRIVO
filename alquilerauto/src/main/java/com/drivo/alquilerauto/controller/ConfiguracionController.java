@@ -1,7 +1,10 @@
 package com.drivo.alquilerauto.controller;
 
-import com.drivo.alquilerauto.entity.Configuracion;
+import com.drivo.alquilerauto.dto.ApiResponse;
+import com.drivo.alquilerauto.dto.request.ConfiguracionRequest;
+import com.drivo.alquilerauto.dto.response.ConfiguracionResponse;
 import com.drivo.alquilerauto.service.ConfiguracionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,30 +21,42 @@ public class ConfiguracionController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Configuracion>> findAll() {
-        return ResponseEntity.ok(service.findAll());
+    public ResponseEntity<ApiResponse<List<ConfiguracionResponse>>> findAll() {
+        return ResponseEntity.ok(ApiResponse.ok(service.findAll(), "Configuraciones obtenidas"));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Configuracion> findById(@PathVariable Integer id) {
-        return ResponseEntity.ok(service.findById(id));
+    public ResponseEntity<ApiResponse<ConfiguracionResponse>> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.ok(service.findById(id), "Configuración encontrada"));
     }
 
     @GetMapping("/clave/{clave}")
-    public ResponseEntity<Configuracion> findByClave(@PathVariable String clave) {
-        return ResponseEntity.ok(service.findByClave(clave));
+    public ResponseEntity<ApiResponse<ConfiguracionResponse>> findByClave(@PathVariable String clave) {
+        return ResponseEntity.ok(ApiResponse.ok(service.findByClave(clave), "Configuración encontrada"));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Configuracion> create(@RequestBody Configuracion config) {
-        return ResponseEntity.ok(service.create(config));
+    public ResponseEntity<ApiResponse<ConfiguracionResponse>> create(
+            @Valid @RequestBody ConfiguracionRequest request) {
+        ConfiguracionResponse creada = service.create(request);
+        return ResponseEntity.ok(ApiResponse.ok(creada, "Configuración creada exitosamente"));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Configuracion> update(@PathVariable Integer id, @RequestBody Configuracion config) {
-        return ResponseEntity.ok(service.update(id, config));
+    public ResponseEntity<ApiResponse<ConfiguracionResponse>> update(
+            @PathVariable Integer id,
+            @Valid @RequestBody ConfiguracionRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(service.update(id, request),
+                "Configuración actualizada exitosamente"));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Integer id) {
+        service.delete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Configuración eliminada exitosamente"));
     }
 }

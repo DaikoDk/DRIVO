@@ -1,5 +1,6 @@
 package com.drivo.alquilerauto.service;
 
+import com.drivo.alquilerauto.dto.request.ClienteMeUpdateRequest;
 import com.drivo.alquilerauto.dto.request.ClienteRequest;
 import com.drivo.alquilerauto.dto.response.ClienteResponse;
 import com.drivo.alquilerauto.entity.Cliente;
@@ -87,6 +88,25 @@ public class ClienteService {
         Cliente cliente = obtenerClienteOFallar(id);
         cliente.setActivo(false);
         clienteRepository.save(cliente);
+    }
+
+    @Transactional(readOnly = true)
+    public ClienteResponse getAuthenticatedCliente(String correo) {
+        Cliente cliente = clienteRepository.findByUsuarioCorreo(correo)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado para el usuario"));
+        return clienteMapper.toResponse(cliente);
+    }
+
+    public ClienteResponse updateMe(String correo, ClienteMeUpdateRequest request) {
+        Cliente cliente = clienteRepository.findByUsuarioCorreo(correo)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado para el usuario"));
+        if (request.telefono() != null) {
+            cliente.setTelefono(request.telefono());
+        }
+        if (request.direccion() != null) {
+            cliente.setDireccion(request.direccion());
+        }
+        return clienteMapper.toResponse(clienteRepository.save(cliente));
     }
 
     private Cliente obtenerClienteOFallar(Integer id) {

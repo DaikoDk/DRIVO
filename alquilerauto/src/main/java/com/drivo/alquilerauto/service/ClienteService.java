@@ -84,6 +84,13 @@ public class ClienteService {
         return clienteMapper.toResponse(clienteRepository.save(cliente));
     }
 
+    public ClienteResponse desbloquear(Integer id) {
+        Cliente cliente = obtenerClienteOFallar(id);
+        cliente.setBloqueado(false);
+        cliente.setEstado("activo");
+        return clienteMapper.toResponse(clienteRepository.save(cliente));
+    }
+
     public void delete(Integer id) {
         Cliente cliente = obtenerClienteOFallar(id);
         cliente.setActivo(false);

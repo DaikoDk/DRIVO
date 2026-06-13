@@ -1,8 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, of, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, tap, throwError, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 export interface AuthUser {
   token: string;
@@ -24,38 +24,18 @@ export interface RegisterRequest {
   email: string;
   direccion?: string;
   clave: string;
-  numeroLicencia?: string;
-  categoriaLicencia?: string;
-  fechaVencimientoLicencia?: string;
+  licencia?: {
+    numeroLicencia: string;
+    categoria: string;
+    fechaVencimiento: string;
+  };
 }
 
-interface MockUser extends AuthUser {
-  clave: string;
-  correo: string;
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message: string;
 }
-
-const MOCK_USERS: MockUser[] = [
-  {
-    token: 'mock-jwt-admin-token',
-    nombre: 'Admin DRIVO',
-    rol: 'ADMIN',
-    clave: 'admin123',
-    correo: 'admin@drivo.com',
-  },
-  {
-    token: 'mock-jwt-cliente-token',
-    nombre: 'Carlos Lopez',
-    rol: 'CLIENTE',
-    clave: 'cliente123',
-    correo: 'carlos@email.com',
-  },
-];
-
-/**
- * HABILITAR CUANDO EL BACKEND YA TENGA JWT IMPLEMENTADO.
- * Cambiar USE_MOCK a false para usar endpoints reales.
- */
-const USE_MOCK = true;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -70,45 +50,28 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<AuthUser> {
-    if (USE_MOCK) {
-      return this.mockLogin(credentials);
-    }
     return this.http.post<AuthUser>(`${this.baseUrl}/login`, credentials).pipe(
-      tap((user) => this.persistUser(user))
+      tap((user) => this.persistUser(user)),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Credenciales invalidas')))
     );
   }
 
   register(data: RegisterRequest): Observable<AuthUser> {
-    if (USE_MOCK) {
-      return this.mockRegister(data);
-    }
-    return this.http.post<AuthUser>(`${this.baseUrl}/register`, data).pipe(
-      tap((user) => this.persistUser(user))
+    return this.http.post<ApiResponse<AuthUser>>(`${this.baseUrl}/register`, data).pipe(
+      map((res) => res.data),
+      tap((user) => this.persistUser(user)),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Error en registro')))
     );
   }
 
-  private mockLogin(credentials: LoginRequest): Observable<AuthUser> {
-    const found = MOCK_USERS.find(
-      (u) => u.correo === credentials.correo && u.clave === credentials.clave
+  cambiarClave(claveActual: string, claveNueva: string): Observable<void> {
+    return this.http.patch<ApiResponse<null>>('http://localhost:8080/api/usuarios/cambiar-clave', {
+      claveActual,
+      claveNueva
+    }).pipe(
+      map(() => undefined),
+      catchError((err) => throwError(() => new Error(err.error?.message || 'Error al cambiar clave')))
     );
-    if (!found) {
-      return throwError(() => new Error('Credenciales invalidas. Use admin@drivo.com / admin123 o carlos@email.com / cliente123'));
-    }
-    const { clave: _, ...user } = found;
-    this.persistUser(user);
-    return of(user);
-  }
-
-  private mockRegister(data: RegisterRequest): Observable<AuthUser> {
-    const newUser: AuthUser = {
-      token: 'mock-jwt-register-token',
-      nombre: data.nombre,
-      rol: 'CLIENTE',
-    };
-    this.persistUser(newUser);
-    // Agregar a la lista mock para que pueda loguearse despues
-    MOCK_USERS.push({ ...newUser, clave: data.clave, correo: data.email });
-    return of(newUser);
   }
 
   private persistUser(user: AuthUser): void {

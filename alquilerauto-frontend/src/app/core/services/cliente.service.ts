@@ -16,6 +16,11 @@ export interface ClienteFormData {
   fechaVencimientoLicencia?: string;
 }
 
+export interface ClienteMeUpdateData {
+  telefono?: string;
+  direccion?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClienteService {
   constructor(private readonly api: ApiService) {}
@@ -25,7 +30,7 @@ export class ClienteService {
   }
 
   getActivos(): Observable<Cliente[]> {
-    return this.api.get<Cliente[]>('/clientes/activos');
+    return this.api.get<Cliente[]>('/clientes');
   }
 
   getById(id: number): Observable<Cliente> {
@@ -41,14 +46,22 @@ export class ClienteService {
   }
 
   bloquear(id: number): Observable<Cliente> {
-    return this.api.patch<Cliente>('/clientes', id, { bloqueado: true });
+    return this.api.patchCustom<Cliente>(`/clientes/${id}/bloquear`);
   }
 
   desbloquear(id: number): Observable<Cliente> {
-    return this.api.patch<Cliente>('/clientes', id, { bloqueado: false });
+    return this.api.patchCustom<Cliente>(`/clientes/${id}/desbloquear`);
   }
 
   delete(id: number): Observable<void> {
     return this.api.delete<void>('/clientes', id);
+  }
+
+  getMe(): Observable<Cliente> {
+    return this.api.get<Cliente>('/clientes/me');
+  }
+
+  updateMe(data: ClienteMeUpdateData): Observable<Cliente> {
+    return this.api.putCustom<Cliente>('/clientes/me', data);
   }
 }

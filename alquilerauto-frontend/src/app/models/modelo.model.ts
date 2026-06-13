@@ -1,8 +1,7 @@
-import { Marca } from './marca.model';
-
 export interface Modelo {
   idModelo: number;
-  marca: Marca;
+  idMarca: number;
+  marca: string;
   nombre: string;
   categoria?: string;
   numeroPasajeros: number;

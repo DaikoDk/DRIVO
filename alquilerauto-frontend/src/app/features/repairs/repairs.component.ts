@@ -69,7 +69,7 @@ import { Reparacion, CatalogoReparacion } from '../../models';
                 <td class="px-4 py-3 text-slate-700">#{{ r.reserva?.idReserva }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.catalogoReparacion?.descripcion || '-' }}</td>
                 <td class="px-4 py-3 text-slate-700 max-w-[200px] truncate">{{ r.descripcion }}</td>
-                <td class="px-4 py-3 font-medium text-slate-700">\${{ r.costo.toFixed(2) }}</td>
+                <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.costo.toFixed(2) }}</td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estado" [label]="r.estado"></app-status-badge></td>
                 <td class="px-4 py-3">
                   <span class="badge" [class.badge-warning]="r.responsable === 'Cliente'" [class.badge-info]="r.responsable === 'Empresa'" [class.badge-neutral]="!r.responsable">
@@ -130,7 +130,7 @@ import { Reparacion, CatalogoReparacion } from '../../models';
           <select class="input-field" [(ngModel)]="formData.idCatalogoReparacion">
             <option [ngValue]="undefined">Seleccionar...</option>
             @for (c of catalogo(); track c.idCatalogoReparacion) {
-              <option [ngValue]="c.idCatalogoReparacion">{{ c.descripcion }} (\${{ c.costoEstimado }})</option>
+              <option [ngValue]="c.idCatalogoReparacion">{{ c.descripcion }} (S/{{ c.costoEstimado }})</option>
             }
           </select>
         </div>

@@ -33,10 +33,10 @@ import { Reserva } from '../../../models';
               @for (r of reservas(); track r.idReserva) {
                 <tr class="hover:bg-slate-50">
                   <td class="px-4 py-3 text-slate-700">#{{ r.idReserva }}</td>
-                  <td class="px-4 py-3 text-slate-700">{{ r.auto?.marca?.nombre }} {{ r.auto?.modelo?.nombre }} ({{ r.auto?.placa }})</td>
+                  <td class="px-4 py-3 text-slate-700">{{ r.auto?.marca }} {{ r.auto?.modelo }} ({{ r.auto?.placa }})</td>
                   <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio | date:'dd/MM/yy' }} {{ r.horaInicio }}</td>
                   <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd/MM/yy' }} {{ r.horaFin }}</td>
-                  <td class="px-4 py-3 font-medium text-slate-700">\${{ r.total.toFixed(2) }}</td>
+                  <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.total.toFixed(2) }}</td>
                   <td class="px-4 py-3">
                     <span class="badge" [class.badge-warning]="r.estado === 'Pendiente'" [class.badge-info]="r.estado === 'En proceso'" [class.badge-success]="r.estado === 'Confirmada' || r.estado === 'Finalizada'" [class.badge-error]="r.estado === 'Cancelada'" [class.badge-neutral]="r.estado === 'Finalizada'">{{ r.estado }}</span>
                   </td>
@@ -77,7 +77,7 @@ export class MisReservasComponent implements OnInit {
   }
 
   cancelar(r: Reserva): void {
-    this.reservaService.cancelar(r.idReserva).subscribe({
+    this.reservaService.cancelarDesdePortal(r.idReserva).subscribe({
       next: () => {
         this.toast.success('Reserva cancelada');
         this.reservaService.getAll().subscribe({ next: (d) => this.reservas.set(d) });

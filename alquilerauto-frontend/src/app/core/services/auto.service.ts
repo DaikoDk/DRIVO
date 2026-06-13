@@ -27,7 +27,7 @@ export class AutoService {
   }
 
   getActivos(): Observable<Auto[]> {
-    return this.api.get<Auto[]>('/autos/activos');
+    return this.api.get<Auto[]>('/autos');
   }
 
   getDisponibles(): Observable<Auto[]> {

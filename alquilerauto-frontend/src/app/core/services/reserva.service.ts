@@ -12,6 +12,14 @@ export interface ReservaFormData {
   horaFin: string;
 }
 
+export interface ReservaPortalFormData {
+  idAuto: number;
+  fechaInicio: string;
+  horaInicio: string;
+  fechaFin: string;
+  horaFin: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReservaService {
   constructor(private readonly api: ApiService) {}
@@ -29,26 +37,42 @@ export class ReservaService {
   }
 
   getByCliente(idCliente: number): Observable<Reserva[]> {
-    return this.api.get<Reserva[]>('/reservas', { idCliente });
+    return this.api.get<Reserva[]>('/reservas', { idCliente: String(idCliente) });
   }
 
   getByAuto(idAuto: number): Observable<Reserva[]> {
-    return this.api.get<Reserva[]>('/reservas', { idAuto });
+    return this.api.get<Reserva[]>('/reservas', { idAuto: String(idAuto) });
   }
 
   create(data: ReservaFormData): Observable<Reserva> {
     return this.api.post<Reserva>('/reservas', data);
   }
 
-  iniciar(id: number): Observable<Reserva> {
-    return this.api.patch<Reserva>('/reservas', id, { accion: 'iniciar' });
+  iniciar(id: number, kilometrajeInicio: number): Observable<Reserva> {
+    return this.api.patchCustom<Reserva>(`/reservas/${id}/iniciar`, { kilometrajeInicio });
   }
 
-  finalizar(id: number, kilometrajeFin: number): Observable<Reserva> {
-    return this.api.patch<Reserva>('/reservas', id, { accion: 'finalizar', kilometrajeFin });
+  finalizar(id: number, kilometrajeFin: number, observaciones?: string): Observable<Reserva> {
+    return this.api.patchCustom<Reserva>(`/reservas/${id}/finalizar`, {
+      kilometrajeFin,
+      observaciones: observaciones || '',
+      usuario: 'admin'
+    });
   }
 
   cancelar(id: number): Observable<Reserva> {
-    return this.api.patch<Reserva>('/reservas', id, { accion: 'cancelar' });
+    return this.api.patchCustom<Reserva>(`/reservas/${id}/cancelar`);
+  }
+
+  createDesdePortal(data: ReservaPortalFormData): Observable<Reserva> {
+    return this.api.post<Reserva>('/reservas/desde-portal', data);
+  }
+
+  getMisReservas(): Observable<Reserva[]> {
+    return this.api.get<Reserva[]>('/reservas/mis-reservas');
+  }
+
+  cancelarDesdePortal(id: number): Observable<Reserva> {
+    return this.api.patchCustom<Reserva>(`/reservas/${id}/cancelar-desde-portal`);
   }
 }

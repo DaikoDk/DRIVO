@@ -1,8 +1,22 @@
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService, RegisterRequest } from '../../core/services/auth.service';
+import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+
+interface RegisterForm {
+  nombre: string;
+  apellidoPaterno: string;
+  apellidoMaterno?: string;
+  dni: string;
+  telefono?: string;
+  email: string;
+  direccion?: string;
+  clave: string;
+  numeroLicencia?: string;
+  categoriaLicencia?: string;
+  fechaVencimientoLicencia?: string;
+}
 
 @Component({
   selector: 'app-register',
@@ -71,11 +85,12 @@ import { ToastService } from '../../core/services/toast.service';
                   <label class="input-label">Categoria</label>
                   <select class="input-field" [(ngModel)]="form.categoriaLicencia">
                     <option value="">Seleccionar</option>
-                    <option value="A1">A1</option>
-                    <option value="A2">A2</option>
-                    <option value="A3">A3</option>
-                    <option value="B">B</option>
-                    <option value="C">C</option>
+                    <option value="A-I">A-I</option>
+                    <option value="A-IIa">A-IIa</option>
+                    <option value="A-IIb">A-IIb</option>
+                    <option value="A-IIIa">A-IIIa</option>
+                    <option value="A-IIIb">A-IIIb</option>
+                    <option value="A-IIIc">A-IIIc</option>
                   </select>
                 </div>
                 <div>
@@ -105,7 +120,7 @@ import { ToastService } from '../../core/services/toast.service';
   `
 })
 export class RegisterComponent {
-  form: RegisterRequest = {
+  form: RegisterForm = {
     nombre: '',
     apellidoPaterno: '',
     dni: '',
@@ -137,7 +152,25 @@ export class RegisterComponent {
     this.loading.set(true);
     this.msg.set('');
 
-    this.auth.register(this.form).subscribe({
+    const licencia = this.form.numeroLicencia
+      ? {
+          numeroLicencia: this.form.numeroLicencia,
+          categoria: this.form.categoriaLicencia || '',
+          fechaVencimiento: this.form.fechaVencimientoLicencia || '',
+        }
+      : undefined;
+
+    this.auth.register({
+      nombre: this.form.nombre,
+      apellidoPaterno: this.form.apellidoPaterno,
+      apellidoMaterno: this.form.apellidoMaterno,
+      dni: this.form.dni,
+      telefono: this.form.telefono,
+      email: this.form.email,
+      direccion: this.form.direccion,
+      clave: this.form.clave,
+      licencia,
+    }).subscribe({
       next: (user) => {
         this.toast.success(`Bienvenido, ${user.nombre}`);
         this.router.navigate(['/portal/home']);

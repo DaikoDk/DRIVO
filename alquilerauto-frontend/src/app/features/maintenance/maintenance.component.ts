@@ -67,11 +67,11 @@ import { Mantenimiento, Auto } from '../../models';
             @for (m of filteredMantenimientos(); track m.idMantenimiento) {
               <tr class="hover:bg-slate-50 group">
                 <td class="px-4 py-3 text-slate-700">#{{ m.idMantenimiento }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ m.auto?.placa }} - {{ m.auto?.modelo?.nombre }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ m.auto?.placa }} - {{ m.auto?.modelo }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ m.fechaIngreso | date:'dd/MM/yy' }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ m.fechaSalida ? (m.fechaSalida | date:'dd/MM/yy') : 'En curso' }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ m.tipo }}</td>
-                <td class="px-4 py-3 font-medium text-slate-700">\${{ m.costo.toFixed(2) }}</td>
+                <td class="px-4 py-3 font-medium text-slate-700">S/{{ m.costo.toFixed(2) }}</td>
                 <td class="px-4 py-3 text-slate-500 max-w-[200px] truncate">{{ m.detalle || '-' }}</td>
                 <td class="px-4 py-3 text-right">
                   @if (!m.fechaSalida) {
@@ -95,7 +95,7 @@ import { Mantenimiento, Auto } from '../../models';
           <select class="input-field" [(ngModel)]="formData.idAuto">
             <option [ngValue]="0" disabled>Seleccionar...</option>
             @for (a of autos(); track a.idAuto) {
-              <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca?.nombre }} {{ a.modelo?.nombre }}</option>
+              <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }}</option>
             }
           </select>
         </div>

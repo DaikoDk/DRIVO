@@ -25,7 +25,7 @@ export class ReparacionService {
   }
 
   getByReserva(idReserva: number): Observable<Reparacion[]> {
-    return this.api.get<Reparacion[]>('/reparaciones', { idReserva });
+    return this.api.get<Reparacion[]>(`/reparaciones/reserva/${idReserva}`);
   }
 
   getCatalogo(): Observable<CatalogoReparacion[]> {
@@ -37,6 +37,6 @@ export class ReparacionService {
   }
 
   updateEstado(id: number, estado: string): Observable<Reparacion> {
-    return this.api.patch<Reparacion>('/reparaciones', id, { estado });
+    return this.api.patchCustom<Reparacion>(`/reparaciones/${id}/estado`, { estado });
   }
 }

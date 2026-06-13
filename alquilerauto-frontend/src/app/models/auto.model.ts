@@ -1,11 +1,9 @@
-import { Marca } from './marca.model';
-import { Modelo } from './modelo.model';
-
 export interface Auto {
   idAuto: number;
   placa: string;
-  marca: Marca;
-  modelo: Modelo;
+  marca: string;
+  modelo: string;
+  categoria?: string;
   anio: number;
   color?: string;
   numeroMotor?: string;
@@ -17,7 +15,7 @@ export interface Auto {
   precioPorHora?: number;
   moraPorDia: number;
   estado: string;
-  activo: boolean;
-  fechaRegistro: string;
+  activo?: boolean;
+  fechaRegistro?: string;
   fechaUltimaActualizacion?: string;
 }

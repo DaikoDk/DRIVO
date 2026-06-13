@@ -36,7 +36,7 @@ import { Auto, Marca } from '../../../models';
               <div>
                 <label class="input-label">Precio maximo/dia</label>
                 <input class="input-field" type="range" min="0" max="500" step="10" [(ngModel)]="filterPrecioMax" />
-                <p class="text-xs text-slate-500 mt-1">Hasta \${{ filterPrecioMax() }}</p>
+                <p class="text-xs text-slate-500 mt-1">Hasta S/{{ filterPrecioMax() }}</p>
               </div>
               <button class="btn-secondary w-full text-center" (click)="clearFilters()">Limpiar filtros</button>
             </div>
@@ -53,16 +53,16 @@ import { Auto, Marca } from '../../../models';
                   <span class="material-symbols-outlined text-6xl text-slate-400">directions_car</span>
                 </div>
                 <div class="flex items-start justify-between mb-1">
-                  <h3 class="text-base font-semibold text-slate-800">{{ auto.marca?.nombre }} {{ auto.modelo?.nombre }}</h3>
+                  <h3 class="text-base font-semibold text-slate-800">{{ auto.marca }} {{ auto.modelo }}</h3>
                   <span class="badge badge-success text-2xs">{{ auto.estado }}</span>
                 </div>
-                <p class="text-sm text-slate-500 mb-3">{{ auto.anio }} | {{ auto.color || 'N/A' }} | {{ auto.modelo?.categoria || 'S/C' }}</p>
+                <p class="text-sm text-slate-500 mb-3">{{ auto.anio }} | {{ auto.color || 'N/A' }} | {{ auto.categoria || 'S/C' }}</p>
                 <div class="flex items-center gap-3 text-xs text-slate-500 mb-3">
-                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> {{ auto.modelo?.numeroPasajeros || 5 }} pasajeros</span>
-                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">settings_suggest</span> {{ auto.modelo?.categoria || 'Estandar' }}</span>
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> 5 pasajeros</span>
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">settings_suggest</span> {{ auto.categoria || 'Estandar' }}</span>
                 </div>
                 <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <p class="text-xl font-bold text-slate-800">\${{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
+                  <p class="text-xl font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
                   <span class="text-primary font-medium text-sm group-hover:underline">Reservar</span>
                 </div>
               </div>
@@ -100,9 +100,10 @@ export class CatalogoComponent implements OnInit {
     const term = this.searchTerm().toLowerCase();
     const marca = this.filterMarca();
     const precioMax = this.filterPrecioMax();
+    const marcaObj = marca ? this.marcas().find(m => m.idMarca === +marca) : null;
     return this.autos().filter(a => {
-      if (term && !a.placa.toLowerCase().includes(term) && !(a.modelo?.nombre || '').toLowerCase().includes(term) && !(a.marca?.nombre || '').toLowerCase().includes(term)) return false;
-      if (marca && a.marca?.idMarca !== +marca) return false;
+      if (term && !a.placa.toLowerCase().includes(term) && !(a.modelo || '').toLowerCase().includes(term) && !(a.marca || '').toLowerCase().includes(term)) return false;
+      if (marcaObj && a.marca !== marcaObj.nombre) return false;
       if (a.precioPorDia > precioMax) return false;
       return true;
     });

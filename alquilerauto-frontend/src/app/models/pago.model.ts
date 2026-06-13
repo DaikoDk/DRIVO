@@ -1,8 +1,7 @@
-import { Reserva } from './reserva.model';
-
 export interface Pago {
   idPago: number;
-  reserva: Reserva;
+  idReserva: number;
+  nombreCliente: string;
   montoBase: number;
   montoMora: number;
   montoDanos: number;

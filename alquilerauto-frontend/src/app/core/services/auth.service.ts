@@ -55,7 +55,7 @@ const MOCK_USERS: MockUser[] = [
  * HABILITAR CUANDO EL BACKEND YA TENGA JWT IMPLEMENTADO.
  * Cambiar USE_MOCK a false para usar endpoints reales.
  */
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

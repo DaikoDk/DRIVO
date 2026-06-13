@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(exclude = {"licencia", "reservas"})
+@ToString(exclude = {"licencia", "reservas", "usuario"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Cliente {
 
@@ -46,6 +46,10 @@ public class Cliente {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idLicencia")
     private Licencia licencia;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "idUsuario")
+    private Usuario usuario;
 
     @Column(nullable = false)
     private Integer numeroReservas = 0;

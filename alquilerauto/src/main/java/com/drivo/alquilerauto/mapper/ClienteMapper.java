@@ -22,6 +22,7 @@ public interface ClienteMapper {
 
     @Mapping(target = "idCliente", ignore = true)
     @Mapping(target = "licencia", ignore = true)
+    @Mapping(target = "usuario", ignore = true)
     @Mapping(target = "numeroReservas", ignore = true)
     @Mapping(target = "numeroIncidentes", ignore = true)
     @Mapping(target = "bloqueado", ignore = true)
@@ -33,6 +34,7 @@ public interface ClienteMapper {
 
     @Mapping(target = "idCliente", ignore = true)
     @Mapping(target = "licencia", ignore = true)
+    @Mapping(target = "usuario", ignore = true)
     @Mapping(target = "numeroReservas", ignore = true)
     @Mapping(target = "numeroIncidentes", ignore = true)
     @Mapping(target = "bloqueado", ignore = true)

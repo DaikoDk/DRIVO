@@ -40,4 +40,12 @@ public class Pago {
 
     @Column(nullable = false, length = 30)
     private String metodoPago;
+
+    @PrePersist
+    void prePersist() {
+        this.fechaPago = LocalDateTime.now();
+        BigDecimal mora = this.montoMora != null ? this.montoMora : BigDecimal.ZERO;
+        BigDecimal danos = this.montoDanos != null ? this.montoDanos : BigDecimal.ZERO;
+        this.montoTotalPagado = this.montoBase.add(mora).add(danos);
+    }
 }

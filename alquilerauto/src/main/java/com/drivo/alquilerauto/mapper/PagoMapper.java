@@ -12,6 +12,7 @@ import java.util.List;
 public interface PagoMapper {
 
     @Mapping(source = "reserva.idReserva", target = "idReserva")
+    @Mapping(target = "nombreCliente", expression = "java(pago.getReserva().getCliente().getNombre() + \" \" + pago.getReserva().getCliente().getApellidoPaterno())")
     PagoResponse toResponse(Pago pago);
 
     List<PagoResponse> toResponseList(List<Pago> pagos);
@@ -19,5 +20,6 @@ public interface PagoMapper {
     @Mapping(target = "idPago", ignore = true)
     @Mapping(target = "reserva", ignore = true)
     @Mapping(target = "fechaPago", ignore = true)
+    @Mapping(target = "montoTotalPagado", ignore = true)
     Pago toEntity(PagoCreateRequest request);
 }

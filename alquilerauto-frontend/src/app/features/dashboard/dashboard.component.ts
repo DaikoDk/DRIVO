@@ -17,7 +17,7 @@ import { DashboardService, DashboardStats, ReservaHoy, VehiculoMantenimiento, In
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <app-stat-card label="Total Vehiculos" [value]="stats().totalVehiculos" icon="directions_car" iconBg="#dbeafe" iconColor="#2563eb" [change]="5"></app-stat-card>
+      <app-stat-card label="Total Vehiculos" [value]="stats().totalAutos" icon="directions_car" iconBg="#dbeafe" iconColor="#2563eb" [change]="5"></app-stat-card>
       <app-stat-card label="Reservas Activas" [value]="stats().reservasActivas" icon="calendar_month" iconBg="#d1fae5" iconColor="#059669" [change]="12"></app-stat-card>
       <app-stat-card label="Ingresos del Mes" [value]="'$' + stats().ingresosMes.toLocaleString()" icon="payments" iconBg="#fef3c7" iconColor="#d97706" [change]="8"></app-stat-card>
       <app-stat-card label="Clientes Activos" [value]="stats().clientesActivos" icon="group" iconBg="#ede9fe" iconColor="#7c3aed" [change]="3"></app-stat-card>
@@ -67,6 +67,7 @@ import { DashboardService, DashboardStats, ReservaHoy, VehiculoMantenimiento, In
               <th class="px-4 py-3 text-left font-medium text-slate-600">ID</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Cliente</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Vehiculo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Fecha</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Inicio</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Fin</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Estado</th>
@@ -76,15 +77,16 @@ import { DashboardService, DashboardStats, ReservaHoy, VehiculoMantenimiento, In
             @for (r of reservasHoy(); track r.idReserva) {
               <tr class="hover:bg-slate-50">
                 <td class="px-4 py-3 text-slate-700">#{{ r.idReserva }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.clienteNombre }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.cliente }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.placa }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.horaInicio }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.horaFin }}</td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estado" [label]="r.estado"></app-status-badge></td>
               </tr>
             }
             @if (reservasHoy().length === 0) {
-              <tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">No hay reservas para hoy</td></tr>
+              <tr><td colspan="7" class="px-4 py-8 text-center text-slate-400">No hay reservas para hoy</td></tr>
             }
           </tbody>
         </table>
@@ -93,7 +95,7 @@ import { DashboardService, DashboardStats, ReservaHoy, VehiculoMantenimiento, In
   `
 })
 export class DashboardComponent implements OnInit {
-  readonly stats = signal<DashboardStats>({ totalVehiculos: 0, reservasActivas: 0, ingresosMes: 0, clientesActivos: 0 });
+  readonly stats = signal<DashboardStats>({ totalAutos: 0, reservasActivas: 0, ingresosMes: 0, clientesActivos: 0 });
   readonly reservasHoy = signal<ReservaHoy[]>([]);
   readonly vehiculosMantenimiento = signal<VehiculoMantenimiento[]>([]);
   readonly ingresosMensuales = signal<IngresoMensual[]>([]);
@@ -103,7 +105,7 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.dashboardService.getStats().subscribe({
       next: (data) => this.stats.set(data),
-      error: () => this.stats.set({ totalVehiculos: 45, reservasActivas: 12, ingresosMes: 15400, clientesActivos: 120 })
+      error: () => this.stats.set({ totalAutos: 45, reservasActivas: 12, ingresosMes: 15400, clientesActivos: 120 })
     });
     this.dashboardService.getReservasHoy().subscribe({
       next: (data) => this.reservasHoy.set(data),

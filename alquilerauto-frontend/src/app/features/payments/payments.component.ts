@@ -54,12 +54,12 @@ import { Pago } from '../../models';
               @for (p of pagos(); track p.idPago) {
                 <tr class="hover:bg-slate-50">
                   <td class="px-4 py-3 text-slate-700">#{{ p.idPago }}</td>
-                  <td class="px-4 py-3 text-slate-700">#{{ p.reserva?.idReserva }}</td>
-                  <td class="px-4 py-3 text-slate-700">{{ p.reserva?.cliente?.nombre }} {{ p.reserva?.cliente?.apellidoPaterno }}</td>
-                  <td class="px-4 py-3 text-slate-700">S/{{ p.montoBase.toFixed(2) }}</td>
-                  <td class="px-4 py-3 text-slate-700">S/{{ p.montoMora.toFixed(2) }}</td>
-                  <td class="px-4 py-3 text-slate-700">S/{{ p.montoDanos.toFixed(2) }}</td>
-                  <td class="px-4 py-3 font-medium text-slate-700">S/{{ p.montoTotalPagado.toFixed(2) }}</td>
+                  <td class="px-4 py-3 text-slate-700">#{{ p.idReserva }}</td>
+                  <td class="px-4 py-3 text-slate-700">{{ p.nombreCliente }}</td>
+                  <td class="px-4 py-3 text-slate-700">\${{ p.montoBase.toFixed(2) }}</td>
+                  <td class="px-4 py-3 text-slate-700">\${{ p.montoMora.toFixed(2) }}</td>
+                  <td class="px-4 py-3 text-slate-700">\${{ p.montoDanos.toFixed(2) }}</td>
+                  <td class="px-4 py-3 font-medium text-slate-700">\${{ p.montoTotalPagado.toFixed(2) }}</td>
                   <td class="px-4 py-3">
                     <span class="badge" [class.badge-info]="p.metodoPago === 'Tarjeta'" [class.badge-success]="p.metodoPago === 'Efectivo'" [class.badge-neutral]="p.metodoPago === 'Transferencia'">{{ p.metodoPago }}</span>
                   </td>

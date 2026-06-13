@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 public record PagoResponse(
         Integer idPago,
         Integer idReserva,
+        String nombreCliente,
         BigDecimal montoBase,
         BigDecimal montoMora,
         BigDecimal montoDanos,

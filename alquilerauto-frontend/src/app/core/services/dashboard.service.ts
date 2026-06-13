@@ -3,7 +3,7 @@ import { ApiService } from './api.service';
 import { Observable } from 'rxjs';
 
 export interface DashboardStats {
-  totalVehiculos: number;
+  totalAutos: number;
   reservasActivas: number;
   ingresosMes: number;
   clientesActivos: number;
@@ -11,9 +11,11 @@ export interface DashboardStats {
 
 export interface ReservaHoy {
   idReserva: number;
-  clienteNombre: string;
+  cliente: string;
   placa: string;
+  fechaInicio: string;
   horaInicio: string;
+  fechaFin: string;
   horaFin: string;
   estado: string;
 }

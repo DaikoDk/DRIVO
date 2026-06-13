@@ -4,13 +4,17 @@ import com.drivo.alquilerauto.dto.ApiResponse;
 import com.drivo.alquilerauto.dto.request.IniciarRequest;
 import com.drivo.alquilerauto.dto.request.ReservaCreateRequest;
 import com.drivo.alquilerauto.dto.request.ReservaFinalizarRequest;
+import com.drivo.alquilerauto.dto.request.ReservaPortalRequest;
 import com.drivo.alquilerauto.dto.response.ReservaResponse;
+import com.drivo.alquilerauto.entity.Cliente;
 import com.drivo.alquilerauto.mapper.ReservaMapper;
+import com.drivo.alquilerauto.repository.ClienteRepository;
 import com.drivo.alquilerauto.service.ReservaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +26,7 @@ public class ReservaController {
 
     private final ReservaService reservaService;
     private final ReservaMapper reservaMapper;
+    private final ClienteRepository clienteRepository;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ReservaResponse>>> findAll(
@@ -72,6 +77,37 @@ public class ReservaController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ReservaResponse>> cancelar(@PathVariable Integer id) {
         ReservaResponse cancelada = reservaService.cancelar(id);
+        return ResponseEntity.ok(ApiResponse.ok(cancelada, "Reserva cancelada exitosamente"));
+    }
+
+    @GetMapping("/mis-reservas")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ResponseEntity<ApiResponse<List<ReservaResponse>>> findMisReservas(
+            Authentication authentication) {
+        Cliente cliente = clienteRepository.findByUsuarioCorreo(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+        List<ReservaResponse> reservas = reservaMapper.toResponseList(
+                reservaService.findMisReservas(cliente.getIdCliente()));
+        return ResponseEntity.ok(ApiResponse.ok(reservas, "Mis reservas obtenidas"));
+    }
+
+    @PostMapping("/desde-portal")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ResponseEntity<ApiResponse<ReservaResponse>> createDesdePortal(
+            @Valid @RequestBody ReservaPortalRequest request,
+            Authentication authentication) {
+        ReservaResponse creada = reservaService.createDesdePortal(request, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(creada, "Reserva creada exitosamente"));
+    }
+
+    @PatchMapping("/{id}/cancelar-desde-portal")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ResponseEntity<ApiResponse<ReservaResponse>> cancelarDesdePortal(
+            @PathVariable Integer id,
+            Authentication authentication) {
+        Cliente cliente = clienteRepository.findByUsuarioCorreo(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+        ReservaResponse cancelada = reservaService.cancelarDesdePortal(id, cliente.getIdCliente());
         return ResponseEntity.ok(ApiResponse.ok(cancelada, "Reserva cancelada exitosamente"));
     }
 }

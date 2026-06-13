@@ -1,6 +1,7 @@
 package com.drivo.alquilerauto.controller;
 
 import com.drivo.alquilerauto.dto.ApiResponse;
+import com.drivo.alquilerauto.dto.request.ClienteMeUpdateRequest;
 import com.drivo.alquilerauto.dto.request.ClienteRequest;
 import com.drivo.alquilerauto.dto.response.ClienteResponse;
 import com.drivo.alquilerauto.service.ClienteService;
@@ -8,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +27,14 @@ public class ClienteController {
         return ResponseEntity.ok(ApiResponse.ok(clientes, "Clientes activos obtenidos"));
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ResponseEntity<ApiResponse<ClienteResponse>> getMe(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                clienteService.getAuthenticatedCliente(authentication.getName()),
+                "Perfil obtenido"));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ClienteResponse>> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(ApiResponse.ok(clienteService.findById(id), "Cliente encontrado"));
@@ -35,6 +45,16 @@ public class ClienteController {
     public ResponseEntity<ApiResponse<ClienteResponse>> create(@Valid @RequestBody ClienteRequest request) {
         ClienteResponse creado = clienteService.create(request);
         return ResponseEntity.ok(ApiResponse.ok(creado, "Cliente creado exitosamente"));
+    }
+
+    @PutMapping("/me")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public ResponseEntity<ApiResponse<ClienteResponse>> updateMe(
+            Authentication authentication,
+            @RequestBody ClienteMeUpdateRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                clienteService.updateMe(authentication.getName(), request),
+                "Perfil actualizado"));
     }
 
     @PutMapping("/{id}")

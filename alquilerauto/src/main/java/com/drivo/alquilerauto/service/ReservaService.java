@@ -3,6 +3,7 @@ package com.drivo.alquilerauto.service;
 import com.drivo.alquilerauto.dto.request.IniciarRequest;
 import com.drivo.alquilerauto.dto.request.ReservaCreateRequest;
 import com.drivo.alquilerauto.dto.request.ReservaFinalizarRequest;
+import com.drivo.alquilerauto.dto.request.ReservaPortalRequest;
 import com.drivo.alquilerauto.dto.response.ReservaResponse;
 import com.drivo.alquilerauto.entity.*;
 import com.drivo.alquilerauto.exception.BadRequestException;
@@ -212,5 +213,48 @@ public class ReservaService {
     @Transactional(readOnly = true)
     public BigDecimal sumIngresosMesActual() {
         return reservaRepository.sumIngresosMesActual();
+    }
+
+    public ReservaResponse createDesdePortal(ReservaPortalRequest request, String correo) {
+        Cliente cliente = clienteRepository.findByUsuarioCorreo(correo)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+
+        ReservaCreateRequest createReq = new ReservaCreateRequest(
+                cliente.getIdCliente(),
+                request.idAuto(),
+                request.fechaInicio(),
+                request.horaInicio(),
+                request.fechaFin(),
+                request.horaFin(),
+                null);
+        return create(createReq);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Reserva> findMisReservas(Integer idCliente) {
+        return reservaRepository.findByClienteIdCliente(idCliente);
+    }
+
+    public ReservaResponse cancelarDesdePortal(Integer idReserva, Integer idClienteAuth) {
+        Reserva reserva = findById(idReserva);
+
+        if (!reserva.getCliente().getIdCliente().equals(idClienteAuth)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "No puedes cancelar una reserva que no te pertenece");
+        }
+
+        if (!"Pendiente".equals(reserva.getEstado())) {
+            throw new BadRequestException("No se puede cancelar");
+        }
+
+        reserva.setEstado("Cancelada");
+        reserva.setFechaFinalizacion(LocalDateTime.now());
+        reservaRepository.save(reserva);
+
+        Auto auto = reserva.getAuto();
+        auto.setEstado("Disponible");
+        autoRepository.save(auto);
+
+        return reservaMapper.toResponse(reserva);
     }
 }

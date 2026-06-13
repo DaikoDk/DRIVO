@@ -19,7 +19,7 @@ export class ConfiguracionService {
   }
 
   getByClave(clave: string): Observable<Configuracion> {
-    return this.api.get<Configuracion>('/configuraciones', { clave });
+    return this.api.get<Configuracion>(`/configuraciones/clave/${clave}`);
   }
 
   create(data: ConfiguracionFormData): Observable<Configuracion> {

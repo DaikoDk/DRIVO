@@ -24,14 +24,17 @@ export class MantenimientoService {
   }
 
   getByAuto(idAuto: number): Observable<Mantenimiento[]> {
-    return this.api.get<Mantenimiento[]>('/mantenimientos', { idAuto });
+    return this.api.get<Mantenimiento[]>(`/mantenimientos/auto/${idAuto}`);
   }
 
   create(data: MantenimientoFormData): Observable<Mantenimiento> {
     return this.api.post<Mantenimiento>('/mantenimientos', data);
   }
 
-  finalizar(id: number, fechaSalida: string): Observable<Mantenimiento> {
-    return this.api.patch<Mantenimiento>('/mantenimientos', id, { fechaSalida });
+  finalizar(id: number, fechaSalida: string, detalle?: string): Observable<Mantenimiento> {
+    return this.api.patchCustom<Mantenimiento>(`/mantenimientos/${id}/finalizar`, {
+      fechaSalida,
+      detalle: detalle || ''
+    });
   }
 }

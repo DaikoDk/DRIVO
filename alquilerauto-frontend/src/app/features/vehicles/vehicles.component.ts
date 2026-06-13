@@ -27,6 +27,25 @@ import { Auto, Marca, Modelo } from '../../models';
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      @if (loading()) {
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="card animate-pulse">
+            <div class="w-full h-32 rounded-lg mb-4 bg-slate-200"></div>
+            <div class="h-4 bg-slate-200 rounded mb-2 w-3/4"></div>
+            <div class="h-3 bg-slate-200 rounded mb-4 w-1/2"></div>
+            <div class="flex justify-between pt-3 border-t border-slate-100">
+              <div class="h-4 bg-slate-200 rounded w-20"></div>
+            </div>
+          </div>
+        }
+      }
+      @if (error()) {
+        <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
+          <span class="material-symbols-outlined text-5xl text-red-300 mb-4">error</span>
+          <p class="text-sm text-red-500 mb-2">{{ error() }}</p>
+          <button class="btn-secondary" (click)="loadAutos()">Reintentar</button>
+        </div>
+      }
       @for (auto of filteredAutos(); track auto.idAuto) {
         <div class="card">
           <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center" [style.background]="'linear-gradient(135deg, ' + getGradient(auto) + ')'">
@@ -35,7 +54,7 @@ import { Auto, Marca, Modelo } from '../../models';
           <div class="flex items-start justify-between mb-2">
             <div>
               <h3 class="text-base font-semibold text-slate-800">{{ auto.placa }}</h3>
-              <p class="text-sm text-slate-500">{{ auto.marca?.nombre || '' }} {{ auto.modelo?.nombre || '' }}</p>
+              <p class="text-sm text-slate-500">{{ auto.marca || '' }} {{ auto.modelo || '' }}</p>
             </div>
             <app-status-badge [status]="auto.estado" [label]="auto.estado"></app-status-badge>
           </div>
@@ -44,7 +63,7 @@ import { Auto, Marca, Modelo } from '../../models';
             <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">speed</span>{{ auto.kilometrajeActual.toLocaleString() }} km</span>
           </div>
           <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-            <p class="text-lg font-bold text-slate-800">\${{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
+            <p class="text-lg font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
             <div class="flex items-center gap-2">
               <button class="btn-sm btn-secondary" (click)="openEditModal(auto)" title="Editar">
                 <span class="material-symbols-outlined text-sm">edit</span>
@@ -76,7 +95,7 @@ import { Auto, Marca, Modelo } from '../../models';
           <div>
             <label class="input-label">Marca *</label>
             <select class="input-field" [(ngModel)]="formData.idMarca" (change)="onMarcaChange()">
-              <option [ngValue]="0" disabled>Seleccionar...</option>
+              <option [ngValue]="0" disabled>{{ loadingMarcas() ? 'Cargando...' : 'Seleccionar...' }}</option>
               @for (m of marcas(); track m.idMarca) {
                 <option [ngValue]="m.idMarca">{{ m.nombre }}</option>
               }
@@ -150,6 +169,9 @@ export class VehiclesComponent implements OnInit {
   readonly autos = signal<Auto[]>([]);
   readonly marcas = signal<Marca[]>([]);
   readonly modelos = signal<Modelo[]>([]);
+  readonly loading = signal(true);
+  readonly loadingMarcas = signal(true);
+  readonly error = signal('');
   readonly currentPage = signal(1);
   readonly searchTerm = signal('');
   readonly showForm = signal(false);
@@ -168,7 +190,19 @@ export class VehiclesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAutos();
-    this.marcaService.getActivos().subscribe({ next: (d) => this.marcas.set(d) });
+    this.marcaService.getActivos().subscribe({
+      next: (d) => { this.marcas.set(d); this.loadingMarcas.set(false); },
+      error: (err) => { this.toast.error('Error al cargar marcas: ' + err.message); this.loadingMarcas.set(false); }
+    });
+  }
+
+  loadAutos(): void {
+    this.loading.set(true);
+    this.error.set('');
+    this.autoService.getAll().subscribe({
+      next: (data) => { this.autos.set(data); this.loading.set(false); },
+      error: (err) => { this.error.set(err.message); this.loading.set(false); }
+    });
   }
 
   readonly filteredAutos = computed(() => {
@@ -176,14 +210,10 @@ export class VehiclesComponent implements OnInit {
     if (!term) return this.autos();
     return this.autos().filter(a =>
       a.placa.toLowerCase().includes(term) ||
-      (a.marca?.nombre || '').toLowerCase().includes(term) ||
-      (a.modelo?.nombre || '').toLowerCase().includes(term)
+      (a.marca || '').toLowerCase().includes(term) ||
+      (a.modelo || '').toLowerCase().includes(term)
     );
   });
-
-  loadAutos(): void {
-    this.autoService.getAll().subscribe({ next: (data) => this.autos.set(data) });
-  }
 
   emptyForm(): AutoFormData {
     return { placa: '', idMarca: 0, idModelo: 0, anio: new Date().getFullYear(), kilometrajeActual: 0, precioPorDia: 0, moraPorDia: 0 };
@@ -196,10 +226,12 @@ export class VehiclesComponent implements OnInit {
   }
 
   openEditModal(auto: Auto): void {
+    const marcaId = this.marcas().find(m => m.nombre === auto.marca)?.idMarca || 0;
+    const modeloId = this.modelos().find(m => m.nombre === auto.modelo)?.idModelo || 0;
     this.formData = {
       placa: auto.placa,
-      idMarca: auto.marca?.idMarca || 0,
-      idModelo: auto.modelo?.idModelo || 0,
+      idMarca: marcaId,
+      idModelo: modeloId,
       anio: auto.anio,
       color: auto.color,
       numeroMotor: auto.numeroMotor,
@@ -210,7 +242,7 @@ export class VehiclesComponent implements OnInit {
       moraPorDia: auto.moraPorDia,
     };
     this.editingAuto.set(auto);
-    if (this.formData.idMarca) this.onMarcaChange();
+    if (marcaId) { this.onMarcaChange(); }
     this.showForm.set(true);
   }
 
@@ -221,7 +253,11 @@ export class VehiclesComponent implements OnInit {
 
   onMarcaChange(): void {
     if (this.formData.idMarca) {
-      this.modeloService.getByMarca(this.formData.idMarca).subscribe({ next: (d) => this.modelos.set(d) });
+      this.modelos.set([]);
+      this.modeloService.getByMarca(this.formData.idMarca).subscribe({
+        next: (d) => this.modelos.set(d),
+        error: (err) => this.toast.error('Error al cargar modelos: ' + err.message)
+      });
     }
   }
 

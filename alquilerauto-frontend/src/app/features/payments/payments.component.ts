@@ -56,10 +56,10 @@ import { Pago } from '../../models';
                   <td class="px-4 py-3 text-slate-700">#{{ p.idPago }}</td>
                   <td class="px-4 py-3 text-slate-700">#{{ p.reserva?.idReserva }}</td>
                   <td class="px-4 py-3 text-slate-700">{{ p.reserva?.cliente?.nombre }} {{ p.reserva?.cliente?.apellidoPaterno }}</td>
-                  <td class="px-4 py-3 text-slate-700">\${{ p.montoBase.toFixed(2) }}</td>
-                  <td class="px-4 py-3 text-slate-700">\${{ p.montoMora.toFixed(2) }}</td>
-                  <td class="px-4 py-3 text-slate-700">\${{ p.montoDanos.toFixed(2) }}</td>
-                  <td class="px-4 py-3 font-medium text-slate-700">\${{ p.montoTotalPagado.toFixed(2) }}</td>
+                  <td class="px-4 py-3 text-slate-700">S/{{ p.montoBase.toFixed(2) }}</td>
+                  <td class="px-4 py-3 text-slate-700">S/{{ p.montoMora.toFixed(2) }}</td>
+                  <td class="px-4 py-3 text-slate-700">S/{{ p.montoDanos.toFixed(2) }}</td>
+                  <td class="px-4 py-3 font-medium text-slate-700">S/{{ p.montoTotalPagado.toFixed(2) }}</td>
                   <td class="px-4 py-3">
                     <span class="badge" [class.badge-info]="p.metodoPago === 'Tarjeta'" [class.badge-success]="p.metodoPago === 'Efectivo'" [class.badge-neutral]="p.metodoPago === 'Transferencia'">{{ p.metodoPago }}</span>
                   </td>
@@ -102,7 +102,7 @@ import { Pago } from '../../models';
           </div>
         </div>
         <div>
-          <label class="input-label">Total: <span class="font-bold text-primary">\${{ (formData.montoBase + formData.montoMora + formData.montoDanos).toFixed(2) }}</span></label>
+          <label class="input-label">Total: <span class="font-bold text-primary">S/{{ (formData.montoBase + formData.montoMora + formData.montoDanos).toFixed(2) }}</span></label>
         </div>
         <div>
           <label class="input-label">Metodo de Pago *</label>

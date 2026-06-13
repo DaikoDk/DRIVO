@@ -47,12 +47,25 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
     java.math.BigDecimal sumIngresosMesActual();
 
     @Query("SELECT r FROM Reserva r WHERE r.auto.idAuto = :idAuto " +
-           "AND r.estado IN ('Pendiente', 'Confirmada', 'En proceso') " +
-           "AND (:idReservaExcluir IS NULL OR r.idReserva != :idReservaExcluir) " +
-           "AND r.fechaInicio <= :fechaFin AND r.fechaFin >= :fechaInicio")
+            "AND r.estado IN ('Pendiente', 'Confirmada', 'En proceso') " +
+            "AND (:idReservaExcluir IS NULL OR r.idReserva != :idReservaExcluir) " +
+            "AND r.fechaInicio <= :fechaFin AND r.fechaFin >= :fechaInicio")
     List<Reserva> findReservasSolapadas(
             @Param("idAuto") Integer idAuto,
             @Param("fechaInicio") LocalDate fechaInicio,
             @Param("fechaFin") LocalDate fechaFin,
             @Param("idReservaExcluir") Integer idReservaExcluir);
+
+    @Query("SELECT r FROM Reserva r JOIN FETCH r.cliente JOIN FETCH r.auto a JOIN FETCH a.marca JOIN FETCH a.modelo " +
+           "WHERE CAST(r.fechaCreacion AS date) = CURRENT_DATE ORDER BY r.fechaCreacion DESC")
+    List<Reserva> findReservasHoy();
+
+    @Query(value = "SELECT FORMAT(fechaFinalizacion, 'yyyy-MM') AS mes, " +
+           "ISNULL(SUM(total), 0) AS monto " +
+           "FROM tb_reserva " +
+           "WHERE estado = 'Finalizada' " +
+           "AND fechaFinalizacion >= DATEADD(MONTH, -5, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)) " +
+           "GROUP BY FORMAT(fechaFinalizacion, 'yyyy-MM') " +
+           "ORDER BY mes", nativeQuery = true)
+    List<Object[]> findIngresosMensuales();
 }

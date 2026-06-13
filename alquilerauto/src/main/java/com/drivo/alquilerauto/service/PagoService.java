@@ -22,7 +22,7 @@ public class PagoService {
 
     @Transactional(readOnly = true)
     public List<Pago> findAll() {
-        return pagoRepository.findAll();
+        return pagoRepository.findAllWithReserva();
     }
 
     @Transactional(readOnly = true)
@@ -45,7 +45,6 @@ public class PagoService {
         pago.setMontoBase(request.montoBase());
         pago.setMontoMora(request.montoMora());
         pago.setMontoDanos(request.montoDanos());
-        pago.setMontoTotalPagado(request.montoTotalPagado());
         pago.setMetodoPago(request.metodoPago());
 
         return pagoRepository.save(pago);

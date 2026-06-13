@@ -8,7 +8,9 @@ public record MantenimientoCreateRequest(
         @NotNull Integer idAuto,
         @NotNull LocalDate fechaIngreso,
         LocalDate fechaSalida,
-        @NotBlank String tipo,
+        @NotBlank
+        @Pattern(regexp = "Preventivo|Correctivo", message = "Tipo de mantenimiento no válido")
+        String tipo,
         @DecimalMin("0") BigDecimal costo,
         String detalle
 ) {

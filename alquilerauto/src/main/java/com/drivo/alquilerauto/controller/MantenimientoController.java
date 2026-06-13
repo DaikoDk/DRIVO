@@ -1,17 +1,17 @@
 package com.drivo.alquilerauto.controller;
 
+import com.drivo.alquilerauto.dto.ApiResponse;
 import com.drivo.alquilerauto.dto.request.MantenimientoCreateRequest;
-import com.drivo.alquilerauto.entity.Mantenimiento;
+import com.drivo.alquilerauto.dto.request.MantenimientoFinalizarRequest;
+import com.drivo.alquilerauto.dto.response.MantenimientoResponse;
 import com.drivo.alquilerauto.service.MantenimientoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/mantenimientos")
@@ -21,37 +21,42 @@ public class MantenimientoController {
     private final MantenimientoService mantenimientoService;
 
     @GetMapping
-    public ResponseEntity<List<Mantenimiento>> findAll() {
-        return ResponseEntity.ok(mantenimientoService.findAll());
+    public ResponseEntity<ApiResponse<List<MantenimientoResponse>>> findAll() {
+        return ResponseEntity.ok(ApiResponse.ok(mantenimientoService.findAll(), "Mantenimientos obtenidos"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Mantenimiento> findById(@PathVariable Integer id) {
-        return ResponseEntity.ok(mantenimientoService.findById(id));
+    public ResponseEntity<ApiResponse<MantenimientoResponse>> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.ok(mantenimientoService.findById(id), "Mantenimiento encontrado"));
     }
 
     @GetMapping("/auto/{idAuto}")
-    public ResponseEntity<List<Mantenimiento>> findByAuto(@PathVariable Integer idAuto) {
-        return ResponseEntity.ok(mantenimientoService.findByAuto(idAuto));
+    public ResponseEntity<ApiResponse<List<MantenimientoResponse>>> findByAuto(
+            @PathVariable Integer idAuto) {
+        return ResponseEntity.ok(ApiResponse.ok(mantenimientoService.findByAuto(idAuto),
+                "Mantenimientos del auto obtenidos"));
     }
 
-    @GetMapping("/pendientes")
-    public ResponseEntity<List<Mantenimiento>> findPendientes() {
-        return ResponseEntity.ok(mantenimientoService.findPendientes());
+    @GetMapping("/en-curso")
+    public ResponseEntity<ApiResponse<List<MantenimientoResponse>>> findEnCurso() {
+        return ResponseEntity.ok(ApiResponse.ok(mantenimientoService.findEnCurso(),
+                "Mantenimientos en curso obtenidos"));
     }
 
     @PostMapping
-    public ResponseEntity<Mantenimiento> create(@Valid @RequestBody MantenimientoCreateRequest request) {
-        return ResponseEntity.ok(mantenimientoService.create(request));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<MantenimientoResponse>> create(
+            @Valid @RequestBody MantenimientoCreateRequest request) {
+        MantenimientoResponse creado = mantenimientoService.create(request);
+        return ResponseEntity.ok(ApiResponse.ok(creado, "Mantenimiento creado exitosamente"));
     }
 
-    @PutMapping("/{id}/finalizar")
-    public ResponseEntity<Mantenimiento> finalizar(@PathVariable Integer id,
-                                                    @RequestBody Map<String, Object> body) {
-        LocalDate fechaSalida = body.get("fechaSalida") != null
-                ? LocalDate.parse(body.get("fechaSalida").toString())
-                : LocalDate.now();
-        String detalle = body.get("detalle") != null ? body.get("detalle").toString() : null;
-        return ResponseEntity.ok(mantenimientoService.finalizar(id, fechaSalida, detalle));
+    @PatchMapping("/{id}/finalizar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<MantenimientoResponse>> finalizar(
+            @PathVariable Integer id,
+            @Valid @RequestBody MantenimientoFinalizarRequest request) {
+        MantenimientoResponse finalizado = mantenimientoService.finalizar(id, request);
+        return ResponseEntity.ok(ApiResponse.ok(finalizado, "Mantenimiento finalizado exitosamente"));
     }
 }

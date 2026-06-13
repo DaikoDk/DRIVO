@@ -9,6 +9,7 @@ public record ReparacionCreateRequest(
         Integer idCatalogoReparacion,
         @NotBlank String descripcion,
         @NotNull @DecimalMin("0") BigDecimal costo,
+        @Pattern(regexp = "Cliente|Empresa|Seguro", message = "Responsable no válido")
         String responsable,
         String usuarioReporte
 ) {}

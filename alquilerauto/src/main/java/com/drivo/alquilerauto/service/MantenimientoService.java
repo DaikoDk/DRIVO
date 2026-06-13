@@ -1,15 +1,19 @@
 package com.drivo.alquilerauto.service;
 
 import com.drivo.alquilerauto.dto.request.MantenimientoCreateRequest;
+import com.drivo.alquilerauto.dto.request.MantenimientoFinalizarRequest;
+import com.drivo.alquilerauto.dto.response.MantenimientoResponse;
 import com.drivo.alquilerauto.entity.Auto;
 import com.drivo.alquilerauto.entity.Mantenimiento;
 import com.drivo.alquilerauto.exception.ResourceNotFoundException;
+import com.drivo.alquilerauto.mapper.MantenimientoMapper;
 import com.drivo.alquilerauto.repository.AutoRepository;
 import com.drivo.alquilerauto.repository.MantenimientoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -19,39 +23,39 @@ public class MantenimientoService {
 
     private final MantenimientoRepository repository;
     private final AutoRepository autoRepository;
+    private final MantenimientoMapper mapper;
 
     @Transactional(readOnly = true)
-    public List<Mantenimiento> findAll() {
-        return repository.findAll();
+    public List<MantenimientoResponse> findAll() {
+        return mapper.toResponseList(repository.findAll());
     }
 
     @Transactional(readOnly = true)
-    public Mantenimiento findById(Integer id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mantenimiento no encontrado"));
+    public MantenimientoResponse findById(Integer id) {
+        Mantenimiento mantenimiento = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Mantenimiento no encontrado con id: " + id));
+        return mapper.toResponse(mantenimiento);
     }
 
     @Transactional(readOnly = true)
-    public List<Mantenimiento> findByAuto(Integer idAuto) {
-        return repository.findByAutoIdAuto(idAuto);
+    public List<MantenimientoResponse> findByAuto(Integer idAuto) {
+        return mapper.toResponseList(repository.findByAutoIdAuto(idAuto));
     }
 
     @Transactional(readOnly = true)
-    public List<Mantenimiento> findPendientes() {
-        return repository.findByFechaSalidaIsNull();
+    public List<MantenimientoResponse> findEnCurso() {
+        return mapper.toResponseList(repository.findByFechaSalidaIsNull());
     }
 
-    public Mantenimiento create(MantenimientoCreateRequest request) {
+    public MantenimientoResponse create(MantenimientoCreateRequest request) {
         Auto auto = autoRepository.findById(request.idAuto())
-                .orElseThrow(() -> new ResourceNotFoundException("Auto no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Auto no encontrado con id: " + request.idAuto()));
 
-        Mantenimiento mantenimiento = new Mantenimiento();
+        Mantenimiento mantenimiento = mapper.toEntity(request);
         mantenimiento.setAuto(auto);
-        mantenimiento.setFechaIngreso(request.fechaIngreso());
-        mantenimiento.setFechaSalida(request.fechaSalida());
-        mantenimiento.setTipo(request.tipo());
-        mantenimiento.setCosto(request.costo());
-        mantenimiento.setDetalle(request.detalle());
+        if (request.fechaSalida() != null) {
+            mantenimiento.setFechaSalida(request.fechaSalida());
+        }
 
         Mantenimiento saved = repository.save(mantenimiento);
 
@@ -60,21 +64,25 @@ public class MantenimientoService {
             autoRepository.save(auto);
         }
 
-        return saved;
+        return mapper.toResponse(saved);
     }
 
-    public Mantenimiento finalizar(Integer id, java.time.LocalDate fechaSalida, String detalle) {
-        Mantenimiento mantenimiento = findById(id);
+    public MantenimientoResponse finalizar(Integer id, MantenimientoFinalizarRequest request) {
+        Mantenimiento mantenimiento = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Mantenimiento no encontrado con id: " + id));
+
+        LocalDate fechaSalida = request.fechaSalida() != null ? request.fechaSalida() : LocalDate.now();
         mantenimiento.setFechaSalida(fechaSalida);
-        if (detalle != null) {
-            mantenimiento.setDetalle(detalle);
+        if (request.detalle() != null) {
+            mantenimiento.setDetalle(request.detalle());
         }
+
         Mantenimiento saved = repository.save(mantenimiento);
 
         Auto auto = mantenimiento.getAuto();
         auto.setEstado("Disponible");
         autoRepository.save(auto);
 
-        return saved;
+        return mapper.toResponse(saved);
     }
 }

@@ -1,5 +1,6 @@
 package com.drivo.alquilerauto.service;
 
+import com.drivo.alquilerauto.dto.response.CatalogoReparacionResponse;
 import com.drivo.alquilerauto.entity.CatalogoReparacion;
 import com.drivo.alquilerauto.exception.ResourceNotFoundException;
 import com.drivo.alquilerauto.repository.CatalogoReparacionRepository;

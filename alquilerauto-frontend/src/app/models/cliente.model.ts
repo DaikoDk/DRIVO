@@ -1,5 +1,3 @@
-import { Licencia } from './licencia.model';
-
 export interface Cliente {
   idCliente: number;
   nombre: string;
@@ -9,7 +7,10 @@ export interface Cliente {
   telefono?: string;
   email: string;
   direccion?: string;
-  licencia?: Licencia;
+  idLicencia?: number;
+  numeroLicencia?: string;
+  categoriaLicencia?: string;
+  fechaVencimientoLicencia?: string;
   numeroReservas: number;
   numeroIncidentes: number;
   bloqueado: boolean;

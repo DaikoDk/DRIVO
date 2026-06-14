@@ -49,7 +49,7 @@ public class ReservaService {
 
     @Transactional(readOnly = true)
     public List<Reserva> findByCliente(Integer idCliente) {
-        return reservaRepository.findByClienteIdCliente(idCliente);
+        return reservaRepository.findByClienteIdClienteWithDetails(idCliente);
     }
 
     @Transactional(readOnly = true)
@@ -232,7 +232,7 @@ public class ReservaService {
 
     @Transactional(readOnly = true)
     public List<Reserva> findMisReservas(Integer idCliente) {
-        return reservaRepository.findByClienteIdCliente(idCliente);
+        return reservaRepository.findByClienteIdClienteWithDetails(idCliente);
     }
 
     public ReservaResponse cancelarDesdePortal(Integer idReserva, Integer idClienteAuth) {

@@ -17,8 +17,14 @@ export interface ClienteFormData {
 }
 
 export interface ClienteMeUpdateData {
+  nombre?: string;
+  apellidoPaterno?: string;
+  apellidoMaterno?: string;
   telefono?: string;
   direccion?: string;
+  numeroLicencia?: string;
+  categoriaLicencia?: string;
+  fechaVencimientoLicencia?: string;
 }
 
 @Injectable({ providedIn: 'root' })

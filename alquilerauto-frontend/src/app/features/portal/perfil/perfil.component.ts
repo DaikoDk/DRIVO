@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ClienteService, ClienteFormData } from '../../../core/services/cliente.service';
@@ -14,6 +14,11 @@ import { Cliente } from '../../../models';
       <h1 class="text-3xl font-bold text-slate-800 mb-2">Mi Perfil</h1>
       <p class="text-slate-500 mb-8">Gestiona tu informacion personal</p>
 
+      @if (loading()) {
+        <div class="flex items-center justify-center py-16">
+          <p class="text-slate-400">Cargando perfil...</p>
+        </div>
+      } @else {
       <div class="space-y-6">
         <!-- Datos personales -->
         <div class="card">
@@ -75,23 +80,27 @@ import { Cliente } from '../../../models';
         </div>
 
         <!-- Seguridad -->
-        <div class="card">
-          <h2 class="text-lg font-semibold text-slate-800 mb-4">Seguridad</h2>
-          <p class="text-sm text-slate-500 mb-4">Cambia tu contrasena</p>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="input-label">Nueva Clave</label>
-              <input class="input-field" type="password" [(ngModel)]="newPassword" placeholder="Minimo 6 caracteres" />
+          <div class="card">
+            <h2 class="text-lg font-semibold text-slate-800 mb-4">Seguridad</h2>
+            <p class="text-sm text-slate-500 mb-4">Cambia tu contrasena</p>
+            <div class="grid md:grid-cols-3 gap-4">
+              <div>
+                <label class="input-label">Clave Actual</label>
+                <input class="input-field" type="password" [(ngModel)]="claveActual" placeholder="Tu clave actual" />
+              </div>
+              <div>
+                <label class="input-label">Nueva Clave</label>
+                <input class="input-field" type="password" [(ngModel)]="newPassword" placeholder="Minimo 6 caracteres" />
+              </div>
+              <div>
+                <label class="input-label">Confirmar Clave</label>
+                <input class="input-field" type="password" [(ngModel)]="confirmPassword" placeholder="Repite la clave" />
+              </div>
             </div>
-            <div>
-              <label class="input-label">Confirmar Clave</label>
-              <input class="input-field" type="password" [(ngModel)]="confirmPassword" placeholder="Repite la clave" />
-            </div>
+            <button class="btn-secondary mt-4" [disabled]="!claveActual || !newPassword() || !confirmPassword() || newPassword() !== confirmPassword()" (click)="changePassword()">
+              Cambiar Clave
+            </button>
           </div>
-          <button class="btn-secondary mt-4" [disabled]="!newPassword || newPassword !== confirmPassword" (click)="changePassword()">
-            Cambiar Clave
-          </button>
-        </div>
 
         <div class="pt-4 border-t border-slate-200">
           <button class="btn-danger" (click)="auth.logout()">
@@ -99,14 +108,17 @@ import { Cliente } from '../../../models';
           </button>
         </div>
       </div>
+      }
     </div>
   `
 })
-export class PerfilComponent {
+export class PerfilComponent implements OnInit {
   readonly auth: AuthService;
   readonly saving = signal(false);
+  readonly loading = signal(true);
   readonly newPassword = signal('');
   readonly confirmPassword = signal('');
+  claveActual = '';
 
   form: ClienteFormData = {
     nombre: '',
@@ -114,6 +126,8 @@ export class PerfilComponent {
     dni: '',
     email: '',
   };
+
+  private clienteId: number | null = null;
 
   constructor(
     auth: AuthService,
@@ -123,9 +137,45 @@ export class PerfilComponent {
     this.auth = auth;
   }
 
+  ngOnInit(): void {
+    this.clienteService.getMe().subscribe({
+      next: (c) => {
+        console.log('Perfil cargado:', JSON.stringify(c));
+        this.clienteId = c.idCliente;
+        this.form = {
+          nombre: c.nombre || '',
+          apellidoPaterno: c.apellidoPaterno || '',
+          apellidoMaterno: c.apellidoMaterno || '',
+          dni: c.dni || '',
+          telefono: c.telefono || '',
+          email: c.email || '',
+          direccion: c.direccion || '',
+          numeroLicencia: c.numeroLicencia || '',
+          categoriaLicencia: c.categoriaLicencia || '',
+          fechaVencimientoLicencia: c.fechaVencimientoLicencia || '',
+        };
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error cargando perfil:', err);
+        this.toast.error('No se pudo cargar el perfil');
+        this.loading.set(false);
+      }
+    });
+  }
+
   saveProfile(): void {
     this.saving.set(true);
-    this.clienteService.create(this.form).subscribe({
+    this.clienteService.updateMe({
+      nombre: this.form.nombre,
+      apellidoPaterno: this.form.apellidoPaterno,
+      apellidoMaterno: this.form.apellidoMaterno,
+      telefono: this.form.telefono,
+      direccion: this.form.direccion,
+      numeroLicencia: this.form.numeroLicencia,
+      categoriaLicencia: this.form.categoriaLicencia,
+      fechaVencimientoLicencia: this.form.fechaVencimientoLicencia,
+    }).subscribe({
       next: () => {
         this.toast.success('Perfil actualizado');
         this.saving.set(false);
@@ -138,6 +188,10 @@ export class PerfilComponent {
   }
 
   changePassword(): void {
+    if (!this.claveActual) {
+      this.toast.warning('Ingrese su clave actual');
+      return;
+    }
     if (!this.newPassword() || this.newPassword().length < 6) {
       this.toast.warning('La clave debe tener al menos 6 caracteres');
       return;
@@ -146,9 +200,14 @@ export class PerfilComponent {
       this.toast.warning('Las claves no coinciden');
       return;
     }
-    // Password change would go to a dedicated endpoint
-    this.toast.success('Clave cambiada exitosamente');
-    this.newPassword.set('');
-    this.confirmPassword.set('');
+    this.auth.cambiarClave(this.claveActual, this.newPassword()).subscribe({
+      next: () => {
+        this.toast.success('Clave cambiada exitosamente');
+        this.claveActual = '';
+        this.newPassword.set('');
+        this.confirmPassword.set('');
+      },
+      error: (err) => this.toast.error(err.message)
+    });
   }
 }

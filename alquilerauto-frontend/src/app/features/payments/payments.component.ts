@@ -4,8 +4,9 @@ import { DatePipe } from '@angular/common';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { PagoService, PagoFormData } from '../../core/services/pago.service';
+import { ReservaService } from '../../core/services/reserva.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Pago } from '../../models';
+import { Pago, Reserva } from '../../models';
 
 @Component({
   selector: 'app-payments',
@@ -84,7 +85,9 @@ import { Pago } from '../../models';
           <label class="input-label">Reserva *</label>
           <select class="input-field" [(ngModel)]="formData.idReserva">
             <option [ngValue]="0" disabled>Seleccionar...</option>
-            <option value="1">#1 - Cliente Demo</option>
+            @for (r of reservas(); track r.idReserva) {
+              <option [ngValue]="r.idReserva">#{{ r.idReserva }} - {{ r.nombreCliente }}</option>
+            }
           </select>
         </div>
         <div class="grid grid-cols-3 gap-4">
@@ -123,6 +126,7 @@ import { Pago } from '../../models';
 })
 export class PaymentsComponent implements OnInit {
   readonly pagos = signal<Pago[]>([]);
+  readonly reservas = signal<Reserva[]>([]);
   readonly showRegisterModal = signal(false);
   readonly filterDate = signal('');
 
@@ -130,11 +134,13 @@ export class PaymentsComponent implements OnInit {
 
   constructor(
     private readonly pagoService: PagoService,
+    private readonly reservaService: ReservaService,
     private readonly toast: ToastService
   ) {}
 
   ngOnInit(): void {
     this.pagoService.getAll().subscribe({ next: (data) => this.pagos.set(data) });
+    this.reservaService.getAll().subscribe({ next: (data) => this.reservas.set(data) });
   }
 
   openRegisterModal(): void {

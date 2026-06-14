@@ -13,31 +13,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/dashboard")
+@RequiredArgsConstructor
 public class DashboardController {
 
-    @GetMapping("/stats")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getStats() {
-        Map<String, Object> stats = new LinkedHashMap<>();
-        stats.put("totalVehiculos", 0);
-        stats.put("vehiculosDisponibles", 0);
-        stats.put("reservasActivas", 0);
-        stats.put("ingresosMes", 0);
-        return ResponseEntity.ok(ApiResponse.ok(stats, "Estadisticas obtenidas"));
-    }
+    private final DashboardService dashboardService;
 
-    @GetMapping("/reservas-hoy")
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getReservasHoy() {
-        return ResponseEntity.ok(ApiResponse.ok(Collections.emptyList(), "Reservas de hoy"));
-    }
-
-    @GetMapping("/vehiculos-mantenimiento")
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getVehiculosMantenimiento() {
-        return ResponseEntity.ok(ApiResponse.ok(Collections.emptyList(), "Vehiculos en mantenimiento"));
-    }
-
-    @GetMapping("/ingresos-mensuales")
-    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getIngresosMensuales() {
-        return ResponseEntity.ok(ApiResponse.ok(Collections.emptyList(), "Ingresos mensuales"));
+    @GetMapping
+    public ResponseEntity<DashboardResponse> getDashboard() {
+        return ResponseEntity.ok(dashboardService.getResumen());
     }
 
     @GetMapping("/stats")

@@ -1,9 +1,11 @@
 package com.drivo.alquilerauto.service;
 
 import com.drivo.alquilerauto.dto.request.PagoCreateRequest;
+import com.drivo.alquilerauto.dto.response.PagoResponse;
 import com.drivo.alquilerauto.entity.Pago;
 import com.drivo.alquilerauto.entity.Reserva;
 import com.drivo.alquilerauto.exception.ResourceNotFoundException;
+import com.drivo.alquilerauto.mapper.PagoMapper;
 import com.drivo.alquilerauto.repository.PagoRepository;
 import com.drivo.alquilerauto.repository.ReservaRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,24 +21,26 @@ public class PagoService {
 
     private final PagoRepository pagoRepository;
     private final ReservaRepository reservaRepository;
+    private final PagoMapper pagoMapper;
 
     @Transactional(readOnly = true)
-    public List<Pago> findAll() {
-        return pagoRepository.findAllWithReserva();
+    public List<PagoResponse> findAll() {
+        return pagoMapper.toResponseList(pagoRepository.findAllWithReserva());
     }
 
     @Transactional(readOnly = true)
-    public Pago findById(Integer id) {
-        return pagoRepository.findById(id)
+    public PagoResponse findById(Integer id) {
+        Pago pago = pagoRepository.findByIdWithReserva(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con id: " + id));
+        return pagoMapper.toResponse(pago);
     }
 
     @Transactional(readOnly = true)
-    public List<Pago> findByReserva(Integer idReserva) {
-        return pagoRepository.findByReservaIdReserva(idReserva);
+    public List<PagoResponse> findByReserva(Integer idReserva) {
+        return pagoMapper.toResponseList(pagoRepository.findByReservaIdReservaWithCliente(idReserva));
     }
 
-    public Pago create(PagoCreateRequest request) {
+    public PagoResponse create(PagoCreateRequest request) {
         Reserva reserva = reservaRepository.findById(request.idReserva())
                 .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
 
@@ -47,6 +51,6 @@ public class PagoService {
         pago.setMontoDanos(request.montoDanos());
         pago.setMetodoPago(request.metodoPago());
 
-        return pagoRepository.save(pago);
+        return pagoMapper.toResponse(pagoRepository.save(pago));
     }
 }

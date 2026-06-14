@@ -5,9 +5,8 @@ import { DatePipe } from '@angular/common';
 import { AutoService } from '../../../core/services/auto.service';
 import { ReservaService } from '../../../core/services/reserva.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { ClienteService } from '../../../core/services/cliente.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Auto, Cliente } from '../../../models';
+import { Auto } from '../../../models';
 
 @Component({
   selector: 'app-auto-detail',
@@ -144,7 +143,6 @@ export class AutoDetailComponent implements OnInit {
     private readonly autoService: AutoService,
     private readonly reservaService: ReservaService,
     private readonly auth: AuthService,
-    private readonly clienteService: ClienteService,
     private readonly toast: ToastService
   ) {}
 
@@ -189,39 +187,19 @@ export class AutoDetailComponent implements OnInit {
     this.loading.set(true);
     this.msg.set('');
 
-    // Find current user's cliente
-    this.clienteService.getAll().subscribe({
-      next: (clientes) => {
-        const userEmail = this.auth.currentUser()?.nombre; // This is basic, will improve when backend returns cliente ID
-        const cliente = clientes[0]; // Temporary: in real app, backend returns the linked cliente
-        if (!cliente) {
-          this.msg.set('Error: perfil de cliente no encontrado');
-          this.isError.set(true);
-          this.loading.set(false);
-          return;
-        }
-
-        this.reservaService.create({
-          idCliente: cliente.idCliente,
-          idAuto: this.auto()!.idAuto,
-          fechaInicio: this.fechaInicio,
-          horaInicio: this.horaInicio,
-          fechaFin: this.fechaFin,
-          horaFin: this.horaFin,
-        }).subscribe({
-          next: () => {
-            this.toast.success('Reserva creada exitosamente');
-            this.router.navigate(['/portal/mis-reservas']);
-          },
-          error: (err) => {
-            this.msg.set(err.message || 'Error al crear reserva');
-            this.isError.set(true);
-            this.loading.set(false);
-          }
-        });
+    this.reservaService.createDesdePortal({
+      idAuto: this.auto()!.idAuto,
+      fechaInicio: this.fechaInicio,
+      horaInicio: this.horaInicio,
+      fechaFin: this.fechaFin,
+      horaFin: this.horaFin,
+    }).subscribe({
+      next: () => {
+        this.toast.success('Reserva creada exitosamente');
+        this.router.navigate(['/portal/mis-reservas']);
       },
       error: (err) => {
-        this.msg.set('Error al obtener datos del cliente');
+        this.msg.set(err.message || 'Error al crear reserva');
         this.isError.set(true);
         this.loading.set(false);
       }

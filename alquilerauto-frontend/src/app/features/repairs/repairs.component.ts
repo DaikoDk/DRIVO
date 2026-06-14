@@ -1,12 +1,14 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { ReparacionService, ReparacionFormData } from '../../core/services/reparacion.service';
+import { ReservaService } from '../../core/services/reserva.service';
+import { AutoService } from '../../core/services/auto.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Reparacion, CatalogoReparacion } from '../../models';
+import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
 
 @Component({
   selector: 'app-repairs',
@@ -113,16 +115,28 @@ import { Reparacion, CatalogoReparacion } from '../../models';
       <div class="space-y-4">
         <div>
           <label class="input-label">Reserva *</label>
-          <select class="input-field" [(ngModel)]="formData.idReserva">
+          <select class="input-field" [(ngModel)]="formData.idReserva" (ngModelChange)="onReservaChange()">
             <option [ngValue]="0" disabled>Seleccionar...</option>
-            <option value="1">#1</option>
+            @for (r of reservas(); track r.idReserva) {
+              <option [ngValue]="r.idReserva">#{{ r.idReserva }} - {{ r.nombreCliente }} ({{ r.placa }})</option>
+            }
           </select>
         </div>
         <div>
           <label class="input-label">Vehiculo *</label>
           <select class="input-field" [(ngModel)]="formData.idAuto">
             <option [ngValue]="0" disabled>Seleccionar...</option>
-            <option value="1">ABC-123</option>
+            @if (formData.idReserva) {
+              @for (r of reservas(); track r.idReserva) {
+                @if (r.idReserva === formData.idReserva && r.idAuto) {
+                  <option [ngValue]="r.idAuto">{{ r.placa }} - {{ r.marca }} {{ r.modelo }}</option>
+                }
+              }
+            } @else {
+              @for (a of autos(); track a.idAuto) {
+                <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }}</option>
+              }
+            }
           </select>
         </div>
         <div>
@@ -164,6 +178,8 @@ import { Reparacion, CatalogoReparacion } from '../../models';
 export class RepairsComponent implements OnInit {
   readonly reparaciones = signal<Reparacion[]>([]);
   readonly catalogo = signal<CatalogoReparacion[]>([]);
+  readonly reservas = signal<Reserva[]>([]);
+  readonly autos = signal<Auto[]>([]);
   readonly activeTab = signal<'activas' | 'historial'>('activas');
   readonly expandedId = signal<number | null>(null);
   readonly showReportModal = signal(false);
@@ -187,12 +203,17 @@ export class RepairsComponent implements OnInit {
 
   constructor(
     private readonly reparacionService: ReparacionService,
-    private readonly toast: ToastService
+    private readonly reservaService: ReservaService,
+    private readonly autoService: AutoService,
+    private readonly toast: ToastService,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.reparacionService.getAll().subscribe({ next: (data) => this.reparaciones.set(data) });
     this.reparacionService.getCatalogo().subscribe({ next: (data) => this.catalogo.set(data) });
+    this.reservaService.getAll().subscribe({ next: (data) => this.reservas.set(data) });
+    this.autoService.getAll().subscribe({ next: (data) => this.autos.set(data) });
   }
 
   toggleExpand(r: Reparacion): void {
@@ -202,6 +223,14 @@ export class RepairsComponent implements OnInit {
   openReportModal(): void {
     this.formData = { idReserva: 0, idAuto: 0, descripcion: '', costo: 0, responsable: 'Cliente' };
     this.showReportModal.set(true);
+  }
+
+  onReservaChange(): void {
+    const reserva = this.reservas().find(r => r.idReserva === this.formData.idReserva);
+    if (reserva?.idAuto) {
+      this.formData.idAuto = reserva.idAuto;
+      setTimeout(() => this.cdr.detectChanges());
+    }
   }
 
   reportRepair(): void {

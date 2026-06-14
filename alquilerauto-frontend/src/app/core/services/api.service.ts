@@ -25,57 +25,57 @@ export class ApiService {
         }
       });
     }
-    return this.http.get<ApiResponse<T>>(`${this.baseUrl}${path}`, { params: httpParams }).pipe(
-      map((res) => res.data),
+    return this.http.get<T>(`${this.baseUrl}${path}`, { params: httpParams }).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res) as T),
       catchError((error) => this.handleError(error))
     );
   }
 
   getById<T>(path: string, id: number): Observable<T> {
-    return this.http.get<ApiResponse<T>>(`${this.baseUrl}${path}/${id}`).pipe(
-      map((res) => res.data),
+    return this.http.get<T>(`${this.baseUrl}${path}/${id}`).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res) as T),
       catchError((error) => this.handleError(error))
     );
   }
 
   post<T>(path: string, body: unknown): Observable<T> {
-    return this.http.post<ApiResponse<T>>(`${this.baseUrl}${path}`, body).pipe(
-      map((res) => res.data),
+    return this.http.post<T>(`${this.baseUrl}${path}`, body).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res) as T),
       catchError((error) => this.handleError(error))
     );
   }
 
   put<T>(path: string, id: number, body: unknown): Observable<T> {
-    return this.http.put<ApiResponse<T>>(`${this.baseUrl}${path}/${id}`, body).pipe(
-      map((res) => res.data),
+    return this.http.put<T>(`${this.baseUrl}${path}/${id}`, body).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res) as T),
       catchError((error) => this.handleError(error))
     );
   }
 
   putCustom<T>(path: string, body: unknown): Observable<T> {
-    return this.http.put<ApiResponse<T>>(`${this.baseUrl}${path}`, body).pipe(
-      map((res) => res.data),
+    return this.http.put<T>(`${this.baseUrl}${path}`, body).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res) as T),
       catchError((error) => this.handleError(error))
     );
   }
 
   delete<T>(path: string, id: number): Observable<T> {
-    return this.http.delete<ApiResponse<T>>(`${this.baseUrl}${path}/${id}`).pipe(
-      map((res) => res.data),
+    return this.http.delete<T>(`${this.baseUrl}${path}/${id}`).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res) as T),
       catchError((error) => this.handleError(error))
     );
   }
 
   patch<T>(path: string, id: number, body: unknown): Observable<T> {
-    return this.http.patch<ApiResponse<T>>(`${this.baseUrl}${path}/${id}`, body).pipe(
-      map((res) => res.data),
+    return this.http.patch<T>(`${this.baseUrl}${path}/${id}`, body).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res) as T),
       catchError((error) => this.handleError(error))
     );
   }
 
   patchCustom<T>(path: string, body: unknown = {}): Observable<T> {
-    return this.http.patch<ApiResponse<T>>(`${this.baseUrl}${path}`, body).pipe(
-      map((res) => res.data),
+    return this.http.patch<T>(`${this.baseUrl}${path}`, body).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res) as T),
       catchError((error) => this.handleError(error))
     );
   }
@@ -90,6 +90,7 @@ export class ApiService {
       });
     }
     return this.http.get<{ content: T[]; totalElements: number; totalPages: number }>(`${this.baseUrl}${path}`, { params: httpParams }).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res)),
       catchError((error) => this.handleError(error))
     );
   }

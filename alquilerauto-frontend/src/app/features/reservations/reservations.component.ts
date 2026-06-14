@@ -58,8 +58,8 @@ import { Reserva, Cliente, Auto } from '../../models';
             @for (r of reservas(); track r.idReserva) {
               <tr class="hover:bg-slate-50">
                 <td class="px-4 py-3 text-slate-700">#{{ r.idReserva }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.cliente?.nombre }} {{ r.cliente?.apellidoPaterno }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.auto?.placa }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.nombreCliente }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.placa }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio | date:'dd/MM' }} {{ r.horaInicio }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd/MM' }} {{ r.horaFin }}</td>
                 <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.total.toFixed(2) }}</td>
@@ -169,11 +169,11 @@ import { Reserva, Cliente, Auto } from '../../models';
           <div class="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p class="text-slate-500">Cliente</p>
-              <p class="font-medium text-slate-800">{{ selectedReserva()?.cliente?.nombre }} {{ selectedReserva()?.cliente?.apellidoPaterno }}</p>
+              <p class="font-medium text-slate-800">{{ selectedReserva()?.nombreCliente }}</p>
             </div>
             <div>
               <p class="text-slate-500">Vehiculo</p>
-              <p class="font-medium text-slate-800">{{ selectedReserva()?.auto?.placa }} - {{ selectedReserva()?.auto?.marca }}</p>
+              <p class="font-medium text-slate-800">{{ selectedReserva()?.placa }} - {{ selectedReserva()?.marca }}</p>
             </div>
             <div>
               <p class="text-slate-500">Fecha/Hora Inicio</p>

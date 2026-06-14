@@ -83,8 +83,8 @@ import { Cliente } from '../../models';
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       <div>
                         <p class="font-medium text-slate-600 mb-1">Licencia</p>
-                        <p class="text-slate-700">{{ c.licencia?.numeroLicencia || 'No registrada' }}</p>
-                        <p class="text-slate-500 text-xs">Cat: {{ c.licencia?.categoria || '-' }} | Vence: {{ c.licencia?.fechaVencimiento ? (c.licencia!.fechaVencimiento | date:'dd/MM/yy') : '-' }}</p>
+                        <p class="text-slate-700">{{ c.numeroLicencia || 'No registrada' }}</p>
+                        <p class="text-slate-500 text-xs">Cat: {{ c.categoriaLicencia || '-' }} | Vence: {{ c.fechaVencimientoLicencia ? (c.fechaVencimientoLicencia | date:'dd/MM/yy') : '-' }}</p>
                       </div>
                       <div>
                         <p class="font-medium text-slate-600 mb-1">Direccion</p>
@@ -232,9 +232,9 @@ export class ClientsComponent implements OnInit {
       telefono: client.telefono,
       email: client.email,
       direccion: client.direccion,
-      numeroLicencia: client.licencia?.numeroLicencia,
-      categoriaLicencia: client.licencia?.categoria,
-      fechaVencimientoLicencia: client.licencia?.fechaVencimiento,
+      numeroLicencia: client.numeroLicencia,
+      categoriaLicencia: client.categoriaLicencia,
+      fechaVencimientoLicencia: client.fechaVencimientoLicencia,
     };
     this.editingClient.set(client);
     this.showForm.set(true);

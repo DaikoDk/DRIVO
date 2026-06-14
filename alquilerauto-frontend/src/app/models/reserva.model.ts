@@ -1,10 +1,12 @@
-import { Cliente } from './cliente.model';
-import { Auto } from './auto.model';
-
 export interface Reserva {
   idReserva: number;
-  cliente: Cliente;
-  auto: Auto;
+  idCliente: number;
+  nombreCliente: string;
+  dniCliente?: string;
+  idAuto: number;
+  placa: string;
+  marca: string;
+  modelo: string;
   fechaInicio: string;
   horaInicio: string;
   fechaFin: string;

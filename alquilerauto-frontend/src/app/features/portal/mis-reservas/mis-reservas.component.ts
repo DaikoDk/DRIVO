@@ -4,12 +4,13 @@ import { DatePipe } from '@angular/common';
 import { ReservaService } from '../../../core/services/reserva.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { Reserva } from '../../../models';
 
 @Component({
   selector: 'app-mis-reservas',
   standalone: true,
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, ConfirmDialogComponent],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-8">
       <h1 class="text-3xl font-bold text-slate-800 mb-2">Mis Reservas</h1>
@@ -28,12 +29,12 @@ import { Reserva } from '../../../models';
             <thead>
               <tr class="border-b border-slate-200">
                 <th class="px-4 py-3 text-left font-medium text-slate-600">ID</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Vehiculo</th>
+                <th class="px-4 py-3 text-left font-medium text-slate-600">Vehículo</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Inicio</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Fin</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Total</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Estado</th>
-                <th class="px-4 py-3 text-right font-medium text-slate-600">Accion</th>
+                <th class="px-4 py-3 text-right font-medium text-slate-600">Acción</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -58,8 +59,8 @@ import { Reserva } from '../../../models';
                 <tr>
                   <td colspan="7" class="px-4 py-16 text-center">
                     <span class="material-symbols-outlined text-5xl text-slate-300 mb-3 block">calendar_month</span>
-                    <p class="text-slate-500 mb-2">No tienes reservas aun</p>
-                    <a routerLink="/portal/catalogo" class="text-primary font-medium text-sm hover:underline">Explorar catalogo</a>
+                    <p class="text-slate-500 mb-2">No tienes reservas aún</p>
+                    <a routerLink="/portal/catalogo" class="text-primary font-medium text-sm hover:underline">Explorar catálogo</a>
                   </td>
                 </tr>
               }
@@ -69,11 +70,23 @@ import { Reserva } from '../../../models';
         }
       </div>
     </div>
+
+    <app-confirm-dialog
+      [open]="showCancelConfirm()"
+      title="Cancelar Reserva"
+      message="¿Está seguro de cancelar esta reserva?"
+      confirmLabel="Cancelar"
+      [danger]="true"
+      (confirmed)="confirmCancelar()"
+      (cancelled)="showCancelConfirm.set(false)">
+    </app-confirm-dialog>
   `
 })
 export class MisReservasComponent implements OnInit {
   readonly reservas = signal<Reserva[]>([]);
   readonly loading = signal(true);
+  readonly showCancelConfirm = signal(false);
+  readonly cancelTargetId = signal<number | null>(null);
 
   constructor(
     private readonly reservaService: ReservaService,
@@ -89,9 +102,18 @@ export class MisReservasComponent implements OnInit {
   }
 
   cancelar(r: Reserva): void {
-    this.reservaService.cancelarDesdePortal(r.idReserva).subscribe({
+    this.cancelTargetId.set(r.idReserva);
+    this.showCancelConfirm.set(true);
+  }
+
+  confirmCancelar(): void {
+    const id = this.cancelTargetId();
+    if (!id) return;
+    this.reservaService.cancelarDesdePortal(id).subscribe({
       next: () => {
         this.toast.success('Reserva cancelada');
+        this.showCancelConfirm.set(false);
+        this.cancelTargetId.set(null);
         this.reservaService.getMisReservas().subscribe({ next: (d) => this.reservas.set(d) });
       },
       error: (err) => this.toast.error(err.message)

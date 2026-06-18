@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'app-topbar',
@@ -6,6 +6,9 @@ import { Component, Input } from '@angular/core';
   template: `
     <header class="h-16 sticky top-0 z-30 flex items-center justify-between px-6 border-b bg-surface-container border-slate-200">
       <div class="flex items-center gap-4">
+        <button type="button" aria-label="Menú lateral" class="lg:hidden mr-2 text-slate-600" (click)="toggleSidebar.emit()">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
         <h2 class="text-lg font-semibold text-slate-800">{{ pageTitle }}</h2>
       </div>
 
@@ -26,4 +29,5 @@ import { Component, Input } from '@angular/core';
 })
 export class TopbarComponent {
   @Input() pageTitle = '';
+  @Output() toggleSidebar = new EventEmitter<void>();
 }

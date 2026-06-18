@@ -13,6 +13,7 @@ interface RegisterForm {
   email: string;
   direccion?: string;
   clave: string;
+  confirmPassword?: string;
   numeroLicencia?: string;
   categoriaLicencia?: string;
   fechaVencimientoLicencia?: string;
@@ -57,7 +58,7 @@ interface RegisterForm {
                 <input class="input-field" id="reg-dni" [(ngModel)]="form.dni" placeholder="12345678" />
               </div>
               <div>
-                <label class="input-label" for="reg-telefono">Telefono</label>
+                <label class="input-label" for="reg-telefono">Teléfono</label>
                 <input class="input-field" id="reg-telefono" [(ngModel)]="form.telefono" placeholder="999888777" />
               </div>
             </div>
@@ -66,12 +67,16 @@ interface RegisterForm {
               <input class="input-field" id="reg-email" type="email" [(ngModel)]="form.email" placeholder="correo@ejemplo.com" />
             </div>
             <div>
-              <label class="input-label" for="reg-direccion">Direccion</label>
+              <label class="input-label" for="reg-direccion">Dirección</label>
               <input class="input-field" id="reg-direccion" [(ngModel)]="form.direccion" placeholder="Av. Principal 123" />
             </div>
             <div>
               <label class="input-label" for="reg-clave">Clave *</label>
-              <input class="input-field" id="reg-clave" type="password" [(ngModel)]="form.clave" placeholder="Minimo 6 caracteres" />
+              <input class="input-field" id="reg-clave" type="password" [(ngModel)]="form.clave" placeholder="Mínimo 6 caracteres" />
+            </div>
+            <div>
+              <label class="input-label" for="reg-confirmar-clave">Confirmar Clave *</label>
+              <input class="input-field" id="reg-confirmar-clave" type="password" [(ngModel)]="form.confirmPassword" placeholder="Repite tu clave" />
             </div>
 
             <div class="border-t border-slate-100 pt-4">
@@ -82,7 +87,7 @@ interface RegisterForm {
                   <input class="input-field" id="reg-licencia-numero" [(ngModel)]="form.numeroLicencia" placeholder="Q12345678" />
                 </div>
                 <div>
-                  <label class="input-label" for="reg-licencia-categoria">Categoria</label>
+                  <label class="input-label" for="reg-licencia-categoria">Categoría</label>
                   <select class="input-field" id="reg-licencia-categoria" [(ngModel)]="form.categoriaLicencia">
                     <option value="">Seleccionar</option>
                     <option value="A-I">A-I</option>
@@ -111,7 +116,7 @@ interface RegisterForm {
           <div class="mt-6 pt-4 border-t border-slate-200 text-center">
             <p class="text-sm text-slate-500">
               ¿Ya tienes cuenta?
-              <a routerLink="/login" class="text-primary font-medium hover:underline">Inicia sesion</a>
+              <a routerLink="/login" class="text-primary font-medium hover:underline">Inicia sesión</a>
             </p>
           </div>
         </div>
@@ -126,6 +131,7 @@ export class RegisterComponent {
     dni: '',
     email: '',
     clave: '',
+    confirmPassword: '',
   };
 
   readonly loading = signal(false);
@@ -144,8 +150,23 @@ export class RegisterComponent {
       this.isError.set(true);
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
+      this.msg.set('Ingrese un email válido');
+      this.isError.set(true);
+      return;
+    }
+    if (!/^\d{8}$/.test(this.form.dni)) {
+      this.msg.set('El DNI debe tener 8 dígitos');
+      this.isError.set(true);
+      return;
+    }
     if (this.form.clave.length < 6) {
       this.msg.set('La clave debe tener al menos 6 caracteres');
+      this.isError.set(true);
+      return;
+    }
+    if (this.form.clave !== this.form.confirmPassword) {
+      this.msg.set('Las claves no coinciden');
       this.isError.set(true);
       return;
     }

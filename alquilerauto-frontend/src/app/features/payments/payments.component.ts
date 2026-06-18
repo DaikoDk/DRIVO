@@ -30,7 +30,7 @@ import { Pago, Reserva } from '../../models';
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <app-stat-card label="Cobranza del Mes" [value]="'S/ ' + statsMes().cobranza" icon="payments" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
       <app-stat-card label="Pendientes" [value]="statsMes().pendientes" icon="pending_actions" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
-      <app-stat-card label="Metodo mas usado" [value]="statsMes().metodoTop" icon="credit_card" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
+      <app-stat-card label="Método más usado" [value]="statsMes().metodoTop" icon="credit_card" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
       <app-stat-card label="Morosidad" [value]="statsMes().morosidad" icon="warning" iconBg="#fee2e2" iconColor="#dc2626"></app-stat-card>
     </div>
 
@@ -51,7 +51,7 @@ import { Pago, Reserva } from '../../models';
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Cliente</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Monto Base</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Mora</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Danos</th>
+                <th class="px-4 py-3 text-left font-medium text-slate-600">Daños</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Total</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Metodo</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Fecha</th>
@@ -80,7 +80,7 @@ import { Pago, Reserva } from '../../models';
         <div class="flex flex-col items-center justify-center py-16 text-center">
           <span class="material-symbols-outlined text-5xl text-slate-300 mb-4">receipt_long</span>
           <h3 class="text-lg font-medium text-slate-600 mb-1">No hay pagos registrados</h3>
-          <p class="text-sm text-slate-400">Los pagos apareceran aqui cuando se registren</p>
+          <p class="text-sm text-slate-400">Los pagos aparecerán aquí cuando se registren</p>
         </div>
       }
     </div>
@@ -106,7 +106,7 @@ import { Pago, Reserva } from '../../models';
             <input class="input-field" id="pay-mora" type="number" step="0.01" [(ngModel)]="formData.montoMora" />
           </div>
           <div>
-            <label class="input-label" for="pay-danos">Danos</label>
+            <label class="input-label" for="pay-danos">Daños</label>
             <input class="input-field" id="pay-danos" type="number" step="0.01" [(ngModel)]="formData.montoDanos" />
           </div>
         </div>
@@ -114,7 +114,7 @@ import { Pago, Reserva } from '../../models';
           <label class="input-label">Total: <span class="font-bold text-primary">S/{{ (formData.montoBase + formData.montoMora + formData.montoDanos).toFixed(2) }}</span></label>
         </div>
         <div>
-          <label class="input-label" for="pay-metodo">Metodo de Pago *</label>
+          <label class="input-label" for="pay-metodo">Método de Pago *</label>
           <select class="input-field" id="pay-metodo" [(ngModel)]="formData.metodoPago">
             <option value="" disabled>Seleccionar...</option>
             <option value="Efectivo">Efectivo</option>

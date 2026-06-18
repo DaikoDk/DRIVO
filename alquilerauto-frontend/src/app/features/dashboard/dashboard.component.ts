@@ -18,7 +18,7 @@ import { ToastService } from '../../core/services/toast.service';
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <app-stat-card label="Total Vehiculos" [value]="stats().totalAutos" icon="directions_car" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
+      <app-stat-card label="Total Vehículos" [value]="stats().totalAutos" icon="directions_car" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
       <app-stat-card label="Reservas Activas" [value]="stats().reservasActivas" icon="calendar_month" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
       <app-stat-card label="Ingresos del Mes" [value]="'S/ ' + stats().ingresosMes.toLocaleString()" icon="payments" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
       <app-stat-card label="Clientes Activos" [value]="stats().clientesActivos" icon="group" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
@@ -38,7 +38,7 @@ import { ToastService } from '../../core/services/toast.service';
       </div>
 
       <div class="card">
-        <h3 class="text-base font-semibold text-slate-800 mb-4">Vehiculos en Mantenimiento</h3>
+        <h3 class="text-base font-semibold text-slate-800 mb-4">Vehículos en Mantenimiento</h3>
         <div class="space-y-3">
           @for (v of vehiculosMantenimiento(); track v.placa) {
             <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50">
@@ -53,7 +53,7 @@ import { ToastService } from '../../core/services/toast.service';
             </div>
           }
           @if (vehiculosMantenimiento().length === 0) {
-            <p class="text-sm text-slate-400 text-center py-4">No hay vehiculos en mantenimiento</p>
+            <p class="text-sm text-slate-400 text-center py-4">No hay vehículos en mantenimiento</p>
           }
         </div>
       </div>
@@ -67,7 +67,7 @@ import { ToastService } from '../../core/services/toast.service';
             <tr class="border-b border-slate-200">
               <th class="px-4 py-3 text-left font-medium text-slate-600">ID</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Cliente</th>
-              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehiculo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehículo</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Fecha</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Inicio</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Fin</th>

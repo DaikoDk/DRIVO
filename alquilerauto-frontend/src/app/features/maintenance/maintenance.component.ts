@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { MantenimientoService, MantenimientoFormData } from '../../core/services/mantenimiento.service';
 import { AutoService } from '../../core/services/auto.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -11,12 +12,12 @@ import { Mantenimiento, Auto } from '../../models';
 @Component({
   selector: 'app-maintenance',
   standalone: true,
-  imports: [FormsModule, DatePipe, StatCardComponent, ModalComponent],
+  imports: [FormsModule, DatePipe, StatCardComponent, ModalComponent, ConfirmDialogComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Mantenimientos</h1>
-        <p class="text-sm text-slate-500 mt-1">Programacion y seguimiento de mantenimientos</p>
+        <p class="text-sm text-slate-500 mt-1">Programación y seguimiento de mantenimientos</p>
       </div>
       <button class="btn-primary flex items-center gap-2" (click)="openScheduleModal()">
         <span class="material-symbols-outlined text-lg">engineering</span>
@@ -61,7 +62,7 @@ import { Mantenimiento, Auto } from '../../models';
           <thead>
             <tr class="border-b border-slate-200">
               <th class="px-4 py-3 text-left font-medium text-slate-600">ID</th>
-              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehiculo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehículo</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Ingreso</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Salida</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Tipo</th>
@@ -99,7 +100,7 @@ import { Mantenimiento, Auto } from '../../models';
     <app-modal [open]="showScheduleModal()" title="Programar Mantenimiento" (closed)="showScheduleModal.set(false)">
       <div class="space-y-4">
         <div>
-          <label class="input-label" for="mnt-vehiculo">Vehiculo *</label>
+          <label class="input-label" for="mnt-vehiculo">Vehículo *</label>
           <select class="input-field" id="mnt-vehiculo" [(ngModel)]="formData.idAuto">
             <option [ngValue]="0" disabled>Seleccionar...</option>
             @for (a of autos(); track a.idAuto) {
@@ -117,7 +118,7 @@ import { Mantenimiento, Auto } from '../../models';
             <option value="" disabled>Seleccionar...</option>
             <option value="Preventivo">Preventivo</option>
             <option value="Correctivo">Correctivo</option>
-            <option value="Revision">Revision Tecnica</option>
+            <option value="Revision">Revisión Técnica</option>
           </select>
         </div>
         <div>
@@ -134,6 +135,16 @@ import { Mantenimiento, Auto } from '../../models';
         </div>
       </div>
     </app-modal>
+
+    <app-confirm-dialog
+      [open]="showFinalizarConfirm()"
+      title="Finalizar Mantenimiento"
+      message="¿Está seguro de finalizar este mantenimiento?"
+      confirmLabel="Finalizar"
+      [danger]="false"
+      (confirmed)="confirmFinalizar()"
+      (cancelled)="showFinalizarConfirm.set(false)">
+    </app-confirm-dialog>
   `
 })
 export class MaintenanceComponent implements OnInit {
@@ -141,6 +152,8 @@ export class MaintenanceComponent implements OnInit {
   readonly autos = signal<Auto[]>([]);
   readonly activeTab = signal<'en-curso' | 'historial'>('en-curso');
   readonly showScheduleModal = signal(false);
+  readonly showFinalizarConfirm = signal(false);
+  readonly finalizarTargetId = signal<number | null>(null);
 
   formData: MantenimientoFormData = { idAuto: 0, fechaIngreso: '', tipo: '', costo: 0 };
 
@@ -212,10 +225,19 @@ export class MaintenanceComponent implements OnInit {
   }
 
   finalizarMantenimiento(m: Mantenimiento): void {
+    this.finalizarTargetId.set(m.idMantenimiento);
+    this.showFinalizarConfirm.set(true);
+  }
+
+  confirmFinalizar(): void {
+    const id = this.finalizarTargetId();
+    if (!id) return;
     const fechaSalida = new Date().toISOString().split('T')[0];
-    this.mantenimientoService.finalizar(m.idMantenimiento, fechaSalida).subscribe({
+    this.mantenimientoService.finalizar(id, fechaSalida).subscribe({
       next: () => {
         this.toast.success('Mantenimiento finalizado');
+        this.showFinalizarConfirm.set(false);
+        this.finalizarTargetId.set(null);
         this.mantenimientoService.getAll().subscribe({ next: (data) => this.mantenimientos.set(data) });
       },
       error: (err) => this.toast.error(err.message)

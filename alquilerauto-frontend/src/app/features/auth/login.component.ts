@@ -20,7 +20,7 @@ import { ToastService } from '../../core/services/toast.service';
         </div>
 
         <div class="card">
-          <h2 class="text-lg font-semibold text-slate-800 mb-6 text-center">Iniciar Sesion</h2>
+          <h2 class="text-lg font-semibold text-slate-800 mb-6 text-center">Iniciar Sesión</h2>
 
           <div class="space-y-4">
             <div>
@@ -42,7 +42,7 @@ import { ToastService } from '../../core/services/toast.service';
             <div class="mt-6 pt-4 border-t border-slate-200 text-center">
             <p class="text-sm text-slate-500">
               ¿No tienes cuenta?
-              <a routerLink="/register" class="text-primary font-medium hover:underline">Registrate</a>
+              <a routerLink="/register" class="text-primary font-medium hover:underline">Regístrate</a>
             </p>
           </div>
 
@@ -81,6 +81,10 @@ export class LoginComponent {
   doLogin(): void {
     if (!this.correo || !this.clave) {
       this.error.set('Complete todos los campos');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.correo)) {
+      this.error.set('Ingrese un email válido');
       return;
     }
     this.loading.set(true);

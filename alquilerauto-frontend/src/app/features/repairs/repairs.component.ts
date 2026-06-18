@@ -18,11 +18,11 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Reparaciones</h1>
-        <p class="text-sm text-slate-500 mt-1">Gestion de reparaciones de la flota</p>
+        <p class="text-sm text-slate-500 mt-1">Gestión de reparaciones de la flota</p>
       </div>
       <button class="btn-primary flex items-center gap-2" (click)="openReportModal()">
         <span class="material-symbols-outlined text-lg">build</span>
-        Reportar Reparacion
+        Reportar Reparación
       </button>
     </div>
 
@@ -61,10 +61,10 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           <thead>
             <tr class="border-b border-slate-200">
               <th class="px-4 py-3 text-left font-medium text-slate-600">ID</th>
-              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehiculo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehículo</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Reserva</th>
-              <th class="px-4 py-3 text-left font-medium text-slate-600">Catalogo</th>
-              <th class="px-4 py-3 text-left font-medium text-slate-600">Descripcion</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Catálogo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Descripción</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Costo</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Estado</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Responsable</th>
@@ -97,7 +97,7 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
                         <p class="text-slate-700">Fin: {{ r.fechaFin ? (r.fechaFin | date:'dd/MM/yy HH:mm') : 'Pendiente' }}</p>
                       </div>
                       <div>
-                        <p class="font-medium text-slate-600 mb-1">Descripcion Completa</p>
+                        <p class="font-medium text-slate-600 mb-1">Descripción Completa</p>
                         <p class="text-slate-700">{{ r.descripcion }}</p>
                       </div>
                       <div>
@@ -119,7 +119,7 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
       }
     </div>
 
-    <app-modal [open]="showReportModal()" title="Reportar Reparacion" (closed)="showReportModal.set(false)">
+    <app-modal [open]="showReportModal()" title="Reportar Reparación" (closed)="showReportModal.set(false)">
       <div class="space-y-4">
         <div>
           <label class="input-label" for="rep-reserva">Reserva *</label>
@@ -131,7 +131,7 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label" for="rep-vehiculo">Vehiculo *</label>
+          <label class="input-label" for="rep-vehiculo">Vehículo *</label>
           <select class="input-field" id="rep-vehiculo" [(ngModel)]="formData.idAuto">
             <option [ngValue]="0" disabled>Seleccionar...</option>
             @if (formData.idReserva) {
@@ -148,7 +148,7 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label" for="rep-catalogo">Catalogo Reparacion</label>
+          <label class="input-label" for="rep-catalogo">Catálogo Reparación</label>
           <select class="input-field" id="rep-catalogo" [(ngModel)]="formData.idCatalogoReparacion">
             <option [ngValue]="undefined">Seleccionar...</option>
             @for (c of catalogo(); track c.idCatalogoReparacion) {
@@ -161,8 +161,8 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           <input class="input-field" id="rep-costo" type="number" step="0.01" [(ngModel)]="formData.costo" />
         </div>
         <div>
-          <label class="input-label" for="rep-descripcion">Descripcion *</label>
-          <textarea class="input-field" id="rep-descripcion" rows="3" [(ngModel)]="formData.descripcion" placeholder="Describa la reparacion..."></textarea>
+          <label class="input-label" for="rep-descripcion">Descripción *</label>
+          <textarea class="input-field" id="rep-descripcion" rows="3" [(ngModel)]="formData.descripcion" placeholder="Describa la reparación..."></textarea>
         </div>
         <div>
           <label class="input-label">Responsable</label>

@@ -32,7 +32,7 @@ import { Auto } from '../../../models';
               </div>
               <div class="card text-center">
                 <span class="material-symbols-outlined text-2xl text-primary mb-2">category</span>
-                <p class="text-xs text-slate-500">Categoria</p>
+                <p class="text-xs text-slate-500">Categoría</p>
                 <p class="font-semibold text-slate-800">{{ auto()?.categoria || 'Estandar' }}</p>
               </div>
               <div class="card text-center">
@@ -51,9 +51,9 @@ import { Auto } from '../../../models';
               <h3 class="text-lg font-semibold text-slate-800 mb-4">Especificaciones</h3>
               <div class="grid grid-cols-2 gap-4 text-sm">
                 <div><span class="text-slate-500">Chasis:</span> <span class="font-medium text-slate-700">{{ auto()?.numeroChasis || 'N/A' }}</span></div>
-                <div><span class="text-slate-500">Mora por dia:</span> <span class="font-medium text-slate-700">S/{{ auto()?.moraPorDia?.toFixed(2) }}</span></div>
-                <div><span class="text-slate-500">Ultima revision:</span> <span class="font-medium text-slate-700">{{ auto()?.ultimaRevisionKm?.toLocaleString() || 'N/A' }} km</span></div>
-                <div><span class="text-slate-500">Proxima revision:</span> <span class="font-medium text-slate-700">{{ auto()?.proximaRevisionKm?.toLocaleString() || 'N/A' }} km</span></div>
+                <div><span class="text-slate-500">Mora por día:</span> <span class="font-medium text-slate-700">S/{{ auto()?.moraPorDia?.toFixed(2) }}</span></div>
+                <div><span class="text-slate-500">Última revisión:</span> <span class="font-medium text-slate-700">{{ auto()?.ultimaRevisionKm?.toLocaleString() || 'N/A' }} km</span></div>
+                <div><span class="text-slate-500">Próxima revisión:</span> <span class="font-medium text-slate-700">{{ auto()?.proximaRevisionKm?.toLocaleString() || 'N/A' }} km</span></div>
               </div>
             </div>
           </div>
@@ -63,14 +63,14 @@ import { Auto } from '../../../models';
             <div class="card sticky top-24">
               <div class="mb-4">
                 <p class="text-3xl font-bold text-slate-800">S/{{ auto()?.precioPorDia?.toFixed(2) }}</p>
-                <p class="text-sm text-slate-500">por dia</p>
+                <p class="text-sm text-slate-500">por día</p>
               </div>
 
               <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="input-label" for="auto-fecha-inicio">Fecha Inicio</label>
-                    <input class="input-field" id="auto-fecha-inicio" type="date" [(ngModel)]="fechaInicio" />
+                    <input class="input-field" id="auto-fecha-inicio" type="date" [min]="today()" [(ngModel)]="fechaInicio" />
                   </div>
                   <div>
                     <label class="input-label" for="auto-hora-inicio">Hora</label>
@@ -80,7 +80,7 @@ import { Auto } from '../../../models';
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="input-label" for="auto-fecha-fin">Fecha Fin</label>
-                    <input class="input-field" id="auto-fecha-fin" type="date" [(ngModel)]="fechaFin" />
+                    <input class="input-field" id="auto-fecha-fin" type="date" [min]="today()" [(ngModel)]="fechaFin" />
                   </div>
                   <div>
                     <label class="input-label" for="auto-hora-fin">Hora</label>
@@ -91,7 +91,7 @@ import { Auto } from '../../../models';
                 @if (dias() > 0) {
                   <div class="bg-slate-50 rounded-lg p-4 space-y-2 text-sm">
                     <div class="flex justify-between">
-                      <span class="text-slate-500">S/{{ auto()?.precioPorDia?.toFixed(2) }} x {{ dias() }} dias</span>
+                      <span class="text-slate-500">S/{{ auto()?.precioPorDia?.toFixed(2) }} x {{ dias() }} días</span>
                       <span class="font-medium text-slate-700">S/{{ (dias() * (auto()?.precioPorDia || 0)).toFixed(2) }}</span>
                     </div>
                     @if (horasExtra() > 0) {
@@ -122,7 +122,7 @@ import { Auto } from '../../../models';
         <div class="flex flex-col items-center justify-center py-20">
           <span class="material-symbols-outlined text-5xl text-red-300 mb-4">error</span>
           <p class="text-red-500 mb-2">{{ loadError() }}</p>
-          <a routerLink="/portal/catalogo" class="text-primary font-medium text-sm hover:underline">Volver al catalogo</a>
+          <a routerLink="/portal/catalogo" class="text-primary font-medium text-sm hover:underline">Volver al catálogo</a>
         </div>
       } @else {
         <div class="flex items-center justify-center py-20">
@@ -190,11 +190,21 @@ export class AutoDetailComponent implements OnInit {
   }
 
   canReservar(): boolean {
-    return !!(this.fechaInicio && this.fechaFin && this.auto());
+    if (!(this.fechaInicio && this.fechaFin && this.auto())) return false;
+    return this.fechaFin >= this.fechaInicio;
+  }
+
+  today(): string {
+    return new Date().toISOString().split('T')[0];
   }
 
   reservar(): void {
     if (!this.canReservar()) return;
+    if (this.fechaFin < this.fechaInicio) {
+      this.msg.set('La fecha fin debe ser posterior a la fecha inicio');
+      this.isError.set(true);
+      return;
+    }
     this.loading.set(true);
     this.msg.set('');
 

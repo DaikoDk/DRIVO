@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { ConfiguracionService, ConfiguracionFormData } from '../../core/services/configuracion.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Configuracion } from '../../models';
@@ -10,21 +11,21 @@ import { Configuracion } from '../../models';
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [FormsModule, DatePipe, StatCardComponent, ModalComponent],
+  imports: [FormsModule, DatePipe, StatCardComponent, ModalComponent, ConfirmDialogComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Configuracion</h1>
-        <p class="text-sm text-slate-500 mt-1">Parametros del sistema</p>
+        <h1 class="text-2xl font-bold text-slate-800">Configuración</h1>
+        <p class="text-sm text-slate-500 mt-1">Parámetros del sistema</p>
       </div>
       <button class="btn-primary flex items-center gap-2" (click)="openAddModal()">
         <span class="material-symbols-outlined text-lg">add</span>
-        Agregar Configuracion
+        Agregar Configuración
       </button>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-      <app-stat-card label="Parametros Totales" [value]="configs().length" icon="database" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
+      <app-stat-card label="Parámetros Totales" [value]="configs().length" icon="database" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
       <app-stat-card label="Por Tipo" [value]="statsTipos()" icon="category" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
     </div>
 
@@ -48,9 +49,9 @@ import { Configuracion } from '../../models';
               <tr class="border-b border-slate-200">
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Clave</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Valor</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Descripcion</th>
+                <th class="px-4 py-3 text-left font-medium text-slate-600">Descripción</th>
                 <th class="px-4 py-3 text-left font-medium text-slate-600">Tipo</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Actualizacion</th>
+                <th class="px-4 py-3 text-left font-medium text-slate-600">Actualización</th>
                 <th class="px-4 py-3 text-right font-medium text-slate-600">Acciones</th>
               </tr>
             </thead>
@@ -85,7 +86,7 @@ import { Configuracion } from '../../models';
       }
     </div>
 
-    <app-modal [open]="showFormModal()" [title]="editingConfig() ? 'Editar Configuracion' : 'Agregar Configuracion'" (closed)="showFormModal.set(false)">
+    <app-modal [open]="showFormModal()" [title]="editingConfig() ? 'Editar Configuración' : 'Agregar Configuración'" (closed)="showFormModal.set(false)">
       <div class="space-y-4">
         <div>
           <label class="input-label" for="cfg-clave">Clave *</label>
@@ -101,12 +102,12 @@ import { Configuracion } from '../../models';
             <option value="">General</option>
             <option value="Sistema">Sistema</option>
             <option value="Seguridad">Seguridad</option>
-            <option value="Notificacion">Notificacion</option>
+            <option value="Notificación">Notificación</option>
           </select>
         </div>
         <div>
-          <label class="input-label" for="cfg-descripcion">Descripcion</label>
-          <textarea class="input-field" id="cfg-descripcion" rows="2" [(ngModel)]="formData.descripcion" placeholder="Descripcion del parametro..."></textarea>
+          <label class="input-label" for="cfg-descripcion">Descripción</label>
+          <textarea class="input-field" id="cfg-descripcion" rows="2" [(ngModel)]="formData.descripcion" placeholder="Descripción del parámetro..."></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button class="btn-secondary" (click)="showFormModal.set(false)">Cancelar</button>
@@ -114,6 +115,16 @@ import { Configuracion } from '../../models';
         </div>
       </div>
     </app-modal>
+
+    <app-confirm-dialog
+      [open]="showDeleteConfirm()"
+      title="Eliminar Configuración"
+      message="¿Está seguro de eliminar esta configuración?"
+      confirmLabel="Eliminar"
+      [danger]="true"
+      (confirmed)="confirmDelete()"
+      (cancelled)="showDeleteConfirm.set(false)">
+    </app-confirm-dialog>
   `
 })
 export class SettingsComponent implements OnInit {
@@ -121,6 +132,8 @@ export class SettingsComponent implements OnInit {
   readonly loading = signal(true);
   readonly showFormModal = signal(false);
   readonly editingConfig = signal<Configuracion | null>(null);
+  readonly showDeleteConfirm = signal(false);
+  readonly deleteTargetId = signal<number | null>(null);
 
   readonly statsTipos = computed(() => {
     const tipos = this.configs().map(c => c.tipo || 'General');
@@ -177,7 +190,7 @@ export class SettingsComponent implements OnInit {
 
     request.subscribe({
       next: () => {
-        this.toast.success(this.editingConfig() ? 'Configuracion actualizada' : 'Configuracion creada');
+        this.toast.success(this.editingConfig() ? 'Configuración actualizada' : 'Configuración creada');
         this.showFormModal.set(false);
         this.loadConfigs();
       },
@@ -186,9 +199,18 @@ export class SettingsComponent implements OnInit {
   }
 
   deleteConfig(c: Configuracion): void {
-    this.configuracionService.delete(c.idConfiguracion).subscribe({
+    this.deleteTargetId.set(c.idConfiguracion);
+    this.showDeleteConfirm.set(true);
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteTargetId();
+    if (!id) return;
+    this.configuracionService.delete(id).subscribe({
       next: () => {
-        this.toast.success('Configuracion eliminada');
+        this.toast.success('Configuración eliminada');
+        this.showDeleteConfirm.set(false);
+        this.deleteTargetId.set(null);
         this.loadConfigs();
       },
       error: (err) => this.toast.error(err.message)

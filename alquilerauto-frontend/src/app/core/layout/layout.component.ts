@@ -23,13 +23,13 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
 export class AdminLayoutComponent {
   private readonly pageTitles: Record<string, string> = {
     '/admin/dashboard': 'Dashboard',
-    '/admin/vehiculos': 'Vehiculos',
+    '/admin/vehiculos': 'Vehículos',
     '/admin/clientes': 'Clientes',
     '/admin/reservas': 'Reservas',
     '/admin/pagos': 'Pagos',
     '/admin/reparaciones': 'Reparaciones',
     '/admin/mantenimientos': 'Mantenimientos',
-    '/admin/configuracion': 'Configuracion',
+    '/admin/configuracion': 'Configuración',
   };
 
   readonly pageTitle = signal('Dashboard');

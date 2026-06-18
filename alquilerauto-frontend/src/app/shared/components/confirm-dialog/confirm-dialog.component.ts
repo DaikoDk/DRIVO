@@ -24,7 +24,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, AfterViewChecked, El
 export class ConfirmDialogComponent implements OnChanges, AfterViewChecked {
   @Input() open = false;
   @Input() title = 'Confirmar';
-  @Input() message = '¿Esta seguro?';
+  @Input() message = '¿Está seguro?';
   @Input() confirmLabel = 'Aceptar';
   @Input() cancelLabel = 'Cancelar';
   @Input() danger = false;

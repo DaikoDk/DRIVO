@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { ReservaService, ReservaFormData } from '../../core/services/reserva.service';
 import { ClienteService } from '../../core/services/cliente.service';
 import { AutoService } from '../../core/services/auto.service';
@@ -13,12 +14,12 @@ import { Reserva, Cliente, Auto } from '../../models';
 @Component({
   selector: 'app-reservations',
   standalone: true,
-  imports: [FormsModule, DatePipe, StatCardComponent, StatusBadgeComponent, ModalComponent],
+  imports: [FormsModule, DatePipe, StatCardComponent, StatusBadgeComponent, ModalComponent, ConfirmDialogComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Reservas</h1>
-        <p class="text-sm text-slate-500 mt-1">Gestion de reservas y alquileres</p>
+        <p class="text-sm text-slate-500 mt-1">Gestión de reservas y alquileres</p>
       </div>
       <div class="flex gap-3">
         <input class="input-field w-48" type="date" [(ngModel)]="filterDateIni" />
@@ -33,7 +34,7 @@ import { Reserva, Cliente, Auto } from '../../models';
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <app-stat-card label="Reservas Activas" [value]="reservas().filter(r => r.estado !== 'Finalizada' && r.estado !== 'Cancelada').length" icon="calendar_month" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
-      <app-stat-card label="Proximas 24h" [value]="statsExtra().proximas24h" icon="schedule" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
+      <app-stat-card label="Próximas 24h" [value]="statsExtra().proximas24h" icon="schedule" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
       <app-stat-card label="Devoluciones Hoy" [value]="statsExtra().devolucionesHoy" icon="assignment_return" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
       <app-stat-card label="Ingresos Proyectados" [value]="'S/ ' + statsExtra().ingresosProyectados" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
     </div>
@@ -52,7 +53,7 @@ import { Reserva, Cliente, Auto } from '../../models';
             <tr class="border-b border-slate-200">
               <th class="px-4 py-3 text-left font-medium text-slate-600">ID</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Cliente</th>
-              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehiculo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehículo</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Inicio</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Fin</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Total</th>
@@ -126,11 +127,11 @@ import { Reserva, Cliente, Auto } from '../../models';
         }
         @if (step() === 2) {
           <div>
-            <label class="input-label" for="res-vehiculo">Seleccionar Vehiculo *</label>
+            <label class="input-label" for="res-vehiculo">Seleccionar Vehículo *</label>
             <select class="input-field" id="res-vehiculo" [(ngModel)]="newData.idAuto">
               <option [ngValue]="0" disabled>Seleccionar...</option>
               @for (a of vehiculosDisponibles(); track a.idAuto) {
-                <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }} (S/{{ a.precioPorDia }}/dia)</option>
+                <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }} (S/{{ a.precioPorDia }}/día)</option>
               }
             </select>
             <div class="flex justify-between mt-4">
@@ -180,7 +181,7 @@ import { Reserva, Cliente, Auto } from '../../models';
               <p class="font-medium text-slate-800">{{ selectedReserva()?.nombreCliente }}</p>
             </div>
             <div>
-              <p class="text-slate-500">Vehiculo</p>
+              <p class="text-slate-500">Vehículo</p>
               <p class="font-medium text-slate-800">{{ selectedReserva()?.placa }} - {{ selectedReserva()?.marca }}</p>
             </div>
             <div>
@@ -217,6 +218,16 @@ import { Reserva, Cliente, Auto } from '../../models';
         </div>
       </div>
     </app-modal>
+
+    <app-confirm-dialog
+      [open]="showCancelConfirm()"
+      title="Cancelar Reserva"
+      message="¿Está seguro de cancelar esta reserva?"
+      confirmLabel="Cancelar Reserva"
+      [danger]="true"
+      (confirmed)="confirmCancelar()"
+      (cancelled)="showCancelConfirm.set(false)">
+    </app-confirm-dialog>
   `
 })
 export class ReservationsComponent implements OnInit {
@@ -229,6 +240,8 @@ export class ReservationsComponent implements OnInit {
   readonly showFinalizar = signal(false);
   readonly selectedReserva = signal<Reserva | null>(null);
   readonly finalizarTarget = signal<Reserva | null>(null);
+  readonly showCancelConfirm = signal(false);
+  readonly cancelTargetId = signal<number | null>(null);
   readonly filterDateIni = signal('');
   readonly filterDateFin = signal('');
 
@@ -337,6 +350,10 @@ export class ReservationsComponent implements OnInit {
   finalizarReserva(): void {
     const r = this.finalizarTarget();
     if (!r) return;
+    if (r.kilometrajeInicio != null && this.kilometrajeFin < r.kilometrajeInicio) {
+      this.toast.warning('El kilometraje final debe ser mayor o igual al inicial');
+      return;
+    }
     this.reservaService.finalizar(r.idReserva, this.kilometrajeFin).subscribe({
       next: () => {
         this.toast.success('Reserva finalizada');
@@ -348,9 +365,17 @@ export class ReservationsComponent implements OnInit {
   }
 
   cancelarReserva(r: Reserva): void {
-    this.reservaService.cancelar(r.idReserva).subscribe({
+    this.cancelTargetId.set(r.idReserva);
+    this.showCancelConfirm.set(true);
+  }
+
+  confirmCancelar(): void {
+    const id = this.cancelTargetId();
+    if (!id) return;
+    this.reservaService.cancelar(id).subscribe({
       next: () => {
         this.toast.success('Reserva cancelada');
+        this.showCancelConfirm.set(false);
         this.loadReservas();
       },
       error: (err) => this.toast.error(err.message)

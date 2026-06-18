@@ -17,7 +17,7 @@ import { Cliente } from '../../models';
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Clientes</h1>
-        <p class="text-sm text-slate-500 mt-1">Gestion de clientes registrados</p>
+        <p class="text-sm text-slate-500 mt-1">Gestión de clientes registrados</p>
       </div>
       <div class="flex gap-3">
         <input class="input-field w-64" type="search" placeholder="Buscar cliente..." [(ngModel)]="searchTerm" />
@@ -50,7 +50,7 @@ import { Cliente } from '../../models';
               <th class="px-4 py-3 text-left font-medium text-slate-600">Nombre</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">DNI</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Email</th>
-              <th class="px-4 py-3 text-left font-medium text-slate-600">Telefono</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Teléfono</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Reservas</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Estado</th>
               <th class="px-4 py-3 text-right font-medium text-slate-600">Acciones</th>
@@ -94,7 +94,7 @@ import { Cliente } from '../../models';
                         <p class="text-slate-500 text-xs">Cat: {{ c.categoriaLicencia || '-' }} | Vence: {{ c.fechaVencimientoLicencia ? (c.fechaVencimientoLicencia | date:'dd/MM/yy') : '-' }}</p>
                       </div>
                       <div>
-                        <p class="font-medium text-slate-600 mb-1">Direccion</p>
+                        <p class="font-medium text-slate-600 mb-1">Dirección</p>
                         <p class="text-slate-700">{{ c.direccion || 'No registrada' }}</p>
                       </div>
                       <div>
@@ -138,7 +138,7 @@ import { Cliente } from '../../models';
             <input class="input-field" id="cli-dni" [(ngModel)]="formData.dni" placeholder="12345678" />
           </div>
           <div>
-            <label class="input-label" for="cli-telefono">Telefono</label>
+            <label class="input-label" for="cli-telefono">Teléfono</label>
             <input class="input-field" id="cli-telefono" [(ngModel)]="formData.telefono" placeholder="999888777" />
           </div>
         </div>
@@ -147,7 +147,7 @@ import { Cliente } from '../../models';
           <input class="input-field" id="cli-email" type="email" [(ngModel)]="formData.email" placeholder="cliente@email.com" />
         </div>
         <div>
-          <label class="input-label" for="cli-direccion">Direccion</label>
+          <label class="input-label" for="cli-direccion">Dirección</label>
           <input class="input-field" id="cli-direccion" [(ngModel)]="formData.direccion" placeholder="Av. Principal 123" />
         </div>
         <div class="border-t border-slate-100 pt-4 mt-2">
@@ -158,7 +158,7 @@ import { Cliente } from '../../models';
               <input class="input-field" id="cli-licencia-numero" [(ngModel)]="formData.numeroLicencia" />
             </div>
             <div>
-              <label class="input-label" for="cli-licencia-categoria">Categoria</label>
+              <label class="input-label" for="cli-licencia-categoria">Categoría</label>
               <input class="input-field" id="cli-licencia-categoria" [(ngModel)]="formData.categoriaLicencia" />
             </div>
             <div>
@@ -177,7 +177,7 @@ import { Cliente } from '../../models';
     <app-confirm-dialog
       [open]="showBlockConfirm()"
       [title]="blockAction() === 'block' ? 'Bloquear Cliente' : 'Desbloquear Cliente'"
-      [message]="blockAction() === 'block' ? '¿Esta seguro de bloquear este cliente? No podra realizar reservas.' : '¿Esta seguro de desbloquear este cliente?'"
+      [message]="blockAction() === 'block' ? '¿Está seguro de bloquear este cliente? No podrá realizar reservas.' : '¿Está seguro de desbloquear este cliente?'"
       [confirmLabel]="blockAction() === 'block' ? 'Bloquear' : 'Desbloquear'"
       [danger]="blockAction() === 'block'"
       (confirmed)="confirmBlock()"
@@ -274,6 +274,18 @@ export class ClientsComponent implements OnInit {
   saveClient(): void {
     if (!this.formData.nombre || !this.formData.apellidoPaterno || !this.formData.dni || !this.formData.email) {
       this.toast.warning('Complete los campos obligatorios');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.formData.email)) {
+      this.toast.warning('Ingrese un email válido');
+      return;
+    }
+    if (!/^\d{8}$/.test(this.formData.dni)) {
+      this.toast.warning('El DNI debe tener 8 dígitos');
+      return;
+    }
+    if (this.formData.telefono && !/^\d{9}$/.test(this.formData.telefono)) {
+      this.toast.warning('El teléfono debe tener 9 dígitos');
       return;
     }
 

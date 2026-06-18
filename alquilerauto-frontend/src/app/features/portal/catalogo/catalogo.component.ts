@@ -12,7 +12,7 @@ import { Auto, Marca } from '../../../models';
   imports: [RouterLink, FormsModule],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-8">
-      <h1 class="text-3xl font-bold text-slate-800 mb-2">Catalogo de Autos</h1>
+      <h1 class="text-3xl font-bold text-slate-800 mb-2">Catálogo de Autos</h1>
       <p class="text-slate-500 mb-8">Explora nuestra flota y encuentra el auto perfecto para ti</p>
 
       <div class="flex flex-col lg:flex-row gap-8">
@@ -73,7 +73,7 @@ import { Auto, Marca } from '../../../models';
                   <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">settings_suggest</span> {{ auto.categoria || 'Estandar' }}</span>
                 </div>
                 <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <p class="text-xl font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
+                  <p class="text-xl font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /día</span></p>
                   <span class="text-primary font-medium text-sm group-hover:underline">Reservar</span>
                 </div>
               </a>

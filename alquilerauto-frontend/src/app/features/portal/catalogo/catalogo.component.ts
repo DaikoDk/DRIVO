@@ -69,7 +69,7 @@ import { Auto, Marca } from '../../../models';
                 </div>
                 <p class="text-sm text-slate-500 mb-3">{{ auto.anio }} | {{ auto.color || 'N/A' }} | {{ auto.categoria || 'S/C' }}</p>
                 <div class="flex items-center gap-3 text-xs text-slate-500 mb-3">
-                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> 5 pasajeros</span>
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> {{ auto.pasajeros ?? 5 }} pasajeros</span>
                   <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">settings_suggest</span> {{ auto.categoria || 'Estandar' }}</span>
                 </div>
                 <div class="flex items-center justify-between pt-3 border-t border-slate-100">

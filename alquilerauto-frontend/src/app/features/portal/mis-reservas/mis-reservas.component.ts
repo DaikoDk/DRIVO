@@ -46,7 +46,7 @@ import { Reserva } from '../../../models';
                   <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd/MM/yy' }} {{ r.horaFin }}</td>
                   <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.total.toFixed(2) }}</td>
                   <td class="px-4 py-3">
-                    <span class="badge" [class.badge-warning]="r.estado === 'Pendiente'" [class.badge-info]="r.estado === 'En proceso'" [class.badge-success]="r.estado === 'Confirmada' || r.estado === 'Finalizada'" [class.badge-error]="r.estado === 'Cancelada'" [class.badge-neutral]="r.estado === 'Finalizada'">{{ r.estado }}</span>
+                    <span class="badge" [class.badge-warning]="r.estado === 'Pendiente'" [class.badge-info]="r.estado === 'En proceso'" [class.badge-success]="r.estado === 'Confirmada' || r.estado === 'Finalizada'" [class.badge-error]="r.estado === 'Cancelada'">{{ r.estado }}</span>
                   </td>
                   <td class="px-4 py-3 text-right">
                     @if (r.estado === 'Pendiente') {

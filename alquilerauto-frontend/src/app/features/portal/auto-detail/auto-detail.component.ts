@@ -28,7 +28,7 @@ import { Auto } from '../../../models';
               <div class="card text-center">
                 <span class="material-symbols-outlined text-2xl text-primary mb-2">person</span>
                 <p class="text-xs text-slate-500">Pasajeros</p>
-                <p class="font-semibold text-slate-800">{{ 5 }}</p>
+                <p class="font-semibold text-slate-800">{{ auto()?.pasajeros ?? 5 }}</p>
               </div>
               <div class="card text-center">
                 <span class="material-symbols-outlined text-2xl text-primary mb-2">category</span>
@@ -96,7 +96,7 @@ import { Auto } from '../../../models';
                     </div>
                     @if (horasExtra() > 0) {
                       <div class="flex justify-between">
-                        <span class="text-slate-500">S/{{ (auto()?.precioPorHora || auto()?.precioPorDia || 0 / 8).toFixed(2) }} x {{ horasExtra() }} horas extra</span>
+                        <span class="text-slate-500">S/{{ (auto()?.precioPorHora || ((auto()?.precioPorDia || 0) / 8)).toFixed(2) }} x {{ horasExtra() }} horas extra</span>
                         <span class="font-medium text-slate-700">S/{{ (horasExtra() * (auto()?.precioPorHora || 0)).toFixed(2) }}</span>
                       </div>
                     }
@@ -171,15 +171,12 @@ export class AutoDetailComponent implements OnInit {
   }
 
   horasExtra(): number {
-    if (!this.horaInicio || !this.horaFin || this.dias() <= 0) return 0;
-    const [h1, m1] = this.horaInicio.split(':').map(Number);
-    const [h2, m2] = this.horaFin.split(':').map(Number);
-    const diff = (h2 * 60 + m2) - (h1 * 60 + m1);
-    const dailyHours = diff / 60;
-    const fullDays = this.dias();
-    const totalHours = dailyHours * fullDays;
-    const fullDayHours = 24 * fullDays;
-    return Math.max(0, Math.ceil(totalHours - fullDayHours));
+    if (!this.fechaInicio || !this.fechaFin || !this.horaInicio || !this.horaFin) return 0;
+    const start = new Date(`${this.fechaInicio}T${this.horaInicio}`);
+    const end = new Date(`${this.fechaFin}T${this.horaFin}`);
+    const totalHours = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60));
+    const fullDayHours = this.dias() * 24;
+    return Math.max(0, totalHours - fullDayHours);
   }
 
   totalEstimado(): number {

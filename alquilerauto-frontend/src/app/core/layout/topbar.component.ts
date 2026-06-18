@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-topbar',
@@ -19,9 +20,9 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
         </div>
         <button type="button" aria-label="Menú de usuario" class="flex items-center gap-2 cursor-pointer bg-transparent border-0">
           <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium bg-primary">
-            A
+            {{ userInitial() }}
           </div>
-          <span class="text-sm font-medium text-slate-700">Admin</span>
+          <span class="text-sm font-medium text-slate-700">{{ userName() }}</span>
         </button>
       </div>
     </header>
@@ -30,4 +31,14 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 export class TopbarComponent {
   @Input() pageTitle = '';
   @Output() toggleSidebar = new EventEmitter<void>();
+
+  constructor(private readonly auth: AuthService) {}
+
+  userName(): string {
+    return this.auth.currentUser()?.nombre || 'Admin';
+  }
+
+  userInitial(): string {
+    return (this.auth.currentUser()?.nombre || 'A').charAt(0).toUpperCase();
+  }
 }

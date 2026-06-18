@@ -147,6 +147,7 @@ export class SettingsComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
+        this.toast.error('Error al cargar configuraciones');
         this.loading.set(false);
       }
     });

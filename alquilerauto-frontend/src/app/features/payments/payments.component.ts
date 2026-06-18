@@ -35,7 +35,13 @@ import { Pago, Reserva } from '../../models';
     </div>
 
     <div class="card">
-      @if (pagos().length > 0) {
+      @if (loading()) {
+        <div class="space-y-4 p-4">
+          @for (i of [1,2,3,4,5]; track i) {
+            <div class="flex gap-4"><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 w-20"></div></div>
+          }
+        </div>
+      } @else if (filteredPagos().length > 0) {
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
@@ -52,7 +58,7 @@ import { Pago, Reserva } from '../../models';
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-              @for (p of pagos(); track p.idPago) {
+              @for (p of filteredPagos(); track p.idPago) {
                 <tr class="hover:bg-slate-50">
                   <td class="px-4 py-3 text-slate-700">#{{ p.idPago }}</td>
                   <td class="px-4 py-3 text-slate-700">#{{ p.idReserva }}</td>
@@ -165,9 +171,24 @@ export class PaymentsComponent implements OnInit {
     private readonly toast: ToastService
   ) {}
 
+  readonly loading = signal(true);
+
+  readonly filteredPagos = computed(() => {
+    const fd = this.filterDate();
+    if (!fd) return this.pagos();
+    return this.pagos().filter(p => p.fechaPago && p.fechaPago.startsWith(fd));
+  });
+
   ngOnInit(): void {
-    this.pagoService.getAll().subscribe({ next: (data) => this.pagos.set(data) });
-    this.reservaService.getAll().subscribe({ next: (data) => this.reservas.set(data) });
+    this.loading.set(true);
+    this.pagoService.getAll().subscribe({
+      next: (data) => { this.pagos.set(data); this.loading.set(false); },
+      error: () => { this.toast.error('Error al cargar pagos'); this.loading.set(false); }
+    });
+    this.reservaService.getAll().subscribe({
+      next: (data) => this.reservas.set(data),
+      error: () => this.toast.error('Error al cargar reservas')
+    });
   }
 
   openRegisterModal(): void {

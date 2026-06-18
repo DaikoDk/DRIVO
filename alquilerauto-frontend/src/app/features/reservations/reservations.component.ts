@@ -39,6 +39,13 @@ import { Reserva, Cliente, Auto } from '../../models';
     </div>
 
     <div class="card">
+      @if (loading()) {
+        <div class="space-y-4 p-4">
+          @for (i of [1,2,3,4,5]; track i) {
+            <div class="flex gap-4"><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 w-20"></div></div>
+          }
+        </div>
+      } @else {
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -55,7 +62,7 @@ import { Reserva, Cliente, Auto } from '../../models';
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            @for (r of reservas(); track r.idReserva) {
+            @for (r of filteredReservas(); track r.idReserva) {
               <tr class="hover:bg-slate-50">
                 <td class="px-4 py-3 text-slate-700">#{{ r.idReserva }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.nombreCliente }}</td>
@@ -89,12 +96,13 @@ import { Reserva, Cliente, Auto } from '../../models';
                 </td>
               </tr>
             }
-            @if (reservas().length === 0) {
+            @if (filteredReservas().length === 0) {
               <tr><td colspan="9" class="px-4 py-16 text-center text-slate-400">No hay reservas registradas</td></tr>
             }
           </tbody>
         </table>
       </div>
+      }
     </div>
 
     <!-- NEW RESERVATION MODAL -->
@@ -251,14 +259,37 @@ export class ReservationsComponent implements OnInit {
     private readonly toast: ToastService
   ) {}
 
+  readonly loading = signal(true);
+
+  readonly filteredReservas = computed(() => {
+    const ini = this.filterDateIni();
+    const fin = this.filterDateFin();
+    if (!ini && !fin) return this.reservas();
+    return this.reservas().filter(r => {
+      if (ini && r.fechaInicio < ini) return false;
+      if (fin && r.fechaFin > fin) return false;
+      return true;
+    });
+  });
+
   ngOnInit(): void {
     this.loadReservas();
-    this.clienteService.getActivos().subscribe({ next: (d) => this.clientes.set(d) });
-    this.autoService.getDisponibles().subscribe({ next: (d) => this.vehiculosDisponibles.set(d) });
+    this.clienteService.getActivos().subscribe({
+      next: (d) => this.clientes.set(d),
+      error: () => this.toast.error('Error al cargar clientes')
+    });
+    this.autoService.getDisponibles().subscribe({
+      next: (d) => this.vehiculosDisponibles.set(d),
+      error: () => this.toast.error('Error al cargar vehiculos')
+    });
   }
 
   loadReservas(): void {
-    this.reservaService.getAll().subscribe({ next: (data) => this.reservas.set(data) });
+    this.loading.set(true);
+    this.reservaService.getAll().subscribe({
+      next: (data) => { this.reservas.set(data); this.loading.set(false); },
+      error: () => { this.toast.error('Error al cargar reservas'); this.loading.set(false); }
+    });
   }
 
   openNewModal(): void {

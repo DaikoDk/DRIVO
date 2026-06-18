@@ -16,6 +16,13 @@ import { Reserva } from '../../../models';
       <p class="text-slate-500 mb-8">Historial de tus alquileres</p>
 
       <div class="card">
+        @if (loading()) {
+          <div class="space-y-4 p-4">
+            @for (i of [1,2,3]; track i) {
+              <div class="flex gap-4"><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 w-20"></div></div>
+            }
+          </div>
+        } @else {
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
@@ -59,12 +66,14 @@ import { Reserva } from '../../../models';
             </tbody>
           </table>
         </div>
+        }
       </div>
     </div>
   `
 })
 export class MisReservasComponent implements OnInit {
   readonly reservas = signal<Reserva[]>([]);
+  readonly loading = signal(true);
 
   constructor(
     private readonly reservaService: ReservaService,
@@ -73,7 +82,10 @@ export class MisReservasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.reservaService.getMisReservas().subscribe({ next: (d) => this.reservas.set(d) });
+    this.reservaService.getMisReservas().subscribe({
+      next: (d) => { this.reservas.set(d); this.loading.set(false); },
+      error: () => { this.toast.error('Error al cargar tus reservas'); this.loading.set(false); }
+    });
   }
 
   cancelar(r: Reserva): void {

@@ -20,10 +20,13 @@ import { Auto, Marca, Modelo } from '../../models';
         <h1 class="text-2xl font-bold text-slate-800">Vehiculos</h1>
         <p class="text-sm text-slate-500 mt-1">Gestion de flota vehicular</p>
       </div>
-      <button class="btn-primary flex items-center gap-2" (click)="openAddModal()">
-        <span class="material-symbols-outlined text-lg">add</span>
-        Agregar Vehiculo
-      </button>
+      <div class="flex gap-3">
+        <input class="input-field w-64" type="search" placeholder="Buscar vehiculo..." [(ngModel)]="searchTerm" />
+        <button class="btn-primary flex items-center gap-2" (click)="openAddModal()">
+          <span class="material-symbols-outlined text-lg">add</span>
+          Agregar Vehiculo
+        </button>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -46,7 +49,7 @@ import { Auto, Marca, Modelo } from '../../models';
           <button class="btn-secondary" (click)="loadAutos()">Reintentar</button>
         </div>
       }
-      @for (auto of filteredAutos(); track auto.idAuto) {
+      @for (auto of pagedAutos(); track auto.idAuto) {
         <div class="card">
           <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center" [style.background]="'linear-gradient(135deg, ' + getGradient(auto) + ')'">
             <span class="material-symbols-outlined text-5xl text-white/80">directions_car</span>
@@ -75,7 +78,7 @@ import { Auto, Marca, Modelo } from '../../models';
           </div>
         </div>
       }
-      @if (filteredAutos().length === 0) {
+      @if (!loading() && pagedAutos().length === 0) {
         <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
           <span class="material-symbols-outlined text-5xl text-slate-300 mb-4">directions_car</span>
           <p class="text-sm text-slate-400">No se encontraron vehiculos</p>
@@ -83,7 +86,7 @@ import { Auto, Marca, Modelo } from '../../models';
       }
     </div>
 
-    <app-pagination [currentPage]="currentPage()" [totalPages]="5" [totalItems]="autos().length" [pageSize]="6" (pageChange)="currentPage.set($event)"></app-pagination>
+    <app-pagination [currentPage]="currentPage()" [totalPages]="totalPagesComputed()" [totalItems]="filteredAutos().length" [pageSize]="pageSize" (pageChange)="currentPage.set($event)"></app-pagination>
 
     <app-modal [open]="showForm()" [title]="editingAuto() ? 'Editar Vehiculo' : 'Agregar Vehiculo'" (closed)="closeForm()">
       <div class="space-y-4">
@@ -213,6 +216,17 @@ export class VehiclesComponent implements OnInit {
       (a.marca || '').toLowerCase().includes(term) ||
       (a.modelo || '').toLowerCase().includes(term)
     );
+  });
+
+  readonly pageSize = 6;
+
+  readonly totalPagesComputed = computed(() =>
+    Math.max(1, Math.ceil(this.filteredAutos().length / this.pageSize))
+  );
+
+  readonly pagedAutos = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredAutos().slice(start, start + this.pageSize);
   });
 
   emptyForm(): AutoFormData {

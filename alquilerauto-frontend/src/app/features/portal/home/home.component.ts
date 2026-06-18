@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AutoService } from '../../../core/services/auto.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Auto } from '../../../models';
 
 @Component({
@@ -73,6 +74,16 @@ import { Auto } from '../../../models';
           </a>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          @if (loading()) {
+            @for (i of [1,2,3]; track i) {
+              <div class="card animate-pulse">
+                <div class="w-full h-40 rounded-lg mb-4 bg-slate-200"></div>
+                <div class="h-4 bg-slate-200 rounded mb-2 w-3/4"></div>
+                <div class="h-3 bg-slate-200 rounded mb-4 w-1/2"></div>
+                <div class="h-4 bg-slate-200 rounded w-20"></div>
+              </div>
+            }
+          }
           @for (auto of destacados(); track auto.idAuto) {
             <div class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
               <div class="w-full h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
@@ -107,13 +118,17 @@ import { Auto } from '../../../models';
 })
 export class HomeComponent implements OnInit {
   readonly destacados = signal<Auto[]>([]);
+  readonly loading = signal(true);
 
-  constructor(private readonly autoService: AutoService) {}
+  constructor(
+    private readonly autoService: AutoService,
+    private readonly toast: ToastService
+  ) {}
 
   ngOnInit(): void {
     this.autoService.getDisponibles().subscribe({
-      next: (data) => this.destacados.set(data.slice(0, 6)),
-      error: () => {}
+      next: (data) => { this.destacados.set(data.slice(0, 6)); this.loading.set(false); },
+      error: () => { this.toast.error('Error al cargar autos destacados'); this.loading.set(false); }
     });
   }
 }

@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { AutoService } from '../../../core/services/auto.service';
@@ -11,7 +11,7 @@ import { Auto } from '../../../models';
 @Component({
   selector: 'app-auto-detail',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, RouterLink],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-8">
       @if (auto()) {
@@ -118,6 +118,12 @@ import { Auto } from '../../../models';
             </div>
           </div>
         </div>
+      } @else if (loadError()) {
+        <div class="flex flex-col items-center justify-center py-20">
+          <span class="material-symbols-outlined text-5xl text-red-300 mb-4">error</span>
+          <p class="text-red-500 mb-2">{{ loadError() }}</p>
+          <a routerLink="/portal/catalogo" class="text-primary font-medium text-sm hover:underline">Volver al catalogo</a>
+        </div>
       } @else {
         <div class="flex items-center justify-center py-20">
           <p class="text-slate-400">Cargando...</p>
@@ -146,9 +152,14 @@ export class AutoDetailComponent implements OnInit {
     private readonly toast: ToastService
   ) {}
 
+  readonly loadError = signal('');
+
   ngOnInit(): void {
     const id = +this.route.snapshot.paramMap.get('id')!;
-    this.autoService.getById(id).subscribe({ next: (d) => this.auto.set(d) });
+    this.autoService.getById(id).subscribe({
+      next: (d) => this.auto.set(d),
+      error: () => this.loadError.set('No se pudo cargar el vehiculo')
+    });
   }
 
   dias(): number {

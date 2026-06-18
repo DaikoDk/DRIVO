@@ -49,6 +49,13 @@ import { Mantenimiento, Auto } from '../../models';
     </div>
 
     <div class="card">
+      @if (loading()) {
+        <div class="space-y-4 p-4">
+          @for (i of [1,2,3,4,5]; track i) {
+            <div class="flex gap-4"><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 w-20"></div></div>
+          }
+        </div>
+      } @else {
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -86,6 +93,7 @@ import { Mantenimiento, Auto } from '../../models';
           </tbody>
         </table>
       </div>
+      }
     </div>
 
     <app-modal [open]="showScheduleModal()" title="Programar Mantenimiento" (closed)="showScheduleModal.set(false)">
@@ -169,9 +177,18 @@ export class MaintenanceComponent implements OnInit {
     private readonly toast: ToastService
   ) {}
 
+  readonly loading = signal(true);
+
   ngOnInit(): void {
-    this.mantenimientoService.getAll().subscribe({ next: (data) => this.mantenimientos.set(data) });
-    this.autoService.getAll().subscribe({ next: (data) => this.autos.set(data) });
+    this.loading.set(true);
+    this.mantenimientoService.getAll().subscribe({
+      next: (data) => { this.mantenimientos.set(data); this.loading.set(false); },
+      error: () => { this.toast.error('Error al cargar mantenimientos'); this.loading.set(false); }
+    });
+    this.autoService.getAll().subscribe({
+      next: (data) => this.autos.set(data),
+      error: () => this.toast.error('Error al cargar autos')
+    });
   }
 
   openScheduleModal(): void {

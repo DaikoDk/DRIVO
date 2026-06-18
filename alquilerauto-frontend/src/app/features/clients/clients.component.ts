@@ -36,6 +36,13 @@ import { Cliente } from '../../models';
     </div>
 
     <div class="card">
+      @if (loading()) {
+        <div class="space-y-4 p-4">
+          @for (i of [1,2,3,4,5]; track i) {
+            <div class="flex gap-4"><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 w-20"></div></div>
+          }
+        </div>
+      } @else {
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -106,6 +113,7 @@ import { Cliente } from '../../models';
           </tbody>
         </table>
       </div>
+      }
     </div>
 
     <app-modal [open]="showForm()" [title]="editingClient() ? 'Editar Cliente' : 'Agregar Cliente'" (closed)="closeForm()">
@@ -221,8 +229,14 @@ export class ClientsComponent implements OnInit {
     );
   });
 
+  readonly loading = signal(true);
+
   loadClientes(): void {
-    this.clienteService.getAll().subscribe({ next: (data) => this.clientes.set(data) });
+    this.loading.set(true);
+    this.clienteService.getAll().subscribe({
+      next: (data) => { this.clientes.set(data); this.loading.set(false); },
+      error: () => { this.toast.error('Error al cargar clientes'); this.loading.set(false); }
+    });
   }
 
   emptyForm(): ClienteFormData {

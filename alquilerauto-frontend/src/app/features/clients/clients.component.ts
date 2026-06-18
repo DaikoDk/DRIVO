@@ -32,7 +32,7 @@ import { Cliente } from '../../models';
       <app-stat-card label="Total Clientes" [value]="clientes().length" icon="group" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
       <app-stat-card label="Activos" [value]="clientes().filter(c => c.activo).length" icon="check_circle" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
       <app-stat-card label="Bloqueados" [value]="clientes().filter(c => c.bloqueado).length" icon="block" iconBg="#fee2e2" iconColor="#dc2626"></app-stat-card>
-      <app-stat-card label="Nuevos (mes)" [value]="0" icon="trending_up" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
+      <app-stat-card label="Nuevos (mes)" [value]="statsMes().nuevosMes" icon="trending_up" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
     </div>
 
     <div class="card">
@@ -186,6 +186,18 @@ export class ClientsComponent implements OnInit {
   readonly showBlockConfirm = signal(false);
   readonly blockAction = signal<'block' | 'unblock'>('block');
   readonly blockTargetId = signal<number | null>(null);
+
+  readonly statsMes = computed(() => {
+    const now = new Date();
+    const mesActual = now.getMonth();
+    const anioActual = now.getFullYear();
+    const nuevosMes = this.clientes().filter(c => {
+      if (!c.fechaRegistro) return false;
+      const f = new Date(c.fechaRegistro);
+      return f.getMonth() === mesActual && f.getFullYear() === anioActual;
+    }).length;
+    return { nuevosMes };
+  });
 
   formData: ClienteFormData = this.emptyForm();
 

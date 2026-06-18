@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { DashboardService, DashboardStats, ReservaHoy, VehiculoMantenimiento, IngresoMensual } from '../../core/services/dashboard.service';
+import { ToastService } from '../../core/services/toast.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,10 +18,10 @@ import { DashboardService, DashboardStats, ReservaHoy, VehiculoMantenimiento, In
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <app-stat-card label="Total Vehiculos" [value]="stats().totalAutos" icon="directions_car" iconBg="#dbeafe" iconColor="#2563eb" [change]="5"></app-stat-card>
-      <app-stat-card label="Reservas Activas" [value]="stats().reservasActivas" icon="calendar_month" iconBg="#d1fae5" iconColor="#059669" [change]="12"></app-stat-card>
-      <app-stat-card label="Ingresos del Mes" [value]="'$' + stats().ingresosMes.toLocaleString()" icon="payments" iconBg="#fef3c7" iconColor="#d97706" [change]="8"></app-stat-card>
-      <app-stat-card label="Clientes Activos" [value]="stats().clientesActivos" icon="group" iconBg="#ede9fe" iconColor="#7c3aed" [change]="3"></app-stat-card>
+      <app-stat-card label="Total Vehiculos" [value]="stats().totalAutos" icon="directions_car" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
+      <app-stat-card label="Reservas Activas" [value]="stats().reservasActivas" icon="calendar_month" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
+      <app-stat-card label="Ingresos del Mes" [value]="'S/ ' + stats().ingresosMes.toLocaleString()" icon="payments" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
+      <app-stat-card label="Clientes Activos" [value]="stats().clientesActivos" icon="group" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -100,27 +101,27 @@ export class DashboardComponent implements OnInit {
   readonly vehiculosMantenimiento = signal<VehiculoMantenimiento[]>([]);
   readonly ingresosMensuales = signal<IngresoMensual[]>([]);
 
-  constructor(private readonly dashboardService: DashboardService) {}
+  constructor(
+    private readonly dashboardService: DashboardService,
+    private readonly toast: ToastService
+  ) {}
 
   ngOnInit(): void {
     this.dashboardService.getStats().subscribe({
       next: (data) => this.stats.set(data),
-      error: () => this.stats.set({ totalAutos: 45, reservasActivas: 12, ingresosMes: 15400, clientesActivos: 120 })
+      error: () => this.toast.error('Error al cargar estadisticas')
     });
     this.dashboardService.getReservasHoy().subscribe({
       next: (data) => this.reservasHoy.set(data),
-      error: () => {}
+      error: () => this.toast.error('Error al cargar reservas de hoy')
     });
     this.dashboardService.getVehiculosMantenimiento().subscribe({
       next: (data) => this.vehiculosMantenimiento.set(data),
-      error: () => {}
+      error: () => this.toast.error('Error al cargar vehiculos en mantenimiento')
     });
     this.dashboardService.getIngresosMensuales().subscribe({
       next: (data) => this.ingresosMensuales.set(data),
-      error: () => this.ingresosMensuales.set([
-        { mes: 'Ene', monto: 8500 }, { mes: 'Feb', monto: 9200 }, { mes: 'Mar', monto: 11000 },
-        { mes: 'Abr', monto: 10500 }, { mes: 'May', monto: 13500 }, { mes: 'Jun', monto: 15400 }
-      ])
+      error: () => this.toast.error('Error al cargar ingresos mensuales')
     });
   }
 

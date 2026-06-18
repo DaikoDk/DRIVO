@@ -27,8 +27,8 @@ import { Mantenimiento, Auto } from '../../models';
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <app-stat-card label="En Curso" [value]="stats().enCurso" icon="progress_activity" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
       <app-stat-card label="Completados" [value]="stats().completados" icon="check_circle" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
-      <app-stat-card label="Urgentes" value="0" icon="warning" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
-      <app-stat-card label="Gasto Mensual" value="$0" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
+      <app-stat-card label="Urgentes" [value]="stats().urgentes" icon="warning" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
+      <app-stat-card label="Gasto Mensual" [value]="'S/ ' + stats().gastoMensual" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
     </div>
 
     <div class="flex items-center gap-4 mb-4">
@@ -136,10 +136,25 @@ export class MaintenanceComponent implements OnInit {
 
   formData: MantenimientoFormData = { idAuto: 0, fechaIngreso: '', tipo: '', costo: 0 };
 
-  readonly stats = computed(() => ({
-    enCurso: this.mantenimientos().filter(m => !m.fechaSalida).length,
-    completados: this.mantenimientos().filter(m => m.fechaSalida).length,
-  }));
+  readonly stats = computed(() => {
+    const all = this.mantenimientos();
+    const now = new Date();
+    const mesActual = now.getMonth();
+    const anioActual = now.getFullYear();
+    const enCurso = all.filter(m => !m.fechaSalida);
+    const urgentes = enCurso.filter(m => m.tipo === 'Correctivo').length;
+    const mantenimientosMes = all.filter(m => {
+      const f = new Date(m.fechaIngreso);
+      return f.getMonth() === mesActual && f.getFullYear() === anioActual;
+    });
+    const gastoMensual = mantenimientosMes.reduce((s, m) => s + m.costo, 0).toFixed(2);
+    return {
+      enCurso: enCurso.length,
+      completados: all.filter(m => m.fechaSalida).length,
+      urgentes,
+      gastoMensual,
+    };
+  });
 
   readonly filteredMantenimientos = computed(() => {
     if (this.activeTab() === 'en-curso') {

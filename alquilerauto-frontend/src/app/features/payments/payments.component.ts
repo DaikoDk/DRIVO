@@ -28,10 +28,10 @@ import { Pago, Reserva } from '../../models';
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <app-stat-card label="Cobranza del Mes" [value]="'$42,850'" icon="payments" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
-      <app-stat-card label="Pendientes" value="14" icon="pending_actions" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
-      <app-stat-card label="Metodo mas usado" value="Tarjeta" icon="credit_card" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
-      <app-stat-card label="Morosidad" value="2.4%" icon="warning" iconBg="#fee2e2" iconColor="#dc2626"></app-stat-card>
+      <app-stat-card label="Cobranza del Mes" [value]="'S/ ' + statsMes().cobranza" icon="payments" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
+      <app-stat-card label="Pendientes" [value]="statsMes().pendientes" icon="pending_actions" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
+      <app-stat-card label="Metodo mas usado" [value]="statsMes().metodoTop" icon="credit_card" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
+      <app-stat-card label="Morosidad" [value]="statsMes().morosidad" icon="warning" iconBg="#fee2e2" iconColor="#dc2626"></app-stat-card>
     </div>
 
     <div class="card">
@@ -57,10 +57,10 @@ import { Pago, Reserva } from '../../models';
                   <td class="px-4 py-3 text-slate-700">#{{ p.idPago }}</td>
                   <td class="px-4 py-3 text-slate-700">#{{ p.idReserva }}</td>
                   <td class="px-4 py-3 text-slate-700">{{ p.nombreCliente }}</td>
-                  <td class="px-4 py-3 text-slate-700">\${{ p.montoBase.toFixed(2) }}</td>
-                  <td class="px-4 py-3 text-slate-700">\${{ p.montoMora.toFixed(2) }}</td>
-                  <td class="px-4 py-3 text-slate-700">\${{ p.montoDanos.toFixed(2) }}</td>
-                  <td class="px-4 py-3 font-medium text-slate-700">\${{ p.montoTotalPagado.toFixed(2) }}</td>
+                  <td class="px-4 py-3 text-slate-700">S/{{ p.montoBase.toFixed(2) }}</td>
+                  <td class="px-4 py-3 text-slate-700">S/{{ p.montoMora.toFixed(2) }}</td>
+                  <td class="px-4 py-3 text-slate-700">S/{{ p.montoDanos.toFixed(2) }}</td>
+                  <td class="px-4 py-3 font-medium text-slate-700">S/{{ p.montoTotalPagado.toFixed(2) }}</td>
                   <td class="px-4 py-3">
                     <span class="badge" [class.badge-info]="p.metodoPago === 'Tarjeta'" [class.badge-success]="p.metodoPago === 'Efectivo'" [class.badge-neutral]="p.metodoPago === 'Transferencia'">{{ p.metodoPago }}</span>
                   </td>
@@ -131,6 +131,33 @@ export class PaymentsComponent implements OnInit {
   readonly filterDate = signal('');
 
   formData: PagoFormData = { idReserva: 0, montoBase: 0, montoMora: 0, montoDanos: 0, metodoPago: '' };
+
+  readonly statsMes = computed(() => {
+    const now = new Date();
+    const mesActual = now.getMonth();
+    const anioActual = now.getFullYear();
+    const pagosMes = this.pagos().filter(p => {
+      const f = new Date(p.fechaPago);
+      return f.getMonth() === mesActual && f.getFullYear() === anioActual;
+    });
+    const cobranza = pagosMes.reduce((s, p) => s + p.montoTotalPagado, 0);
+    const totalMora = pagosMes.reduce((s, p) => s + p.montoMora, 0);
+    const totalPagado = pagosMes.reduce((s, p) => s + p.montoTotalPagado, 0);
+    const morosidadPct = totalPagado > 0 ? ((totalMora / totalPagado) * 100).toFixed(1) + '%' : '0%';
+    const metodos: Record<string, number> = {};
+    pagosMes.forEach(p => { metodos[p.metodoPago] = (metodos[p.metodoPago] || 0) + 1; });
+    const metodoTop = Object.entries(metodos).sort((a, b) => b[1] - a[1])[0]?.[0] || '--';
+    const reservasConPago = new Set(this.pagos().map(p => p.idReserva));
+    const pendientes = this.reservas().filter(r =>
+      r.estado !== 'Cancelada' && r.estado !== 'Finalizada' && !reservasConPago.has(r.idReserva)
+    ).length;
+    return {
+      cobranza: cobranza.toFixed(2),
+      pendientes,
+      metodoTop,
+      morosidad: morosidadPct,
+    };
+  });
 
   constructor(
     private readonly pagoService: PagoService,

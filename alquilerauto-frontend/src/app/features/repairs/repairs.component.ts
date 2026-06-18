@@ -29,8 +29,8 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <app-stat-card label="Pendientes" [value]="stats().pendientes" icon="pending_actions" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
       <app-stat-card label="En Proceso" [value]="stats().enProceso" icon="progress_activity" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
-      <app-stat-card label="Completadas Hoy" value="5" icon="check_circle" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
-      <app-stat-card label="Costo Mensual" [value]="'$4,200'" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
+      <app-stat-card label="Completadas Hoy" [value]="stats().completadasHoy" icon="check_circle" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
+      <app-stat-card label="Costo Mensual" [value]="'S/ ' + stats().costoMensual" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
     </div>
 
     <div class="flex items-center gap-4 mb-4">
@@ -188,9 +188,23 @@ export class RepairsComponent implements OnInit {
 
   readonly stats = computed(() => {
     const all = this.reparaciones();
+    const hoy = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const mesActual = now.getMonth();
+    const anioActual = now.getFullYear();
+    const completadasHoy = all.filter(r =>
+      r.estado === 'Completada' && r.fechaFin && r.fechaFin.startsWith(hoy)
+    ).length;
+    const reparacionesMes = all.filter(r => {
+      const f = new Date(r.fechaReporte);
+      return f.getMonth() === mesActual && f.getFullYear() === anioActual;
+    });
+    const costoMensual = reparacionesMes.reduce((s, r) => s + r.costo, 0).toFixed(2);
     return {
       pendientes: all.filter(r => r.estado === 'Pendiente').length,
       enProceso: all.filter(r => r.estado === 'En proceso').length,
+      completadasHoy,
+      costoMensual,
     };
   });
 

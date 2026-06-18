@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
@@ -23,11 +23,9 @@ import { Configuracion } from '../../models';
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
       <app-stat-card label="Parametros Totales" [value]="configs().length" icon="database" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
-      <app-stat-card label="Seguridad" value="Optima" icon="security" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
-      <app-stat-card label="Ultima Sincronizacion" value="5 min" icon="sync" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
-      <app-stat-card label="Alertas" value="0" icon="info" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
+      <app-stat-card label="Por Tipo" [value]="statsTipos()" icon="category" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
     </div>
 
     <div class="card">
@@ -123,6 +121,12 @@ export class SettingsComponent implements OnInit {
   readonly loading = signal(true);
   readonly showFormModal = signal(false);
   readonly editingConfig = signal<Configuracion | null>(null);
+
+  readonly statsTipos = computed(() => {
+    const tipos = this.configs().map(c => c.tipo || 'General');
+    const unique = new Set(tipos);
+    return unique.size + ' tipos';
+  });
 
   formData: ConfiguracionFormData = { clave: '', valor: '' };
 

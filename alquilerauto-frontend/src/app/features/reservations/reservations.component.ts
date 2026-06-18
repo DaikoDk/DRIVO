@@ -33,9 +33,9 @@ import { Reserva, Cliente, Auto } from '../../models';
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <app-stat-card label="Reservas Activas" [value]="reservas().filter(r => r.estado !== 'Finalizada' && r.estado !== 'Cancelada').length" icon="calendar_month" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
-      <app-stat-card label="Proximas 24h" [value]="0" icon="schedule" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
-      <app-stat-card label="Devoluciones Hoy" [value]="0" icon="assignment_return" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
-      <app-stat-card label="Ingresos Proyectados" [value]="'$0'" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
+      <app-stat-card label="Proximas 24h" [value]="statsExtra().proximas24h" icon="schedule" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
+      <app-stat-card label="Devoluciones Hoy" [value]="statsExtra().devolucionesHoy" icon="assignment_return" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
+      <app-stat-card label="Ingresos Proyectados" [value]="'S/ ' + statsExtra().ingresosProyectados" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
     </div>
 
     <div class="card">
@@ -223,6 +223,23 @@ export class ReservationsComponent implements OnInit {
   readonly finalizarTarget = signal<Reserva | null>(null);
   readonly filterDateIni = signal('');
   readonly filterDateFin = signal('');
+
+  readonly statsExtra = computed(() => {
+    const all = this.reservas();
+    const now = new Date();
+    const hoy = now.toISOString().split('T')[0];
+    const en24h = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const proximas24h = all.filter(r =>
+      r.estado !== 'Cancelada' && r.estado !== 'Finalizada' &&
+      r.fechaInicio >= hoy && r.fechaInicio <= en24h
+    ).length;
+    const devolucionesHoy = all.filter(r =>
+      r.estado === 'En proceso' && r.fechaFin === hoy
+    ).length;
+    const activas = all.filter(r => r.estado !== 'Finalizada' && r.estado !== 'Cancelada');
+    const ingresosProyectados = activas.reduce((s, r) => s + r.total, 0).toFixed(2);
+    return { proximas24h, devolucionesHoy, ingresosProyectados };
+  });
 
   newData: ReservaFormData = { idCliente: 0, idAuto: 0, fechaInicio: '', horaInicio: '', fechaFin: '', horaFin: '' };
   kilometrajeFin = 0;

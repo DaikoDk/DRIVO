@@ -74,21 +74,21 @@ import { Reserva, Cliente, Auto } from '../../models';
                 <td class="px-4 py-3"><app-status-badge [status]="r.estadoEntrega" [label]="r.estadoEntrega"></app-status-badge></td>
                 <td class="px-4 py-3 text-right">
                   <div class="flex items-center justify-end gap-1">
-                    <button class="btn-sm btn-secondary" (click)="openDetail(r)" title="Ver detalle">
+                    <button class="btn-sm btn-secondary" (click)="openDetail(r)" title="Ver detalle" aria-label="Ver detalle de reserva">
                       <span class="material-symbols-outlined text-sm">visibility</span>
                     </button>
                     @if (r.estado === 'Pendiente') {
-                      <button class="btn-sm btn-primary" (click)="iniciarReserva(r)" title="Iniciar">
+                      <button class="btn-sm btn-primary" (click)="iniciarReserva(r)" title="Iniciar" aria-label="Iniciar reserva">
                         <span class="material-symbols-outlined text-sm">play_circle</span>
                       </button>
                     }
                     @if (r.estado === 'En proceso') {
-                      <button class="btn-sm btn-primary" (click)="openFinalizar(r)" title="Finalizar">
+                      <button class="btn-sm btn-primary" (click)="openFinalizar(r)" title="Finalizar" aria-label="Finalizar reserva">
                         <span class="material-symbols-outlined text-sm">check_circle</span>
                       </button>
                     }
                     @if (r.estado === 'Pendiente') {
-                      <button class="btn-sm btn-danger" (click)="cancelarReserva(r)" title="Cancelar">
+                      <button class="btn-sm btn-danger" (click)="cancelarReserva(r)" title="Cancelar" aria-label="Cancelar reserva">
                         <span class="material-symbols-outlined text-sm">cancel</span>
                       </button>
                     }
@@ -110,8 +110,8 @@ import { Reserva, Cliente, Auto } from '../../models';
       <div class="space-y-4">
         @if (step() === 1) {
           <div>
-            <label class="input-label">Seleccionar Cliente *</label>
-            <select class="input-field" [(ngModel)]="newData.idCliente">
+            <label class="input-label" for="res-cliente">Seleccionar Cliente *</label>
+            <select class="input-field" id="res-cliente" [(ngModel)]="newData.idCliente">
               <option [ngValue]="0" disabled>Seleccionar...</option>
               @for (c of clientes(); track c.idCliente) {
                 <option [ngValue]="c.idCliente">{{ c.nombre }} {{ c.apellidoPaterno }} - {{ c.dni }}</option>
@@ -126,8 +126,8 @@ import { Reserva, Cliente, Auto } from '../../models';
         }
         @if (step() === 2) {
           <div>
-            <label class="input-label">Seleccionar Vehiculo *</label>
-            <select class="input-field" [(ngModel)]="newData.idAuto">
+            <label class="input-label" for="res-vehiculo">Seleccionar Vehiculo *</label>
+            <select class="input-field" id="res-vehiculo" [(ngModel)]="newData.idAuto">
               <option [ngValue]="0" disabled>Seleccionar...</option>
               @for (a of vehiculosDisponibles(); track a.idAuto) {
                 <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }} (S/{{ a.precioPorDia }}/dia)</option>
@@ -145,20 +145,20 @@ import { Reserva, Cliente, Auto } from '../../models';
           <div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="input-label">Fecha Inicio *</label>
-                <input class="input-field" type="date" [(ngModel)]="newData.fechaInicio" />
+                <label class="input-label" for="res-fecha-inicio">Fecha Inicio *</label>
+                <input class="input-field" id="res-fecha-inicio" type="date" [(ngModel)]="newData.fechaInicio" />
               </div>
               <div>
-                <label class="input-label">Hora Inicio *</label>
-                <input class="input-field" type="time" [(ngModel)]="newData.horaInicio" />
+                <label class="input-label" for="res-hora-inicio">Hora Inicio *</label>
+                <input class="input-field" id="res-hora-inicio" type="time" [(ngModel)]="newData.horaInicio" />
               </div>
               <div>
-                <label class="input-label">Fecha Fin *</label>
-                <input class="input-field" type="date" [(ngModel)]="newData.fechaFin" />
+                <label class="input-label" for="res-fecha-fin">Fecha Fin *</label>
+                <input class="input-field" id="res-fecha-fin" type="date" [(ngModel)]="newData.fechaFin" />
               </div>
               <div>
-                <label class="input-label">Hora Fin *</label>
-                <input class="input-field" type="time" [(ngModel)]="newData.horaFin" />
+                <label class="input-label" for="res-hora-fin">Hora Fin *</label>
+                <input class="input-field" id="res-hora-fin" type="time" [(ngModel)]="newData.horaFin" />
               </div>
             </div>
             <div class="flex justify-between mt-4">
@@ -208,8 +208,8 @@ import { Reserva, Cliente, Auto } from '../../models';
     <app-modal [open]="showFinalizar()" title="Finalizar Reserva" (closed)="showFinalizar.set(false)">
       <div class="space-y-4">
         <div>
-          <label class="input-label">Kilometraje Final *</label>
-          <input class="input-field" type="number" [(ngModel)]="kilometrajeFin" />
+          <label class="input-label" for="res-kilometraje-final">Kilometraje Final *</label>
+          <input class="input-field" id="res-kilometraje-final" type="number" [(ngModel)]="kilometrajeFin" />
         </div>
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button class="btn-secondary" (click)="showFinalizar.set(false)">Cancelar</button>

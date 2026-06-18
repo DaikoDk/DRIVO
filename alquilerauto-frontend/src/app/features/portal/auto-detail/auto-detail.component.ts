@@ -69,22 +69,22 @@ import { Auto } from '../../../models';
               <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label class="input-label">Fecha Inicio</label>
-                    <input class="input-field" type="date" [(ngModel)]="fechaInicio" />
+                    <label class="input-label" for="auto-fecha-inicio">Fecha Inicio</label>
+                    <input class="input-field" id="auto-fecha-inicio" type="date" [(ngModel)]="fechaInicio" />
                   </div>
                   <div>
-                    <label class="input-label">Hora</label>
-                    <input class="input-field" type="time" [(ngModel)]="horaInicio" value="08:00" />
+                    <label class="input-label" for="auto-hora-inicio">Hora</label>
+                    <input class="input-field" id="auto-hora-inicio" type="time" [(ngModel)]="horaInicio" value="08:00" />
                   </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label class="input-label">Fecha Fin</label>
-                    <input class="input-field" type="date" [(ngModel)]="fechaFin" />
+                    <label class="input-label" for="auto-fecha-fin">Fecha Fin</label>
+                    <input class="input-field" id="auto-fecha-fin" type="date" [(ngModel)]="fechaFin" />
                   </div>
                   <div>
-                    <label class="input-label">Hora</label>
-                    <input class="input-field" type="time" [(ngModel)]="horaFin" value="18:00" />
+                    <label class="input-label" for="auto-hora-fin">Hora</label>
+                    <input class="input-field" id="auto-hora-fin" type="time" [(ngModel)]="horaFin" value="18:00" />
                   </div>
                 </div>
 

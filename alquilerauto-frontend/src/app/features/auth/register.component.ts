@@ -39,51 +39,51 @@ interface RegisterForm {
           <div class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="input-label">Nombre *</label>
-                <input class="input-field" [(ngModel)]="form.nombre" placeholder="Nombres" />
+                <label class="input-label" for="reg-nombre">Nombre *</label>
+                <input class="input-field" id="reg-nombre" [(ngModel)]="form.nombre" placeholder="Nombres" />
               </div>
               <div>
-                <label class="input-label">Apellido Paterno *</label>
-                <input class="input-field" [(ngModel)]="form.apellidoPaterno" placeholder="Apellido" />
+                <label class="input-label" for="reg-apellido-paterno">Apellido Paterno *</label>
+                <input class="input-field" id="reg-apellido-paterno" [(ngModel)]="form.apellidoPaterno" placeholder="Apellido" />
               </div>
             </div>
             <div>
-              <label class="input-label">Apellido Materno</label>
-              <input class="input-field" [(ngModel)]="form.apellidoMaterno" placeholder="Apellido materno" />
+              <label class="input-label" for="reg-apellido-materno">Apellido Materno</label>
+              <input class="input-field" id="reg-apellido-materno" [(ngModel)]="form.apellidoMaterno" placeholder="Apellido materno" />
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="input-label">DNI *</label>
-                <input class="input-field" [(ngModel)]="form.dni" placeholder="12345678" />
+                <label class="input-label" for="reg-dni">DNI *</label>
+                <input class="input-field" id="reg-dni" [(ngModel)]="form.dni" placeholder="12345678" />
               </div>
               <div>
-                <label class="input-label">Telefono</label>
-                <input class="input-field" [(ngModel)]="form.telefono" placeholder="999888777" />
+                <label class="input-label" for="reg-telefono">Telefono</label>
+                <input class="input-field" id="reg-telefono" [(ngModel)]="form.telefono" placeholder="999888777" />
               </div>
             </div>
             <div>
-              <label class="input-label">Email *</label>
-              <input class="input-field" type="email" [(ngModel)]="form.email" placeholder="correo@ejemplo.com" />
+              <label class="input-label" for="reg-email">Email *</label>
+              <input class="input-field" id="reg-email" type="email" [(ngModel)]="form.email" placeholder="correo@ejemplo.com" />
             </div>
             <div>
-              <label class="input-label">Direccion</label>
-              <input class="input-field" [(ngModel)]="form.direccion" placeholder="Av. Principal 123" />
+              <label class="input-label" for="reg-direccion">Direccion</label>
+              <input class="input-field" id="reg-direccion" [(ngModel)]="form.direccion" placeholder="Av. Principal 123" />
             </div>
             <div>
-              <label class="input-label">Clave *</label>
-              <input class="input-field" type="password" [(ngModel)]="form.clave" placeholder="Minimo 6 caracteres" />
+              <label class="input-label" for="reg-clave">Clave *</label>
+              <input class="input-field" id="reg-clave" type="password" [(ngModel)]="form.clave" placeholder="Minimo 6 caracteres" />
             </div>
 
             <div class="border-t border-slate-100 pt-4">
               <p class="text-sm font-semibold text-slate-700 mb-3">Licencia de Conducir</p>
               <div class="grid grid-cols-3 gap-4">
                 <div>
-                  <label class="input-label">Numero</label>
-                  <input class="input-field" [(ngModel)]="form.numeroLicencia" placeholder="Q12345678" />
+                  <label class="input-label" for="reg-licencia-numero">Numero</label>
+                  <input class="input-field" id="reg-licencia-numero" [(ngModel)]="form.numeroLicencia" placeholder="Q12345678" />
                 </div>
                 <div>
-                  <label class="input-label">Categoria</label>
-                  <select class="input-field" [(ngModel)]="form.categoriaLicencia">
+                  <label class="input-label" for="reg-licencia-categoria">Categoria</label>
+                  <select class="input-field" id="reg-licencia-categoria" [(ngModel)]="form.categoriaLicencia">
                     <option value="">Seleccionar</option>
                     <option value="A-I">A-I</option>
                     <option value="A-IIa">A-IIa</option>
@@ -94,8 +94,8 @@ interface RegisterForm {
                   </select>
                 </div>
                 <div>
-                  <label class="input-label">Vencimiento</label>
-                  <input class="input-field" type="date" [(ngModel)]="form.fechaVencimientoLicencia" />
+                  <label class="input-label" for="reg-licencia-vencimiento">Vencimiento</label>
+                  <input class="input-field" id="reg-licencia-vencimiento" type="date" [(ngModel)]="form.fechaVencimientoLicencia" />
                 </div>
               </div>
             </div>

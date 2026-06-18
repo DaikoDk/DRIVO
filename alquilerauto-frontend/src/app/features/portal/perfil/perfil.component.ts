@@ -25,35 +25,35 @@ import { Cliente } from '../../../models';
           <h2 class="text-lg font-semibold text-slate-800 mb-4">Datos Personales</h2>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="input-label">Nombre</label>
-              <input class="input-field" [(ngModel)]="form.nombre" />
+              <label class="input-label" for="perf-nombre">Nombre</label>
+              <input class="input-field" id="perf-nombre" [(ngModel)]="form.nombre" />
             </div>
             <div>
-              <label class="input-label">Apellido Paterno</label>
-              <input class="input-field" [(ngModel)]="form.apellidoPaterno" />
+              <label class="input-label" for="perf-apellido-paterno">Apellido Paterno</label>
+              <input class="input-field" id="perf-apellido-paterno" [(ngModel)]="form.apellidoPaterno" />
             </div>
           </div>
           <div class="mt-4">
-            <label class="input-label">Apellido Materno</label>
-            <input class="input-field" [(ngModel)]="form.apellidoMaterno" />
+            <label class="input-label" for="perf-apellido-materno">Apellido Materno</label>
+            <input class="input-field" id="perf-apellido-materno" [(ngModel)]="form.apellidoMaterno" />
           </div>
           <div class="grid grid-cols-2 gap-4 mt-4">
             <div>
-              <label class="input-label">DNI</label>
-              <input class="input-field" [(ngModel)]="form.dni" disabled />
+              <label class="input-label" for="perf-dni">DNI</label>
+              <input class="input-field" id="perf-dni" [(ngModel)]="form.dni" disabled />
             </div>
             <div>
-              <label class="input-label">Telefono</label>
-              <input class="input-field" [(ngModel)]="form.telefono" />
+              <label class="input-label" for="perf-telefono">Telefono</label>
+              <input class="input-field" id="perf-telefono" [(ngModel)]="form.telefono" />
             </div>
           </div>
           <div class="mt-4">
-            <label class="input-label">Email</label>
-            <input class="input-field" type="email" [(ngModel)]="form.email" disabled />
+            <label class="input-label" for="perf-email">Email</label>
+            <input class="input-field" id="perf-email" type="email" [(ngModel)]="form.email" disabled />
           </div>
           <div class="mt-4">
-            <label class="input-label">Direccion</label>
-            <input class="input-field" [(ngModel)]="form.direccion" />
+            <label class="input-label" for="perf-direccion">Direccion</label>
+            <input class="input-field" id="perf-direccion" [(ngModel)]="form.direccion" />
           </div>
           <button class="btn-primary mt-6" [disabled]="saving()" (click)="saveProfile()">
             {{ saving() ? 'Guardando...' : 'Guardar Cambios' }}
@@ -65,16 +65,16 @@ import { Cliente } from '../../../models';
           <h2 class="text-lg font-semibold text-slate-800 mb-4">Licencia de Conducir</h2>
           <div class="grid grid-cols-3 gap-4">
             <div>
-              <label class="input-label">Numero</label>
-              <input class="input-field" [(ngModel)]="form.numeroLicencia" />
+              <label class="input-label" for="perf-licencia-numero">Numero</label>
+              <input class="input-field" id="perf-licencia-numero" [(ngModel)]="form.numeroLicencia" />
             </div>
             <div>
-              <label class="input-label">Categoria</label>
-              <input class="input-field" [(ngModel)]="form.categoriaLicencia" />
+              <label class="input-label" for="perf-licencia-categoria">Categoria</label>
+              <input class="input-field" id="perf-licencia-categoria" [(ngModel)]="form.categoriaLicencia" />
             </div>
             <div>
-              <label class="input-label">Vencimiento</label>
-              <input class="input-field" type="date" [(ngModel)]="form.fechaVencimientoLicencia" />
+              <label class="input-label" for="perf-licencia-vencimiento">Vencimiento</label>
+              <input class="input-field" id="perf-licencia-vencimiento" type="date" [(ngModel)]="form.fechaVencimientoLicencia" />
             </div>
           </div>
         </div>
@@ -85,16 +85,16 @@ import { Cliente } from '../../../models';
             <p class="text-sm text-slate-500 mb-4">Cambia tu contrasena</p>
             <div class="grid md:grid-cols-3 gap-4">
               <div>
-                <label class="input-label">Clave Actual</label>
-                <input class="input-field" type="password" [(ngModel)]="claveActual" placeholder="Tu clave actual" />
+                <label class="input-label" for="perf-clave-actual">Clave Actual</label>
+                <input class="input-field" id="perf-clave-actual" type="password" [(ngModel)]="claveActual" placeholder="Tu clave actual" />
               </div>
               <div>
-                <label class="input-label">Nueva Clave</label>
-                <input class="input-field" type="password" [(ngModel)]="newPassword" placeholder="Minimo 6 caracteres" />
+                <label class="input-label" for="perf-nueva-clave">Nueva Clave</label>
+                <input class="input-field" id="perf-nueva-clave" type="password" [(ngModel)]="newPassword" placeholder="Minimo 6 caracteres" />
               </div>
               <div>
-                <label class="input-label">Confirmar Clave</label>
-                <input class="input-field" type="password" [(ngModel)]="confirmPassword" placeholder="Repite la clave" />
+                <label class="input-label" for="perf-confirmar-clave">Confirmar Clave</label>
+                <input class="input-field" id="perf-confirmar-clave" type="password" [(ngModel)]="confirmPassword" placeholder="Repite la clave" />
               </div>
             </div>
             <button class="btn-secondary mt-4" [disabled]="!claveActual || !newPassword() || !confirmPassword() || newPassword() !== confirmPassword()" (click)="changePassword()">

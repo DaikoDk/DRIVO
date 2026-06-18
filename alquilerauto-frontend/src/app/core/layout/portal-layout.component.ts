@@ -34,7 +34,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
             </div>
             <span class="hidden sm:inline">{{ userName() }}</span>
           </a>
-          <button (click)="auth.logout()" class="text-slate-400 hover:text-white transition-colors" title="Cerrar sesion">
+          <button (click)="auth.logout()" class="text-slate-400 hover:text-white transition-colors" title="Cerrar sesion" aria-label="Cerrar sesión">
             <span class="material-symbols-outlined">logout</span>
           </button>
         </div>

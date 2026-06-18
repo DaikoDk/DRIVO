@@ -32,15 +32,15 @@ import { Mantenimiento, Auto } from '../../models';
     </div>
 
     <div class="flex items-center gap-4 mb-4">
-      <div class="inline-flex rounded-lg border border-slate-200 overflow-hidden">
-        <button class="px-4 py-2 text-sm font-medium transition-colors"
+      <div role="tablist" class="inline-flex rounded-lg border border-slate-200 overflow-hidden">
+        <button role="tab" [attr.aria-selected]="activeTab() === 'en-curso'" class="px-4 py-2 text-sm font-medium transition-colors"
                 [class.btn-primary]="activeTab() === 'en-curso'"
                 [class.bg-white]="activeTab() !== 'en-curso'"
                 [class.text-slate-600]="activeTab() !== 'en-curso'"
                 (click)="activeTab.set('en-curso')">En curso
           <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full" [class.bg-blue-100]="activeTab() !== 'en-curso'" [class.bg-white/20]="activeTab() === 'en-curso'">{{ stats().enCurso }}</span>
         </button>
-        <button class="px-4 py-2 text-sm font-medium transition-colors"
+        <button role="tab" [attr.aria-selected]="activeTab() === 'historial'" class="px-4 py-2 text-sm font-medium transition-colors"
                 [class.btn-primary]="activeTab() === 'historial'"
                 [class.bg-white]="activeTab() !== 'historial'"
                 [class.text-slate-600]="activeTab() !== 'historial'"
@@ -99,8 +99,8 @@ import { Mantenimiento, Auto } from '../../models';
     <app-modal [open]="showScheduleModal()" title="Programar Mantenimiento" (closed)="showScheduleModal.set(false)">
       <div class="space-y-4">
         <div>
-          <label class="input-label">Vehiculo *</label>
-          <select class="input-field" [(ngModel)]="formData.idAuto">
+          <label class="input-label" for="mnt-vehiculo">Vehiculo *</label>
+          <select class="input-field" id="mnt-vehiculo" [(ngModel)]="formData.idAuto">
             <option [ngValue]="0" disabled>Seleccionar...</option>
             @for (a of autos(); track a.idAuto) {
               <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }}</option>
@@ -108,12 +108,12 @@ import { Mantenimiento, Auto } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label">Fecha Ingreso *</label>
-          <input class="input-field" type="date" [(ngModel)]="formData.fechaIngreso" />
+          <label class="input-label" for="mnt-fecha-ingreso">Fecha Ingreso *</label>
+          <input class="input-field" id="mnt-fecha-ingreso" type="date" [(ngModel)]="formData.fechaIngreso" />
         </div>
         <div>
-          <label class="input-label">Tipo *</label>
-          <select class="input-field" [(ngModel)]="formData.tipo">
+          <label class="input-label" for="mnt-tipo">Tipo *</label>
+          <select class="input-field" id="mnt-tipo" [(ngModel)]="formData.tipo">
             <option value="" disabled>Seleccionar...</option>
             <option value="Preventivo">Preventivo</option>
             <option value="Correctivo">Correctivo</option>
@@ -121,12 +121,12 @@ import { Mantenimiento, Auto } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label">Costo *</label>
-          <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.costo" />
+          <label class="input-label" for="mnt-costo">Costo *</label>
+          <input class="input-field" id="mnt-costo" type="number" step="0.01" [(ngModel)]="formData.costo" />
         </div>
         <div>
-          <label class="input-label">Detalle</label>
-          <textarea class="input-field" rows="3" [(ngModel)]="formData.detalle" placeholder="Describa el mantenimiento..."></textarea>
+          <label class="input-label" for="mnt-detalle">Detalle</label>
+          <textarea class="input-field" id="mnt-detalle" rows="3" [(ngModel)]="formData.detalle" placeholder="Describa el mantenimiento..."></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button class="btn-secondary" (click)="showScheduleModal.set(false)">Cancelar</button>

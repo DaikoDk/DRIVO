@@ -22,12 +22,12 @@ import { Auto, Marca } from '../../../models';
             <h3 class="font-semibold text-slate-800 mb-4">Filtros</h3>
             <div class="space-y-4">
               <div>
-                <label class="input-label">Buscar</label>
-                <input class="input-field" type="search" [(ngModel)]="searchTerm" placeholder="Placa o modelo..." />
+                <label class="input-label" for="cat-buscar">Buscar</label>
+                <input class="input-field" id="cat-buscar" type="search" [(ngModel)]="searchTerm" placeholder="Placa o modelo..." />
               </div>
               <div>
-                <label class="input-label">Marca</label>
-                <select class="input-field" [(ngModel)]="filterMarca">
+                <label class="input-label" for="cat-marca">Marca</label>
+                <select class="input-field" id="cat-marca" [(ngModel)]="filterMarca">
                   <option value="">Todas</option>
                   @for (m of marcas(); track m.idMarca) {
                     <option [value]="m.idMarca">{{ m.nombre }}</option>
@@ -35,8 +35,8 @@ import { Auto, Marca } from '../../../models';
                 </select>
               </div>
               <div>
-                <label class="input-label">Precio maximo/dia</label>
-                <input class="input-field" type="range" min="0" max="500" step="10" [(ngModel)]="filterPrecioMax" />
+                <label class="input-label" for="cat-precio-max">Precio maximo/dia</label>
+                <input class="input-field" id="cat-precio-max" type="range" min="0" max="500" step="10" [(ngModel)]="filterPrecioMax" />
                 <p class="text-xs text-slate-500 mt-1">Hasta S/{{ filterPrecioMax() }}</p>
               </div>
               <button class="btn-secondary w-full text-center" (click)="clearFilters()">Limpiar filtros</button>
@@ -59,7 +59,7 @@ import { Auto, Marca } from '../../../models';
               }
             }
             @for (auto of filteredAutos(); track auto.idAuto) {
-              <div class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
+              <a class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
                 <div class="w-full h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
                   <span class="material-symbols-outlined text-6xl text-slate-400">directions_car</span>
                 </div>
@@ -76,7 +76,7 @@ import { Auto, Marca } from '../../../models';
                   <p class="text-xl font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
                   <span class="text-primary font-medium text-sm group-hover:underline">Reservar</span>
                 </div>
-              </div>
+              </a>
             }
             @if (filteredAutos().length === 0) {
               <div class="col-span-full flex flex-col items-center justify-center py-20">

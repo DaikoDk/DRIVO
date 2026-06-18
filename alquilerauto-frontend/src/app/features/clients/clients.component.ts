@@ -58,7 +58,7 @@ import { Cliente } from '../../models';
           </thead>
           <tbody class="divide-y divide-slate-100">
             @for (c of filteredClientes(); track c.idCliente) {
-              <tr class="hover:bg-slate-50 cursor-pointer" (click)="toggleExpand(c)">
+              <tr class="hover:bg-slate-50 cursor-pointer" tabindex="0" [attr.aria-expanded]="expandedId() === c.idCliente" (click)="toggleExpand(c)" (keyup.enter)="toggleExpand(c)">
                 <td class="px-4 py-3 font-medium text-slate-700">{{ c.nombre }} {{ c.apellidoPaterno }} {{ c.apellidoMaterno || '' }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ c.dni }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ c.email }}</td>
@@ -69,15 +69,15 @@ import { Cliente } from '../../models';
                 </td>
                 <td class="px-4 py-3 text-right">
                   <div class="flex items-center justify-end gap-2">
-                    <button class="btn-sm btn-secondary" (click)="$event.stopPropagation(); openEditModal(c)" title="Editar">
+                    <button class="btn-sm btn-secondary" (click)="$event.stopPropagation(); openEditModal(c)" title="Editar" aria-label="Editar cliente">
                       <span class="material-symbols-outlined text-sm">edit</span>
                     </button>
                     @if (c.bloqueado) {
-                      <button class="btn-sm btn-primary" (click)="$event.stopPropagation(); desbloquear(c)" title="Desbloquear">
+                      <button class="btn-sm btn-primary" (click)="$event.stopPropagation(); desbloquear(c)" title="Desbloquear" aria-label="Desbloquear cliente">
                         <span class="material-symbols-outlined text-sm">check_circle</span>
                       </button>
                     } @else {
-                      <button class="btn-sm btn-danger" (click)="$event.stopPropagation(); bloquear(c)" title="Bloquear">
+                      <button class="btn-sm btn-danger" (click)="$event.stopPropagation(); bloquear(c)" title="Bloquear" aria-label="Bloquear cliente">
                         <span class="material-symbols-outlined text-sm">block</span>
                       </button>
                     }
@@ -120,50 +120,50 @@ import { Cliente } from '../../models';
       <div class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">Nombre *</label>
-            <input class="input-field" [(ngModel)]="formData.nombre" placeholder="Nombres" />
+            <label class="input-label" for="cli-nombre">Nombre *</label>
+            <input class="input-field" id="cli-nombre" [(ngModel)]="formData.nombre" placeholder="Nombres" />
           </div>
           <div>
-            <label class="input-label">Apellido Paterno *</label>
-            <input class="input-field" [(ngModel)]="formData.apellidoPaterno" placeholder="Apellido paterno" />
+            <label class="input-label" for="cli-apellido-paterno">Apellido Paterno *</label>
+            <input class="input-field" id="cli-apellido-paterno" [(ngModel)]="formData.apellidoPaterno" placeholder="Apellido paterno" />
           </div>
         </div>
         <div>
-          <label class="input-label">Apellido Materno</label>
-          <input class="input-field" [(ngModel)]="formData.apellidoMaterno" placeholder="Apellido materno" />
+          <label class="input-label" for="cli-apellido-materno">Apellido Materno</label>
+          <input class="input-field" id="cli-apellido-materno" [(ngModel)]="formData.apellidoMaterno" placeholder="Apellido materno" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">DNI *</label>
-            <input class="input-field" [(ngModel)]="formData.dni" placeholder="12345678" />
+            <label class="input-label" for="cli-dni">DNI *</label>
+            <input class="input-field" id="cli-dni" [(ngModel)]="formData.dni" placeholder="12345678" />
           </div>
           <div>
-            <label class="input-label">Telefono</label>
-            <input class="input-field" [(ngModel)]="formData.telefono" placeholder="999888777" />
+            <label class="input-label" for="cli-telefono">Telefono</label>
+            <input class="input-field" id="cli-telefono" [(ngModel)]="formData.telefono" placeholder="999888777" />
           </div>
         </div>
         <div>
-          <label class="input-label">Email *</label>
-          <input class="input-field" type="email" [(ngModel)]="formData.email" placeholder="cliente@email.com" />
+          <label class="input-label" for="cli-email">Email *</label>
+          <input class="input-field" id="cli-email" type="email" [(ngModel)]="formData.email" placeholder="cliente@email.com" />
         </div>
         <div>
-          <label class="input-label">Direccion</label>
-          <input class="input-field" [(ngModel)]="formData.direccion" placeholder="Av. Principal 123" />
+          <label class="input-label" for="cli-direccion">Direccion</label>
+          <input class="input-field" id="cli-direccion" [(ngModel)]="formData.direccion" placeholder="Av. Principal 123" />
         </div>
         <div class="border-t border-slate-100 pt-4 mt-2">
           <p class="text-sm font-semibold text-slate-700 mb-3">Licencia de Conducir</p>
           <div class="grid grid-cols-3 gap-4">
             <div>
-              <label class="input-label">Numero</label>
-              <input class="input-field" [(ngModel)]="formData.numeroLicencia" />
+              <label class="input-label" for="cli-licencia-numero">Numero</label>
+              <input class="input-field" id="cli-licencia-numero" [(ngModel)]="formData.numeroLicencia" />
             </div>
             <div>
-              <label class="input-label">Categoria</label>
-              <input class="input-field" [(ngModel)]="formData.categoriaLicencia" />
+              <label class="input-label" for="cli-licencia-categoria">Categoria</label>
+              <input class="input-field" id="cli-licencia-categoria" [(ngModel)]="formData.categoriaLicencia" />
             </div>
             <div>
-              <label class="input-label">Vencimiento</label>
-              <input class="input-field" type="date" [(ngModel)]="formData.fechaVencimientoLicencia" />
+              <label class="input-label" for="cli-licencia-vencimiento">Vencimiento</label>
+              <input class="input-field" id="cli-licencia-vencimiento" type="date" [(ngModel)]="formData.fechaVencimientoLicencia" />
             </div>
           </div>
         </div>

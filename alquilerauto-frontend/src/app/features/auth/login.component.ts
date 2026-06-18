@@ -24,18 +24,18 @@ import { ToastService } from '../../core/services/toast.service';
 
           <div class="space-y-4">
             <div>
-              <label class="input-label">Correo</label>
-              <input class="input-field" type="email" [(ngModel)]="correo" placeholder="correo@ejemplo.com" />
+              <label for="login-correo" class="input-label">Correo</label>
+              <input id="login-correo" class="input-field" type="email" [(ngModel)]="correo" placeholder="correo@ejemplo.com" />
             </div>
             <div>
-              <label class="input-label">Clave</label>
-              <input class="input-field" type="password" [(ngModel)]="clave" placeholder="••••••••" (keyup.enter)="doLogin()" />
+              <label for="login-clave" class="input-label">Clave</label>
+              <input id="login-clave" class="input-field" type="password" [(ngModel)]="clave" placeholder="••••••••" (keyup.enter)="doLogin()" />
             </div>
             <button class="btn-primary w-full" [disabled]="loading()" (click)="doLogin()">
               {{ loading() ? 'Ingresando...' : 'Ingresar' }}
             </button>
             @if (error()) {
-              <p class="text-sm text-red-600 text-center">{{ error() }}</p>
+              <p role="alert" class="text-sm text-red-600 text-center">{{ error() }}</p>
             }
           </div>
 

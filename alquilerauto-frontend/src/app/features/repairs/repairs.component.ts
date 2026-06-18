@@ -34,13 +34,13 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
     </div>
 
     <div class="flex items-center gap-4 mb-4">
-      <div class="inline-flex rounded-lg border border-slate-200 overflow-hidden">
-        <button class="px-4 py-2 text-sm font-medium transition-colors"
+      <div role="tablist" class="inline-flex rounded-lg border border-slate-200 overflow-hidden">
+        <button role="tab" [attr.aria-selected]="activeTab() === 'activas'" class="px-4 py-2 text-sm font-medium transition-colors"
                 [class.btn-primary]="activeTab() === 'activas'"
                 [class.bg-white]="activeTab() !== 'activas'"
                 [class.text-slate-600]="activeTab() !== 'activas'"
                 (click)="activeTab.set('activas')">Activas</button>
-        <button class="px-4 py-2 text-sm font-medium transition-colors"
+        <button role="tab" [attr.aria-selected]="activeTab() === 'historial'" class="px-4 py-2 text-sm font-medium transition-colors"
                 [class.btn-primary]="activeTab() === 'historial'"
                 [class.bg-white]="activeTab() !== 'historial'"
                 [class.text-slate-600]="activeTab() !== 'historial'"
@@ -72,7 +72,7 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </thead>
           <tbody class="divide-y divide-slate-100">
             @for (r of filteredReparaciones(); track r.idReparacion) {
-              <tr class="hover:bg-slate-50 cursor-pointer" (click)="toggleExpand(r)">
+              <tr class="hover:bg-slate-50 cursor-pointer" tabindex="0" [attr.aria-expanded]="expandedId() === r.idReparacion" (click)="toggleExpand(r)" (keyup.enter)="toggleExpand(r)">
                 <td class="px-4 py-3 text-slate-700">#{{ r.idReparacion }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.auto?.placa }}</td>
                 <td class="px-4 py-3 text-slate-700">#{{ r.reserva?.idReserva }}</td>
@@ -122,8 +122,8 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
     <app-modal [open]="showReportModal()" title="Reportar Reparacion" (closed)="showReportModal.set(false)">
       <div class="space-y-4">
         <div>
-          <label class="input-label">Reserva *</label>
-          <select class="input-field" [(ngModel)]="formData.idReserva" (ngModelChange)="onReservaChange()">
+          <label class="input-label" for="rep-reserva">Reserva *</label>
+          <select class="input-field" id="rep-reserva" [(ngModel)]="formData.idReserva" (ngModelChange)="onReservaChange()">
             <option [ngValue]="0" disabled>Seleccionar...</option>
             @for (r of reservas(); track r.idReserva) {
               <option [ngValue]="r.idReserva">#{{ r.idReserva }} - {{ r.nombreCliente }} ({{ r.placa }})</option>
@@ -131,8 +131,8 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label">Vehiculo *</label>
-          <select class="input-field" [(ngModel)]="formData.idAuto">
+          <label class="input-label" for="rep-vehiculo">Vehiculo *</label>
+          <select class="input-field" id="rep-vehiculo" [(ngModel)]="formData.idAuto">
             <option [ngValue]="0" disabled>Seleccionar...</option>
             @if (formData.idReserva) {
               @for (r of reservas(); track r.idReserva) {
@@ -148,8 +148,8 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label">Catalogo Reparacion</label>
-          <select class="input-field" [(ngModel)]="formData.idCatalogoReparacion">
+          <label class="input-label" for="rep-catalogo">Catalogo Reparacion</label>
+          <select class="input-field" id="rep-catalogo" [(ngModel)]="formData.idCatalogoReparacion">
             <option [ngValue]="undefined">Seleccionar...</option>
             @for (c of catalogo(); track c.idCatalogoReparacion) {
               <option [ngValue]="c.idCatalogoReparacion">{{ c.descripcion }} (S/{{ c.costoEstimado }})</option>
@@ -157,12 +157,12 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label">Costo Estimado *</label>
-          <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.costo" />
+          <label class="input-label" for="rep-costo">Costo Estimado *</label>
+          <input class="input-field" id="rep-costo" type="number" step="0.01" [(ngModel)]="formData.costo" />
         </div>
         <div>
-          <label class="input-label">Descripcion *</label>
-          <textarea class="input-field" rows="3" [(ngModel)]="formData.descripcion" placeholder="Describa la reparacion..."></textarea>
+          <label class="input-label" for="rep-descripcion">Descripcion *</label>
+          <textarea class="input-field" id="rep-descripcion" rows="3" [(ngModel)]="formData.descripcion" placeholder="Describa la reparacion..."></textarea>
         </div>
         <div>
           <label class="input-label">Responsable</label>

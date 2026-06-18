@@ -66,10 +66,10 @@ import { Configuracion } from '../../models';
                   <td class="px-4 py-3 text-slate-500 text-xs">{{ c.fechaActualizacion | date:'dd/MM/yy HH:mm' }}</td>
                   <td class="px-4 py-3 text-right">
                     <div class="flex items-center justify-end gap-2">
-                      <button class="btn-sm btn-secondary" (click)="openEditModal(c)">
+                      <button class="btn-sm btn-secondary" title="Editar" aria-label="Editar configuración" (click)="openEditModal(c)">
                         <span class="material-symbols-outlined text-sm">edit</span>
                       </button>
-                      <button class="btn-sm btn-danger" (click)="deleteConfig(c)">
+                      <button class="btn-sm btn-danger" title="Eliminar" aria-label="Eliminar configuración" (click)="deleteConfig(c)">
                         <span class="material-symbols-outlined text-sm">delete</span>
                       </button>
                     </div>
@@ -88,16 +88,16 @@ import { Configuracion } from '../../models';
     <app-modal [open]="showFormModal()" [title]="editingConfig() ? 'Editar Configuracion' : 'Agregar Configuracion'" (closed)="showFormModal.set(false)">
       <div class="space-y-4">
         <div>
-          <label class="input-label">Clave *</label>
-          <input class="input-field" [(ngModel)]="formData.clave" placeholder="Ej: app.version" />
+          <label class="input-label" for="cfg-clave">Clave *</label>
+          <input class="input-field" id="cfg-clave" [(ngModel)]="formData.clave" placeholder="Ej: app.version" />
         </div>
         <div>
-          <label class="input-label">Valor *</label>
-          <input class="input-field" [(ngModel)]="formData.valor" placeholder="Ej: 1.0.0" />
+          <label class="input-label" for="cfg-valor">Valor *</label>
+          <input class="input-field" id="cfg-valor" [(ngModel)]="formData.valor" placeholder="Ej: 1.0.0" />
         </div>
         <div>
-          <label class="input-label">Tipo</label>
-          <select class="input-field" [(ngModel)]="formData.tipo">
+          <label class="input-label" for="cfg-tipo">Tipo</label>
+          <select class="input-field" id="cfg-tipo" [(ngModel)]="formData.tipo">
             <option value="">General</option>
             <option value="Sistema">Sistema</option>
             <option value="Seguridad">Seguridad</option>
@@ -105,8 +105,8 @@ import { Configuracion } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label">Descripcion</label>
-          <textarea class="input-field" rows="2" [(ngModel)]="formData.descripcion" placeholder="Descripcion del parametro..."></textarea>
+          <label class="input-label" for="cfg-descripcion">Descripcion</label>
+          <textarea class="input-field" id="cfg-descripcion" rows="2" [(ngModel)]="formData.descripcion" placeholder="Descripcion del parametro..."></textarea>
         </div>
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button class="btn-secondary" (click)="showFormModal.set(false)">Cancelar</button>

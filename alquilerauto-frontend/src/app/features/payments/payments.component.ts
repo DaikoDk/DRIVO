@@ -88,8 +88,8 @@ import { Pago, Reserva } from '../../models';
     <app-modal [open]="showRegisterModal()" title="Registrar Pago" (closed)="showRegisterModal.set(false)">
       <div class="space-y-4">
         <div>
-          <label class="input-label">Reserva *</label>
-          <select class="input-field" [(ngModel)]="formData.idReserva">
+          <label class="input-label" for="pay-reserva">Reserva *</label>
+          <select class="input-field" id="pay-reserva" [(ngModel)]="formData.idReserva">
             <option [ngValue]="0" disabled>Seleccionar...</option>
             @for (r of reservas(); track r.idReserva) {
               <option [ngValue]="r.idReserva">#{{ r.idReserva }} - {{ r.nombreCliente }}</option>
@@ -98,24 +98,24 @@ import { Pago, Reserva } from '../../models';
         </div>
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="input-label">Monto Base *</label>
-            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.montoBase" />
+            <label class="input-label" for="pay-monto-base">Monto Base *</label>
+            <input class="input-field" id="pay-monto-base" type="number" step="0.01" [(ngModel)]="formData.montoBase" />
           </div>
           <div>
-            <label class="input-label">Mora</label>
-            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.montoMora" />
+            <label class="input-label" for="pay-mora">Mora</label>
+            <input class="input-field" id="pay-mora" type="number" step="0.01" [(ngModel)]="formData.montoMora" />
           </div>
           <div>
-            <label class="input-label">Danos</label>
-            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.montoDanos" />
+            <label class="input-label" for="pay-danos">Danos</label>
+            <input class="input-field" id="pay-danos" type="number" step="0.01" [(ngModel)]="formData.montoDanos" />
           </div>
         </div>
         <div>
           <label class="input-label">Total: <span class="font-bold text-primary">S/{{ (formData.montoBase + formData.montoMora + formData.montoDanos).toFixed(2) }}</span></label>
         </div>
         <div>
-          <label class="input-label">Metodo de Pago *</label>
-          <select class="input-field" [(ngModel)]="formData.metodoPago">
+          <label class="input-label" for="pay-metodo">Metodo de Pago *</label>
+          <select class="input-field" id="pay-metodo" [(ngModel)]="formData.metodoPago">
             <option value="" disabled>Seleccionar...</option>
             <option value="Efectivo">Efectivo</option>
             <option value="Tarjeta">Tarjeta</option>

@@ -68,10 +68,10 @@ import { Auto, Marca, Modelo } from '../../models';
           <div class="flex items-center justify-between pt-3 border-t border-slate-100">
             <p class="text-lg font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
             <div class="flex items-center gap-2">
-              <button class="btn-sm btn-secondary" (click)="openEditModal(auto)" title="Editar">
+              <button class="btn-sm btn-secondary" (click)="openEditModal(auto)" title="Editar" aria-label="Editar vehículo">
                 <span class="material-symbols-outlined text-sm">edit</span>
               </button>
-              <button class="btn-sm btn-danger" (click)="prepareDelete(auto)" title="Eliminar">
+              <button class="btn-sm btn-danger" (click)="prepareDelete(auto)" title="Eliminar" aria-label="Eliminar vehículo">
                 <span class="material-symbols-outlined text-sm">delete</span>
               </button>
             </div>
@@ -91,13 +91,13 @@ import { Auto, Marca, Modelo } from '../../models';
     <app-modal [open]="showForm()" [title]="editingAuto() ? 'Editar Vehiculo' : 'Agregar Vehiculo'" (closed)="closeForm()">
       <div class="space-y-4">
         <div>
-          <label class="input-label">Placa *</label>
-          <input class="input-field" [(ngModel)]="formData.placa" placeholder="ABC-123" />
+          <label class="input-label" for="veh-placa">Placa *</label>
+          <input class="input-field" id="veh-placa" [(ngModel)]="formData.placa" placeholder="ABC-123" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">Marca *</label>
-            <select class="input-field" [(ngModel)]="formData.idMarca" (change)="onMarcaChange()">
+            <label class="input-label" for="veh-marca">Marca *</label>
+            <select class="input-field" id="veh-marca" [(ngModel)]="formData.idMarca" (change)="onMarcaChange()">
               <option [ngValue]="0" disabled>{{ loadingMarcas() ? 'Cargando...' : 'Seleccionar...' }}</option>
               @for (m of marcas(); track m.idMarca) {
                 <option [ngValue]="m.idMarca">{{ m.nombre }}</option>
@@ -105,8 +105,8 @@ import { Auto, Marca, Modelo } from '../../models';
             </select>
           </div>
           <div>
-            <label class="input-label">Modelo *</label>
-            <select class="input-field" [(ngModel)]="formData.idModelo">
+            <label class="input-label" for="veh-modelo">Modelo *</label>
+            <select class="input-field" id="veh-modelo" [(ngModel)]="formData.idModelo">
               <option [ngValue]="0" disabled>Seleccionar...</option>
               @for (m of modelos(); track m.idModelo) {
                 <option [ngValue]="m.idModelo">{{ m.nombre }}</option>
@@ -116,38 +116,38 @@ import { Auto, Marca, Modelo } from '../../models';
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">Año *</label>
-            <input class="input-field" type="number" [(ngModel)]="formData.anio" />
+            <label class="input-label" for="veh-anio">Año *</label>
+            <input class="input-field" id="veh-anio" type="number" [(ngModel)]="formData.anio" />
           </div>
           <div>
-            <label class="input-label">Color</label>
-            <input class="input-field" [(ngModel)]="formData.color" />
+            <label class="input-label" for="veh-color">Color</label>
+            <input class="input-field" id="veh-color" [(ngModel)]="formData.color" />
           </div>
         </div>
         <div>
-          <label class="input-label">Numero de Motor</label>
-          <input class="input-field" [(ngModel)]="formData.numeroMotor" />
+          <label class="input-label" for="veh-numero-motor">Numero de Motor</label>
+          <input class="input-field" id="veh-numero-motor" [(ngModel)]="formData.numeroMotor" />
         </div>
         <div>
-          <label class="input-label">Numero de Chasis</label>
-          <input class="input-field" [(ngModel)]="formData.numeroChasis" />
+          <label class="input-label" for="veh-numero-chasis">Numero de Chasis</label>
+          <input class="input-field" id="veh-numero-chasis" [(ngModel)]="formData.numeroChasis" />
         </div>
         <div>
-          <label class="input-label">Kilometraje Actual *</label>
-          <input class="input-field" type="number" [(ngModel)]="formData.kilometrajeActual" />
+          <label class="input-label" for="veh-kilometraje">Kilometraje Actual *</label>
+          <input class="input-field" id="veh-kilometraje" type="number" [(ngModel)]="formData.kilometrajeActual" />
         </div>
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="input-label">Precio/Dia *</label>
-            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.precioPorDia" />
+            <label class="input-label" for="veh-precio-dia">Precio/Dia *</label>
+            <input class="input-field" id="veh-precio-dia" type="number" step="0.01" [(ngModel)]="formData.precioPorDia" />
           </div>
           <div>
-            <label class="input-label">Precio/Hora</label>
-            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.precioPorHora" />
+            <label class="input-label" for="veh-precio-hora">Precio/Hora</label>
+            <input class="input-field" id="veh-precio-hora" type="number" step="0.01" [(ngModel)]="formData.precioPorHora" />
           </div>
           <div>
-            <label class="input-label">Mora/Dia *</label>
-            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.moraPorDia" />
+            <label class="input-label" for="veh-mora-dia">Mora/Dia *</label>
+            <input class="input-field" id="veh-mora-dia" type="number" step="0.01" [(ngModel)]="formData.moraPorDia" />
           </div>
         </div>
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">

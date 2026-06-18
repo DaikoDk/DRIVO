@@ -85,7 +85,7 @@ import { Auto } from '../../../models';
             }
           }
           @for (auto of destacados(); track auto.idAuto) {
-            <div class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
+            <a class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
               <div class="w-full h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
                 <span class="material-symbols-outlined text-6xl text-slate-400">directions_car</span>
               </div>
@@ -102,7 +102,7 @@ import { Auto } from '../../../models';
                 <p class="text-xl font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
                 <span class="text-primary font-medium text-sm group-hover:underline">Ver detalle</span>
               </div>
-            </div>
+            </a>
           }
         </div>
       </div>

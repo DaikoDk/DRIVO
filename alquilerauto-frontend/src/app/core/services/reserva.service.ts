@@ -71,4 +71,9 @@ export class ReservaService {
   cancelarDesdePortal(id: number): Observable<Reserva> {
     return this.api.patchCustom<Reserva>(`/reservas/${id}/cancelar-desde-portal`);
   }
+
+  bufferCheck(idAuto: number, fechaInicio: string, horaInicio: string): Observable<{ riesgo: boolean; mensaje: string | null; horasMargen: number; fechaFinAnterior: string | null; horaFinAnterior: string | null }> {
+    return this.api.get<{ riesgo: boolean; mensaje: string | null; horasMargen: number; fechaFinAnterior: string | null; horaFinAnterior: string | null }>(
+      '/reservas/buffer-check', { idAuto, fechaInicio, horaInicio });
+  }
 }

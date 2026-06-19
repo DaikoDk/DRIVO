@@ -176,10 +176,28 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
                 <input class="input-field" id="res-hora-fin" type="time" [(ngModel)]="newData.horaFin" />
               </div>
             </div>
-            <div class="flex justify-between mt-4">
-              <button class="btn-secondary" (click)="step.set(2)">Atrás</button>
-              <button class="btn-primary" (click)="createReserva()" [disabled]="!newData.fechaInicio || !newData.fechaFin || holdState() === 'expired'">Crear Reserva</button>
-            </div>
+            @if (showBufferWarning()) {
+              <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg space-y-3">
+                <p class="text-sm text-red-700 font-medium">⚠️ {{ bufferMensaje() }}</p>
+                <label class="flex items-center gap-2 text-sm text-red-800 cursor-pointer">
+                  <input type="checkbox" [ngModel]="bufferAcepto()" (change)="bufferAcepto.set(!bufferAcepto())" class="rounded" />
+                  Acepto los riesgos
+                </label>
+                <div class="flex items-center justify-between gap-2">
+                  <button class="btn-secondary" (click)="cancelarBuffer()">Atrás</button>
+                  <button class="btn-primary" [disabled]="!bufferAcepto() || bufferTimer() > 0" (click)="confirmarConRiesgo()">
+                    Confirmar
+                    @if (bufferTimer() > 0) { ({{ bufferTimer() }}s) }
+                  </button>
+                </div>
+              </div>
+            }
+            @if (!showBufferWarning()) {
+              <div class="flex justify-between mt-4">
+                <button class="btn-secondary" (click)="step.set(2)">Atrás</button>
+                <button class="btn-primary" (click)="createReserva()" [disabled]="!newData.fechaInicio || !newData.fechaFin || holdState() === 'expired'">Crear Reserva</button>
+              </div>
+            }
           </div>
         }
       </div>
@@ -396,6 +414,11 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   readonly holdState = signal<'idle' | 'held' | 'expired'>('idle');
   readonly holdTiempo = signal('');
   private holdTimer: ReturnType<typeof setInterval> | null = null;
+  readonly showBufferWarning = signal(false);
+  readonly bufferMensaje = signal('');
+  readonly bufferAcepto = signal(false);
+  readonly bufferTimer = signal(10);
+  private bufferInterval: ReturnType<typeof setInterval> | null = null;
 
   readonly statsExtra = computed(() => {
     const all = this.reservas();
@@ -458,6 +481,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.pararHoldTimer();
+    this.pararBufferTimer();
   }
 
   private iniciarHoldTimer(fechaExpiracion: string): void {
@@ -497,6 +521,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.holdState.set('idle');
     this.holdTiempo.set('');
     this.pararHoldTimer();
+    this.cancelarBuffer();
     this.autoService.getDisponibles().subscribe({
       next: (d) => this.vehiculosDisponibles.set(d),
       error: () => this.toast.error('Error al cargar vehiculos')
@@ -506,6 +531,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
   closeNewModal(): void {
     this.pararHoldTimer();
+    this.pararBufferTimer();
     this.showNewModal.set(false);
   }
 
@@ -560,11 +586,56 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.reparaciones.update(arr => arr.filter((_, i) => i !== index));
   }
 
+  private pararBufferTimer(): void {
+    if (this.bufferInterval) { clearInterval(this.bufferInterval); this.bufferInterval = null; }
+  }
+
+  cancelarBuffer(): void {
+    this.pararBufferTimer();
+    this.showBufferWarning.set(false);
+    this.bufferMensaje.set('');
+    this.bufferAcepto.set(false);
+    this.bufferTimer.set(10);
+  }
+
+  confirmarConRiesgo(): void {
+    this.pararBufferTimer();
+    this.showBufferWarning.set(false);
+    this.doCreate();
+  }
+
   createReserva(): void {
     if (!this.newData.idCliente || !this.newData.idAuto || !this.newData.fechaInicio || !this.newData.fechaFin) {
       this.toast.warning('Complete todos los campos');
       return;
     }
+    if (!this.newData.horaInicio) this.newData.horaInicio = '08:00';
+    if (this.showBufferWarning()) return;
+    this.reservaService.bufferCheck(this.newData.idAuto, this.newData.fechaInicio, this.newData.horaInicio).subscribe({
+      next: (res) => {
+        console.log('bufferCheck:', res);
+        if (res.riesgo && res.fechaFinAnterior && res.horaFinAnterior) {
+          const finAnterior = new Date(`${res.fechaFinAnterior}T${res.horaFinAnterior}`);
+          const inicioSeguro = new Date(finAnterior.getTime() + 24 * 60 * 60 * 1000);
+          this.newData.fechaInicio = inicioSeguro.toISOString().split('T')[0];
+          this.newData.horaInicio = res.horaFinAnterior;
+          this.bufferMensaje.set(res.mensaje!);
+          this.bufferAcepto.set(false);
+          this.bufferTimer.set(10);
+          this.pararBufferTimer();
+          this.bufferInterval = setInterval(() => {
+            this.bufferTimer.update(v => { if (v <= 1) { this.pararBufferTimer(); return 0; } return v - 1; });
+          }, 1000);
+          this.showBufferWarning.set(true);
+        } else {
+          this.doCreate();
+        }
+      },
+      error: () => this.doCreate()
+    });
+  }
+
+  doCreate(): void {
     this.reservaService.create(this.newData).subscribe({
       next: () => {
         this.toast.success('Reserva creada exitosamente');

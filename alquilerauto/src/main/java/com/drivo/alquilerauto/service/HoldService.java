@@ -21,23 +21,28 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class HoldService {
 
-    private final ConcurrentHashMap<Integer, LocalDateTime> holds = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, HoldInfo> holds = new ConcurrentHashMap<>();
     private final AutoRepository autoRepository;
 
     @Value("${app.reserva.tiempo-maximo-minutos}")
     private int tiempoMaximo;
 
+    record HoldInfo(LocalDateTime fechaHold, String estadoOriginal) {}
+
     @Transactional
     public HoldResponse hold(Integer idAuto) {
         Auto auto = autoRepository.findByIdWithLock(idAuto)
                 .orElseThrow(() -> new ResourceNotFoundException("Auto no encontrado con id: " + idAuto));
-        if (!"Disponible".equals(auto.getEstado())) {
+        String estado = auto.getEstado();
+        if (!"Disponible".equals(estado) && !"Reservado".equals(estado) && !"En proceso".equals(estado)) {
             throw new BadRequestException("Auto no disponible en este momento");
         }
-        auto.setEstado("Reservado");
-        autoRepository.save(auto);
-        holds.put(idAuto, LocalDateTime.now());
-        log.info("Hold creado para auto {} (expira en {} min)", idAuto, tiempoMaximo);
+        if ("Disponible".equals(estado)) {
+            auto.setEstado("Reservado");
+            autoRepository.save(auto);
+        }
+        holds.put(idAuto, new HoldInfo(LocalDateTime.now(), estado));
+        log.info("Hold creado para auto {} (original={}, expira en {} min)", idAuto, estado, tiempoMaximo);
         return new HoldResponse(LocalDateTime.now().plusMinutes(tiempoMaximo));
     }
 
@@ -46,16 +51,21 @@ public class HoldService {
     }
 
     public boolean isValid(Integer idAuto) {
-        LocalDateTime fechaHold = holds.get(idAuto);
-        return fechaHold != null && fechaHold.plusMinutes(tiempoMaximo).isAfter(LocalDateTime.now());
+        HoldInfo info = holds.get(idAuto);
+        return info != null && info.fechaHold().plusMinutes(tiempoMaximo).isAfter(LocalDateTime.now());
+    }
+
+    public String getEstadoOriginal(Integer idAuto) {
+        HoldInfo info = holds.get(idAuto);
+        return info != null ? info.estadoOriginal() : null;
     }
 
     @Transactional
     public void liberarExpiradosTx() {
         LocalDateTime corte = LocalDateTime.now().minusMinutes(tiempoMaximo);
         List<Integer> aLiberar = new ArrayList<>();
-        holds.forEach((idAuto, fechaHold) -> {
-            if (fechaHold.isBefore(corte)) {
+        holds.forEach((idAuto, info) -> {
+            if (info.fechaHold().isBefore(corte)) {
                 aLiberar.add(idAuto);
             }
         });
@@ -63,24 +73,29 @@ public class HoldService {
             log.info("Liberando {} holds expirados", aLiberar.size());
         }
         for (Integer idAuto : aLiberar) {
-            holds.remove(idAuto);
-            autoRepository.findById(idAuto).ifPresent(auto -> {
-                if ("Reservado".equals(auto.getEstado())) {
-                    auto.setEstado("Disponible");
-                    log.info("Auto {} liberado: Reservado → Disponible", idAuto);
-                }
-            });
+            HoldInfo info = holds.remove(idAuto);
+            if (info == null) continue;
+            if ("Disponible".equals(info.estadoOriginal())) {
+                autoRepository.findById(idAuto).ifPresent(auto -> {
+                    if ("Reservado".equals(auto.getEstado())) {
+                        auto.setEstado("Disponible");
+                        log.info("Auto {} liberado: Reservado → Disponible", idAuto);
+                    }
+                });
+            }
         }
     }
 
     @Transactional
     public void cancel(Integer idAuto) {
-        holds.remove(idAuto);
-        autoRepository.findById(idAuto).ifPresent(auto -> {
-            if ("Reservado".equals(auto.getEstado())) {
-                auto.setEstado("Disponible");
-                log.info("Auto {} cancelado manualmente: Reservado → Disponible", idAuto);
-            }
-        });
+        HoldInfo info = holds.remove(idAuto);
+        if (info != null && "Disponible".equals(info.estadoOriginal())) {
+            autoRepository.findById(idAuto).ifPresent(auto -> {
+                if ("Reservado".equals(auto.getEstado())) {
+                    auto.setEstado("Disponible");
+                    log.info("Auto {} cancelado: Reservado → Disponible", idAuto);
+                }
+            });
+        }
     }
 }

@@ -21,6 +21,9 @@ public interface AutoRepository extends JpaRepository<Auto, Integer> {
     @EntityGraph(attributePaths = {"marca", "modelo"})
     List<Auto> findByActivoTrueAndEstado(String estado);
 
+    @EntityGraph(attributePaths = {"marca", "modelo"})
+    List<Auto> findByActivoTrueAndEstadoIn(List<String> estados);
+
     Optional<Auto> findByPlaca(String placa);
 
     boolean existsByPlaca(String placa);
@@ -30,7 +33,7 @@ public interface AutoRepository extends JpaRepository<Auto, Integer> {
     List<Auto> findByModeloIdModelo(Integer idModelo);
 
     @EntityGraph(attributePaths = {"marca", "modelo"})
-    @Query("SELECT a FROM Auto a WHERE a.activo = true AND a.estado = 'Disponible' " +
+    @Query("SELECT a FROM Auto a WHERE a.activo = true AND a.estado IN ('Disponible', 'Reservado', 'En proceso') " +
            "AND a.idAuto NOT IN (SELECT r.auto.idAuto FROM Reserva r WHERE r.estado IN ('Pendiente', 'Confirmada', 'En proceso') " +
            "AND r.fechaInicio <= :fechaFin AND r.fechaFin >= :fechaInicio)")
     List<Auto> findDisponiblesEnRango(

@@ -72,6 +72,14 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
             @Param("hoy") LocalDate hoy,
             @Param("horaAhora") LocalTime horaAhora);
 
+    @Query("SELECT r FROM Reserva r WHERE r.auto.idAuto = :idAuto " +
+            "AND r.estado IN ('Confirmada', 'En proceso') " +
+            "AND r.fechaFin <= :fechaInicio " +
+            "ORDER BY r.fechaFin DESC, r.horaFin DESC")
+    List<Reserva> findUltimaReservaAntesDe(
+            @Param("idAuto") Integer idAuto,
+            @Param("fechaInicio") LocalDate fechaInicio);
+
     @Query(value = "SELECT FORMAT(fechaFinalizacion, 'yyyy-MM') AS mes, " +
            "ISNULL(SUM(total), 0) AS monto " +
            "FROM tb_reserva " +

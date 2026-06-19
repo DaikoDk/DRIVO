@@ -114,9 +114,26 @@ import { Auto } from '../../../models';
                       <span class="text-sm text-amber-700 font-medium">Completa tu reserva</span>
                       <span class="text-lg font-bold text-amber-600 font-mono">{{ tiempoRestante() }}</span>
                     </div>
-                    <button class="btn-primary w-full" [disabled]="loading()" (click)="confirmar()">
-                      {{ loading() ? 'Confirmando...' : 'Confirmar Reserva' }}
-                    </button>
+                    @if (showBufferWarning()) {
+                      <div class="p-3 bg-red-100 border border-red-200 rounded-lg space-y-3">
+                        <p class="text-xs text-red-700 font-medium">⚠️ {{ bufferMensaje() }}</p>
+                        <label class="flex items-center gap-2 text-xs text-red-800 cursor-pointer">
+                          <input type="checkbox" [ngModel]="bufferAcepto()" (change)="bufferAcepto.set(!bufferAcepto())" class="rounded" />
+                          Acepto los riesgos
+                        </label>
+                        <div class="flex items-center justify-between gap-2">
+                          <button class="text-xs text-slate-500 hover:text-slate-700 font-medium" (click)="cancelarBuffer()">Cancelar</button>
+                          <button class="btn-primary text-sm" [disabled]="!bufferAcepto() || bufferTimer() > 0" (click)="confirmarConRiesgo()">
+                            Confirmar
+                            @if (bufferTimer() > 0) { ({{ bufferTimer() }}s) }
+                          </button>
+                        </div>
+                      </div>
+                    } @else {
+                      <button class="btn-primary w-full" [disabled]="loading()" (click)="confirmar()">
+                        {{ loading() ? 'Confirmando...' : 'Confirmar Reserva' }}
+                      </button>
+                    }
                     <button class="w-full text-sm text-red-600 hover:text-red-800 font-medium py-1" (click)="cancelarHold()">
                       Cancelar
                     </button>
@@ -158,6 +175,11 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
   readonly holdState = signal<'idle' | 'held' | 'expired'>('idle');
   readonly tiempoRestante = signal('');
   private holdTimer: ReturnType<typeof setInterval> | null = null;
+  readonly showBufferWarning = signal(false);
+  readonly bufferMensaje = signal('');
+  readonly bufferAcepto = signal(false);
+  readonly bufferTimer = signal(10);
+  private bufferInterval: ReturnType<typeof setInterval> | null = null;
 
   fechaInicio = '';
   horaInicio = '08:00';
@@ -185,6 +207,7 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.pararTimer();
+    this.pararBufferTimer();
   }
 
   dias(): number {
@@ -243,31 +266,56 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
     if (this.holdTimer) { clearInterval(this.holdTimer); this.holdTimer = null; }
   }
 
-  reservar(): void {
-    if (!this.canReservar()) return;
-    if (this.fechaFin < this.fechaInicio) {
-      this.msg.set('La fecha fin debe ser posterior a la fecha inicio');
-      this.isError.set(true);
-      return;
-    }
+  private pararBufferTimer(): void {
+    if (this.bufferInterval) { clearInterval(this.bufferInterval); this.bufferInterval = null; }
+  }
+
+  cancelarBuffer(): void {
+    this.pararBufferTimer();
+    this.showBufferWarning.set(false);
+    this.bufferMensaje.set('');
+    this.bufferAcepto.set(false);
+    this.bufferTimer.set(10);
+  }
+
+  confirmarConRiesgo(): void {
+    this.pararBufferTimer();
+    this.showBufferWarning.set(false);
+    this.doCreate();
+  }
+
+  confirmar(): void {
     this.loading.set(true);
     this.msg.set('');
-
-    this.autoService.hold(this.auto()!.idAuto).subscribe({
+    this.reservaService.bufferCheck(this.auto()!.idAuto, this.fechaInicio, this.horaInicio).subscribe({
       next: (res) => {
-        this.holdState.set('held');
+        console.log('bufferCheck portal:', res);
         this.loading.set(false);
-        this.iniciarTimer(res.fechaExpiracion);
+        if (res.riesgo && res.fechaFinAnterior && res.horaFinAnterior) {
+          const finAnterior = new Date(`${res.fechaFinAnterior}T${res.horaFinAnterior}`);
+          const inicioSeguro = new Date(finAnterior.getTime() + 24 * 60 * 60 * 1000);
+          this.fechaInicio = inicioSeguro.toISOString().split('T')[0];
+          this.horaInicio = res.horaFinAnterior;
+          this.bufferMensaje.set(res.mensaje!);
+          this.bufferAcepto.set(false);
+          this.bufferTimer.set(10);
+          this.pararBufferTimer();
+          this.bufferInterval = setInterval(() => {
+            this.bufferTimer.update(v => { if (v <= 1) { this.pararBufferTimer(); return 0; } return v - 1; });
+          }, 1000);
+          this.showBufferWarning.set(true);
+        } else {
+          this.doCreate();
+        }
       },
-      error: (err) => {
-        this.msg.set(err.message || 'Error al reservar el auto');
-        this.isError.set(true);
+      error: () => {
         this.loading.set(false);
+        this.doCreate();
       }
     });
   }
 
-  confirmar(): void {
+  doCreate(): void {
     this.loading.set(true);
     this.msg.set('');
     this.reservaService.createDesdePortal({
@@ -298,6 +346,29 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
         this.tiempoRestante.set('');
       },
       error: (err) => this.msg.set(err.message || 'Error al liberar el auto')
+    });
+  }
+
+  reservar(): void {
+    if (!this.canReservar()) return;
+    if (this.fechaFin < this.fechaInicio) {
+      this.msg.set('La fecha fin debe ser posterior a la fecha inicio');
+      this.isError.set(true);
+      return;
+    }
+    this.loading.set(true);
+    this.msg.set('');
+    this.autoService.hold(this.auto()!.idAuto).subscribe({
+      next: (res) => {
+        this.holdState.set('held');
+        this.loading.set(false);
+        this.iniciarTimer(res.fechaExpiracion);
+      },
+      error: (err) => {
+        this.msg.set(err.message || 'Error al reservar el auto');
+        this.isError.set(true);
+        this.loading.set(false);
+      }
     });
   }
 }

@@ -55,7 +55,7 @@ public class ReservaService {
     @Transactional(readOnly = true)
     public List<Reserva> findActivas() {
         return reservaRepository.findByEstadoInWithDetails(
-                List.of("Pendiente", "En proceso"));
+                List.of("En proceso"));
     }
 
     public ReservaResponse create(ReservaCreateRequest request) {
@@ -108,13 +108,15 @@ public class ReservaService {
         reserva.setMora(BigDecimal.ZERO);
         reserva.setCostoReparaciones(BigDecimal.ZERO);
         reserva.setTotal(subtotal);
-        reserva.setEstado("Pendiente");
+        reserva.setEstado("En proceso");
         reserva.setEstadoEntrega("Sin entregar");
+        reserva.setKilometrajeInicio(auto.getKilometrajeActual());
+        reserva.setFechaHoraInicioReal(LocalDateTime.now());
         reserva.setFechaCreacion(LocalDateTime.now());
 
         reserva = reservaRepository.save(reserva);
 
-        auto.setEstado("Reservado");
+        auto.setEstado("En proceso");
         autoRepository.save(auto);
 
         cliente.setNumeroReservas(cliente.getNumeroReservas() + 1);
@@ -190,7 +192,7 @@ public class ReservaService {
     public ReservaResponse cancelar(Integer idReserva) {
         Reserva reserva = findById(idReserva);
 
-        if (!"Pendiente".equals(reserva.getEstado())) {
+        if (!"En proceso".equals(reserva.getEstado())) {
             throw new BadRequestException("No se puede cancelar");
         }
 
@@ -243,7 +245,7 @@ public class ReservaService {
                     "No puedes cancelar una reserva que no te pertenece");
         }
 
-        if (!"Pendiente".equals(reserva.getEstado())) {
+        if (!"En proceso".equals(reserva.getEstado())) {
             throw new BadRequestException("No se puede cancelar");
         }
 

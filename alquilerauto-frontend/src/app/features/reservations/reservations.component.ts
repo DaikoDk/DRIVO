@@ -78,17 +78,10 @@ import { Reserva, Cliente, Auto } from '../../models';
                     <button class="btn-sm btn-secondary" (click)="openDetail(r)" title="Ver detalle" aria-label="Ver detalle de reserva">
                       <span class="material-symbols-outlined text-sm">visibility</span>
                     </button>
-                    @if (r.estado === 'Pendiente') {
-                      <button class="btn-sm btn-primary" (click)="iniciarReserva(r)" title="Iniciar" aria-label="Iniciar reserva">
-                        <span class="material-symbols-outlined text-sm">play_circle</span>
-                      </button>
-                    }
                     @if (r.estado === 'En proceso') {
                       <button class="btn-sm btn-primary" (click)="openFinalizar(r)" title="Finalizar" aria-label="Finalizar reserva">
                         <span class="material-symbols-outlined text-sm">check_circle</span>
                       </button>
-                    }
-                    @if (r.estado === 'Pendiente') {
                       <button class="btn-sm btn-danger" (click)="cancelarReserva(r)" title="Cancelar" aria-label="Cancelar reserva">
                         <span class="material-symbols-outlined text-sm">cancel</span>
                       </button>

@@ -10,7 +10,7 @@ import { ClienteService } from '../../core/services/cliente.service';
 import { AutoService } from '../../core/services/auto.service';
 import { ReparacionService } from '../../core/services/reparacion.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Reserva, Cliente, Auto, CatalogoReparacion } from '../../models';
+import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../models';
 
 @Component({
   selector: 'app-reservations',
@@ -169,14 +169,14 @@ import { Reserva, Cliente, Auto, CatalogoReparacion } from '../../models';
     <app-modal [open]="showDetail()" title="Detalle de Reserva #{{ selectedReserva()?.idReserva }}" (closed)="showDetail.set(false)">
       @if (selectedReserva()) {
         <div class="space-y-4">
-          <div class="grid grid-cols-2 gap-4 text-sm">
+          <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
             <div>
               <p class="text-slate-500">Cliente</p>
               <p class="font-medium text-slate-800">{{ selectedReserva()?.nombreCliente }}</p>
             </div>
             <div>
               <p class="text-slate-500">Vehículo</p>
-              <p class="font-medium text-slate-800">{{ selectedReserva()?.placa }} - {{ selectedReserva()?.marca }}</p>
+              <p class="font-medium text-slate-800">{{ selectedReserva()?.placa }} - {{ selectedReserva()?.marca }} {{ selectedReserva()?.modelo }}</p>
             </div>
             <div>
               <p class="text-slate-500">Fecha/Hora Inicio</p>
@@ -187,14 +187,83 @@ import { Reserva, Cliente, Auto, CatalogoReparacion } from '../../models';
               <p class="font-medium text-slate-800">{{ selectedReserva()?.fechaFin }} {{ selectedReserva()?.horaFin }}</p>
             </div>
             <div>
+              <p class="text-slate-500">KM Inicial</p>
+              <p class="font-medium text-slate-800">{{ selectedReserva()?.kilometrajeInicio?.toLocaleString() || '-' }}</p>
+            </div>
+            <div>
+              <p class="text-slate-500">KM Final</p>
+              <p class="font-medium text-slate-800">{{ selectedReserva()?.kilometrajeFin?.toLocaleString() || '-' }}</p>
+            </div>
+            <div>
               <p class="text-slate-500">Estado</p>
               <app-status-badge [status]="selectedReserva()!.estado" [label]="selectedReserva()!.estado"></app-status-badge>
             </div>
             <div>
-              <p class="text-slate-500">Costo Total</p>
-              <p class="font-medium text-slate-800">S/{{ selectedReserva()!.total.toFixed(2) }}</p>
+              <p class="text-slate-500">Estado de Entrega</p>
+              <app-status-badge [status]="selectedReserva()!.estadoEntrega" [label]="selectedReserva()!.estadoEntrega"></app-status-badge>
             </div>
           </div>
+
+          <div class="border-t border-slate-100 pt-3">
+            <p class="text-sm font-semibold text-slate-700 mb-2">Costos</p>
+            <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+              <div>
+                <p class="text-slate-500">Subtotal</p>
+                <p class="font-medium text-slate-800">S/{{ selectedReserva()!.subtotal.toFixed(2) }}</p>
+              </div>
+              <div>
+                <p class="text-slate-500">Mora</p>
+                <p class="font-medium text-slate-800" [class.text-error]="(selectedReserva()!.mora || 0) > 0">S/{{ (selectedReserva()!.mora || 0).toFixed(2) }}</p>
+              </div>
+              <div>
+                <p class="text-slate-500">Reparaciones</p>
+                <p class="font-medium text-slate-800" [class.text-error]="(selectedReserva()!.costoReparaciones || 0) > 0">S/{{ (selectedReserva()!.costoReparaciones || 0).toFixed(2) }}</p>
+              </div>
+              <div>
+                <p class="text-slate-500">Total</p>
+                <p class="font-semibold text-slate-800">S/{{ selectedReserva()!.total.toFixed(2) }}</p>
+              </div>
+            </div>
+          </div>
+
+          @if (reparacionesDetalle().length > 0) {
+            <div class="border-t border-slate-100 pt-3">
+              <p class="text-sm font-semibold text-slate-700 mb-2">Reparaciones registradas</p>
+              <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                  <thead>
+                    <tr class="border-b border-slate-200">
+                      <th class="px-2 py-2 text-left font-medium text-slate-600">ID</th>
+                      <th class="px-2 py-2 text-left font-medium text-slate-600">Catálogo</th>
+                      <th class="px-2 py-2 text-left font-medium text-slate-600">Descripción</th>
+                      <th class="px-2 py-2 text-left font-medium text-slate-600">Costo</th>
+                      <th class="px-2 py-2 text-left font-medium text-slate-600">Estado</th>
+                      <th class="px-2 py-2 text-left font-medium text-slate-600">Resp.</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    @for (rep of reparacionesDetalle(); track rep.idReparacion) {
+                      <tr>
+                        <td class="px-2 py-2 text-slate-700">#{{ rep.idReparacion }}</td>
+                        <td class="px-2 py-2 text-slate-600">{{ rep.descripcionCatalogo || '-' }}</td>
+                        <td class="px-2 py-2 text-slate-700 max-w-[150px] truncate">{{ rep.descripcion }}</td>
+                        <td class="px-2 py-2 font-medium text-slate-700">S/{{ rep.costo.toFixed(2) }}</td>
+                        <td class="px-2 py-2"><span class="badge" [class.badge-warning]="rep.estado === 'Pendiente'" [class.badge-info]="rep.estado === 'En proceso'" [class.badge-success]="rep.estado === 'Completada'" [class.badge-error]="rep.estado === 'Cancelada'" [class.badge-neutral]="!rep.estado">{{ rep.estado || '-' }}</span></td>
+                        <td class="px-2 py-2 text-slate-600">{{ rep.responsable || '-' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          @if (selectedReserva()?.observacionesEntrega) {
+            <div class="border-t border-slate-100 pt-3">
+              <p class="text-sm font-semibold text-slate-700 mb-1">Observaciones</p>
+              <p class="text-sm text-slate-600">{{ selectedReserva()?.observacionesEntrega }}</p>
+            </div>
+          }
         </div>
       }
     </app-modal>
@@ -297,6 +366,7 @@ export class ReservationsComponent implements OnInit {
   readonly showDetail = signal(false);
   readonly showFinalizar = signal(false);
   readonly selectedReserva = signal<Reserva | null>(null);
+  readonly reparacionesDetalle = signal<Reparacion[]>([]);
   readonly finalizarTarget = signal<Reserva | null>(null);
   readonly showCancelConfirm = signal(false);
   readonly cancelTargetId = signal<number | null>(null);
@@ -379,6 +449,11 @@ export class ReservationsComponent implements OnInit {
 
   openDetail(r: Reserva): void {
     this.selectedReserva.set(r);
+    this.reparacionesDetalle.set([]);
+    this.reparacionService.getByReserva(r.idReserva).subscribe({
+      next: (data) => this.reparacionesDetalle.set(data),
+      error: () => this.toast.error('Error al cargar reparaciones')
+    });
     this.showDetail.set(true);
   }
 

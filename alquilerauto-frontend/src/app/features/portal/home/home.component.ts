@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AutoService } from '../../../core/services/auto.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Auto } from '../../../models';
 
 @Component({
@@ -21,11 +22,11 @@ import { Auto } from '../../../models';
             Encuentra el auto perfecto para tu viaje
           </h1>
           <p class="text-lg text-slate-300 mb-8">
-            Reserva en minutos. Los mejores autos al mejor precio. Sin tramites complicados.
+            Reserva en minutos. Los mejores autos al mejor precio. Sin trámites complicados.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
             <a routerLink="/portal/catalogo" class="btn-primary text-center px-8 py-3 text-base">
-              Ver Catalogo
+              Ver Catálogo
             </a>
             <a routerLink="/register" class="btn-secondary text-center px-8 py-3 text-base bg-white/10 border-white/20 text-white hover:bg-white/20">
               Registrarme
@@ -37,14 +38,14 @@ import { Auto } from '../../../models';
 
     <!-- Como funciona -->
     <section class="max-w-7xl mx-auto px-6 py-20">
-      <h2 class="text-3xl font-bold text-slate-800 text-center mb-12">Como funciona</h2>
+      <h2 class="text-3xl font-bold text-slate-800 text-center mb-12">Cómo funciona</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div class="text-center">
           <div class="w-16 h-16 rounded-2xl bg-primary-container flex items-center justify-center mx-auto mb-4">
             <span class="material-symbols-outlined text-3xl text-primary-on-container">search</span>
           </div>
           <h3 class="text-lg font-semibold text-slate-800 mb-2">1. Busca</h3>
-          <p class="text-sm text-slate-500">Explora nuestro catalogo y encuentra el auto ideal para tus necesidades.</p>
+          <p class="text-sm text-slate-500">Explora nuestro catálogo y encuentra el auto ideal para tus necesidades.</p>
         </div>
         <div class="text-center">
           <div class="w-16 h-16 rounded-2xl bg-success-container flex items-center justify-center mx-auto mb-4">
@@ -73,8 +74,18 @@ import { Auto } from '../../../models';
           </a>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          @if (loading()) {
+            @for (i of [1,2,3]; track i) {
+              <div class="card animate-pulse">
+                <div class="w-full h-40 rounded-lg mb-4 bg-slate-200"></div>
+                <div class="h-4 bg-slate-200 rounded mb-2 w-3/4"></div>
+                <div class="h-3 bg-slate-200 rounded mb-4 w-1/2"></div>
+                <div class="h-4 bg-slate-200 rounded w-20"></div>
+              </div>
+            }
+          }
           @for (auto of destacados(); track auto.idAuto) {
-            <div class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
+            <a class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
               <div class="w-full h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
                 <span class="material-symbols-outlined text-6xl text-slate-400">directions_car</span>
               </div>
@@ -84,14 +95,14 @@ import { Auto } from '../../../models';
               </div>
               <p class="text-sm text-slate-500 mb-3">{{ auto.anio }} | {{ auto.color || 'N/A' }} | {{ auto.categoria || 'S/C' }}</p>
               <div class="flex items-center gap-3 text-xs text-slate-500 mb-3">
-                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> 5</span>
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> {{ auto.pasajeros ?? 5 }}</span>
                 <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">speed</span> {{ auto.kilometrajeActual.toLocaleString() }} km</span>
               </div>
               <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                <p class="text-xl font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
+                <p class="text-xl font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /día</span></p>
                 <span class="text-primary font-medium text-sm group-hover:underline">Ver detalle</span>
               </div>
-            </div>
+            </a>
           }
         </div>
       </div>
@@ -100,20 +111,24 @@ import { Auto } from '../../../models';
     <!-- CTA -->
     <section class="max-w-7xl mx-auto px-6 py-20 text-center">
       <h2 class="text-3xl font-bold text-slate-800 mb-4">¿Listo para conducir?</h2>
-      <p class="text-slate-500 mb-8 max-w-lg mx-auto">Registrate ahora y obten acceso a toda nuestra flota de autos verificados.</p>
+      <p class="text-slate-500 mb-8 max-w-lg mx-auto">Regístrate ahora y obten acceso a toda nuestra flota de autos verificados.</p>
       <a routerLink="/register" class="btn-primary px-10 py-3 text-base inline-block">Crear Cuenta Gratis</a>
     </section>
   `
 })
 export class HomeComponent implements OnInit {
   readonly destacados = signal<Auto[]>([]);
+  readonly loading = signal(true);
 
-  constructor(private readonly autoService: AutoService) {}
+  constructor(
+    private readonly autoService: AutoService,
+    private readonly toast: ToastService
+  ) {}
 
   ngOnInit(): void {
     this.autoService.getDisponibles().subscribe({
-      next: (data) => this.destacados.set(data.slice(0, 6)),
-      error: () => {}
+      next: (data) => { this.destacados.set(data.slice(0, 6)); this.loading.set(false); },
+      error: () => { this.toast.error('Error al cargar autos destacados'); this.loading.set(false); }
     });
   }
 }

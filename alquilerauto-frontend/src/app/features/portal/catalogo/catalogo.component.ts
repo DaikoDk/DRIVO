@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AutoService } from '../../../core/services/auto.service';
 import { MarcaService } from '../../../core/services/marca.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Auto, Marca } from '../../../models';
 
 @Component({
@@ -11,7 +12,7 @@ import { Auto, Marca } from '../../../models';
   imports: [RouterLink, FormsModule],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-8">
-      <h1 class="text-3xl font-bold text-slate-800 mb-2">Catalogo de Autos</h1>
+      <h1 class="text-3xl font-bold text-slate-800 mb-2">Catálogo de Autos</h1>
       <p class="text-slate-500 mb-8">Explora nuestra flota y encuentra el auto perfecto para ti</p>
 
       <div class="flex flex-col lg:flex-row gap-8">
@@ -21,12 +22,12 @@ import { Auto, Marca } from '../../../models';
             <h3 class="font-semibold text-slate-800 mb-4">Filtros</h3>
             <div class="space-y-4">
               <div>
-                <label class="input-label">Buscar</label>
-                <input class="input-field" type="search" [(ngModel)]="searchTerm" placeholder="Placa o modelo..." />
+                <label class="input-label" for="cat-buscar">Buscar</label>
+                <input class="input-field" id="cat-buscar" type="search" [(ngModel)]="searchTerm" placeholder="Placa o modelo..." />
               </div>
               <div>
-                <label class="input-label">Marca</label>
-                <select class="input-field" [(ngModel)]="filterMarca">
+                <label class="input-label" for="cat-marca">Marca</label>
+                <select class="input-field" id="cat-marca" [(ngModel)]="filterMarca">
                   <option value="">Todas</option>
                   @for (m of marcas(); track m.idMarca) {
                     <option [value]="m.idMarca">{{ m.nombre }}</option>
@@ -34,8 +35,8 @@ import { Auto, Marca } from '../../../models';
                 </select>
               </div>
               <div>
-                <label class="input-label">Precio maximo/dia</label>
-                <input class="input-field" type="range" min="0" max="500" step="10" [(ngModel)]="filterPrecioMax" />
+                <label class="input-label" for="cat-precio-max">Precio maximo/dia</label>
+                <input class="input-field" id="cat-precio-max" type="range" min="0" max="500" step="10" [(ngModel)]="filterPrecioMax" />
                 <p class="text-xs text-slate-500 mt-1">Hasta S/{{ filterPrecioMax() }}</p>
               </div>
               <button class="btn-secondary w-full text-center" (click)="clearFilters()">Limpiar filtros</button>
@@ -47,8 +48,18 @@ import { Auto, Marca } from '../../../models';
         <div class="flex-1">
           <p class="text-sm text-slate-500 mb-4">{{ filteredAutos().length }} autos encontrados</p>
           <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            @if (loading()) {
+              @for (i of [1,2,3,4,5,6]; track i) {
+                <div class="card animate-pulse">
+                  <div class="w-full h-40 rounded-lg mb-4 bg-slate-200"></div>
+                  <div class="h-4 bg-slate-200 rounded mb-2 w-3/4"></div>
+                  <div class="h-3 bg-slate-200 rounded mb-4 w-1/2"></div>
+                  <div class="h-4 bg-slate-200 rounded w-20"></div>
+                </div>
+              }
+            }
             @for (auto of filteredAutos(); track auto.idAuto) {
-              <div class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
+              <a class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
                 <div class="w-full h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
                   <span class="material-symbols-outlined text-6xl text-slate-400">directions_car</span>
                 </div>
@@ -58,14 +69,14 @@ import { Auto, Marca } from '../../../models';
                 </div>
                 <p class="text-sm text-slate-500 mb-3">{{ auto.anio }} | {{ auto.color || 'N/A' }} | {{ auto.categoria || 'S/C' }}</p>
                 <div class="flex items-center gap-3 text-xs text-slate-500 mb-3">
-                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> 5 pasajeros</span>
+                  <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> {{ auto.pasajeros ?? 5 }} pasajeros</span>
                   <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">settings_suggest</span> {{ auto.categoria || 'Estandar' }}</span>
                 </div>
                 <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <p class="text-xl font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
+                  <p class="text-xl font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /día</span></p>
                   <span class="text-primary font-medium text-sm group-hover:underline">Reservar</span>
                 </div>
-              </div>
+              </a>
             }
             @if (filteredAutos().length === 0) {
               <div class="col-span-full flex flex-col items-center justify-center py-20">
@@ -86,14 +97,23 @@ export class CatalogoComponent implements OnInit {
   readonly filterMarca = signal<string | number>('');
   readonly filterPrecioMax = signal(500);
 
+  readonly loading = signal(true);
+
   constructor(
     private readonly autoService: AutoService,
-    private readonly marcaService: MarcaService
+    private readonly marcaService: MarcaService,
+    private readonly toast: ToastService
   ) {}
 
   ngOnInit(): void {
-    this.autoService.getDisponibles().subscribe({ next: (d) => this.autos.set(d) });
-    this.marcaService.getActivos().subscribe({ next: (d) => this.marcas.set(d) });
+    this.autoService.getDisponibles().subscribe({
+      next: (d) => { this.autos.set(d); this.loading.set(false); },
+      error: () => { this.toast.error('Error al cargar autos'); this.loading.set(false); }
+    });
+    this.marcaService.getActivos().subscribe({
+      next: (d) => this.marcas.set(d),
+      error: () => this.toast.error('Error al cargar marcas')
+    });
   }
 
   readonly filteredAutos = computed(() => {

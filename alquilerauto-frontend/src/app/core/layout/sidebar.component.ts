@@ -12,7 +12,7 @@ export interface NavItem {
   standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
-    <aside class="fixed left-0 top-0 h-screen w-[280px] flex flex-col z-50 bg-inverse-surface">
+    <aside class="hidden lg:block fixed left-0 top-0 h-screen w-[280px] flex flex-col z-50 bg-inverse-surface" [class.hidden]="collapsed">
       <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10">
         <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary">
           <span class="material-symbols-outlined text-white text-lg">directions_car</span>
@@ -46,14 +46,16 @@ export interface NavItem {
   `
 })
 export class SidebarComponent {
+  @Input() collapsed = false;
+
   readonly navItems: NavItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/admin/dashboard' },
-    { label: 'Vehiculos', icon: 'directions_car', route: '/admin/vehiculos' },
+    { label: 'Vehículos', icon: 'directions_car', route: '/admin/vehiculos' },
     { label: 'Clientes', icon: 'group', route: '/admin/clientes' },
     { label: 'Reservas', icon: 'calendar_month', route: '/admin/reservas' },
     { label: 'Pagos', icon: 'payments', route: '/admin/pagos' },
     { label: 'Reparaciones', icon: 'build', route: '/admin/reparaciones' },
     { label: 'Mantenimientos', icon: 'engineering', route: '/admin/mantenimientos' },
-    { label: 'Configuracion', icon: 'settings', route: '/admin/configuracion' },
+    { label: 'Configuración', icon: 'settings', route: '/admin/configuracion' },
   ];
 }

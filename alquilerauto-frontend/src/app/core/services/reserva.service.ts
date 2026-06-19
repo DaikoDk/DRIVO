@@ -55,8 +55,7 @@ export class ReservaService {
   finalizar(id: number, kilometrajeFin: number, observaciones?: string): Observable<Reserva> {
     return this.api.patchCustom<Reserva>(`/reservas/${id}/finalizar`, {
       kilometrajeFin,
-      observaciones: observaciones || '',
-      usuario: 'admin'
+      observaciones: observaciones || ''
     });
   }
 

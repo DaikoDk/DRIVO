@@ -1,4 +1,5 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-topbar',
@@ -6,24 +7,38 @@ import { Component, Input } from '@angular/core';
   template: `
     <header class="h-16 sticky top-0 z-30 flex items-center justify-between px-6 border-b bg-surface-container border-slate-200">
       <div class="flex items-center gap-4">
+        <button type="button" aria-label="Menú lateral" class="lg:hidden mr-2 text-slate-600" (click)="toggleSidebar.emit()">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
         <h2 class="text-lg font-semibold text-slate-800">{{ pageTitle }}</h2>
       </div>
 
       <div class="flex items-center gap-4">
         <div class="relative">
-          <span class="material-symbols-outlined cursor-pointer text-slate-500">notifications</span>
+          <button type="button" aria-label="Notificaciones" class="material-symbols-outlined cursor-pointer text-slate-500 bg-transparent border-0">notifications</button>
           <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-error"></span>
         </div>
-        <div class="flex items-center gap-2 cursor-pointer">
+        <button type="button" aria-label="Menú de usuario" class="flex items-center gap-2 cursor-pointer bg-transparent border-0">
           <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium bg-primary">
-            A
+            {{ userInitial() }}
           </div>
-          <span class="text-sm font-medium text-slate-700">Admin</span>
-        </div>
+          <span class="text-sm font-medium text-slate-700">{{ userName() }}</span>
+        </button>
       </div>
     </header>
   `
 })
 export class TopbarComponent {
   @Input() pageTitle = '';
+  @Output() toggleSidebar = new EventEmitter<void>();
+
+  constructor(private readonly auth: AuthService) {}
+
+  userName(): string {
+    return this.auth.currentUser()?.nombre || 'Admin';
+  }
+
+  userInitial(): string {
+    return (this.auth.currentUser()?.nombre || 'A').charAt(0).toUpperCase();
+  }
 }

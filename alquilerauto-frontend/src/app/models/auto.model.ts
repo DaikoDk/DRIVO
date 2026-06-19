@@ -14,6 +14,7 @@ export interface Auto {
   precioPorDia: number;
   precioPorHora?: number;
   moraPorDia: number;
+  pasajeros?: number;
   estado: string;
   activo?: boolean;
   fechaRegistro?: string;

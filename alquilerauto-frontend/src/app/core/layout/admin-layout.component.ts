@@ -10,9 +10,9 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
   standalone: true,
   imports: [RouterOutlet, SidebarComponent, TopbarComponent, ToastComponent],
   template: `
-    <app-sidebar></app-sidebar>
-    <div class="ml-[280px] flex flex-col min-h-screen">
-      <app-topbar [pageTitle]="pageTitle()"></app-topbar>
+    <app-sidebar [collapsed]="sidebarCollapsed()"></app-sidebar>
+    <div class="ml-0 lg:ml-[280px] flex flex-col min-h-screen">
+      <app-topbar [pageTitle]="pageTitle()" (toggleSidebar)="sidebarCollapsed.set(!sidebarCollapsed())"></app-topbar>
       <main class="flex-1 p-6">
         <router-outlet></router-outlet>
       </main>
@@ -21,15 +21,17 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
   `
 })
 export class AdminLayoutComponent {
+  readonly sidebarCollapsed = signal(true);
+
   private readonly pageTitles: Record<string, string> = {
     '/admin/dashboard': 'Dashboard',
-    '/admin/vehiculos': 'Vehiculos',
+    '/admin/vehiculos': 'Vehículos',
     '/admin/clientes': 'Clientes',
     '/admin/reservas': 'Reservas',
     '/admin/pagos': 'Pagos',
     '/admin/reparaciones': 'Reparaciones',
     '/admin/mantenimientos': 'Mantenimientos',
-    '/admin/configuracion': 'Configuracion',
+    '/admin/configuracion': 'Configuración',
   };
 
   readonly pageTitle = signal('Dashboard');

@@ -18,29 +18,29 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Reparaciones</h1>
-        <p class="text-sm text-slate-500 mt-1">Gestion de reparaciones de la flota</p>
+        <p class="text-sm text-slate-500 mt-1">Gestión de reparaciones de la flota</p>
       </div>
       <button class="btn-primary flex items-center gap-2" (click)="openReportModal()">
         <span class="material-symbols-outlined text-lg">build</span>
-        Reportar Reparacion
+        Reportar Reparación
       </button>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <app-stat-card label="Pendientes" [value]="stats().pendientes" icon="pending_actions" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
       <app-stat-card label="En Proceso" [value]="stats().enProceso" icon="progress_activity" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
-      <app-stat-card label="Completadas Hoy" value="5" icon="check_circle" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
-      <app-stat-card label="Costo Mensual" [value]="'$4,200'" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
+      <app-stat-card label="Completadas Hoy" [value]="stats().completadasHoy" icon="check_circle" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
+      <app-stat-card label="Costo Mensual" [value]="'S/ ' + stats().costoMensual" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
     </div>
 
     <div class="flex items-center gap-4 mb-4">
-      <div class="inline-flex rounded-lg border border-slate-200 overflow-hidden">
-        <button class="px-4 py-2 text-sm font-medium transition-colors"
+      <div role="tablist" class="inline-flex rounded-lg border border-slate-200 overflow-hidden">
+        <button role="tab" [attr.aria-selected]="activeTab() === 'activas'" class="px-4 py-2 text-sm font-medium transition-colors"
                 [class.btn-primary]="activeTab() === 'activas'"
                 [class.bg-white]="activeTab() !== 'activas'"
                 [class.text-slate-600]="activeTab() !== 'activas'"
                 (click)="activeTab.set('activas')">Activas</button>
-        <button class="px-4 py-2 text-sm font-medium transition-colors"
+        <button role="tab" [attr.aria-selected]="activeTab() === 'historial'" class="px-4 py-2 text-sm font-medium transition-colors"
                 [class.btn-primary]="activeTab() === 'historial'"
                 [class.bg-white]="activeTab() !== 'historial'"
                 [class.text-slate-600]="activeTab() !== 'historial'"
@@ -49,15 +49,22 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
     </div>
 
     <div class="card">
+      @if (loading()) {
+        <div class="space-y-4 p-4">
+          @for (i of [1,2,3,4,5]; track i) {
+            <div class="flex gap-4"><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 flex-1"></div><div class="skeleton h-4 w-20"></div></div>
+          }
+        </div>
+      } @else {
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-slate-200">
               <th class="px-4 py-3 text-left font-medium text-slate-600">ID</th>
-              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehiculo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Vehículo</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Reserva</th>
-              <th class="px-4 py-3 text-left font-medium text-slate-600">Catalogo</th>
-              <th class="px-4 py-3 text-left font-medium text-slate-600">Descripcion</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Catálogo</th>
+              <th class="px-4 py-3 text-left font-medium text-slate-600">Descripción</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Costo</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Estado</th>
               <th class="px-4 py-3 text-left font-medium text-slate-600">Responsable</th>
@@ -65,7 +72,7 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </thead>
           <tbody class="divide-y divide-slate-100">
             @for (r of filteredReparaciones(); track r.idReparacion) {
-              <tr class="hover:bg-slate-50 cursor-pointer" (click)="toggleExpand(r)">
+              <tr class="hover:bg-slate-50 cursor-pointer" tabindex="0" [attr.aria-expanded]="expandedId() === r.idReparacion" (click)="toggleExpand(r)" (keyup.enter)="toggleExpand(r)">
                 <td class="px-4 py-3 text-slate-700">#{{ r.idReparacion }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.auto?.placa }}</td>
                 <td class="px-4 py-3 text-slate-700">#{{ r.reserva?.idReserva }}</td>
@@ -90,7 +97,7 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
                         <p class="text-slate-700">Fin: {{ r.fechaFin ? (r.fechaFin | date:'dd/MM/yy HH:mm') : 'Pendiente' }}</p>
                       </div>
                       <div>
-                        <p class="font-medium text-slate-600 mb-1">Descripcion Completa</p>
+                        <p class="font-medium text-slate-600 mb-1">Descripción Completa</p>
                         <p class="text-slate-700">{{ r.descripcion }}</p>
                       </div>
                       <div>
@@ -109,13 +116,14 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </tbody>
         </table>
       </div>
+      }
     </div>
 
-    <app-modal [open]="showReportModal()" title="Reportar Reparacion" (closed)="showReportModal.set(false)">
+    <app-modal [open]="showReportModal()" title="Reportar Reparación" (closed)="showReportModal.set(false)">
       <div class="space-y-4">
         <div>
-          <label class="input-label">Reserva *</label>
-          <select class="input-field" [(ngModel)]="formData.idReserva" (ngModelChange)="onReservaChange()">
+          <label class="input-label" for="rep-reserva">Reserva *</label>
+          <select class="input-field" id="rep-reserva" [(ngModel)]="formData.idReserva" (ngModelChange)="onReservaChange()">
             <option [ngValue]="0" disabled>Seleccionar...</option>
             @for (r of reservas(); track r.idReserva) {
               <option [ngValue]="r.idReserva">#{{ r.idReserva }} - {{ r.nombreCliente }} ({{ r.placa }})</option>
@@ -123,8 +131,8 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label">Vehiculo *</label>
-          <select class="input-field" [(ngModel)]="formData.idAuto">
+          <label class="input-label" for="rep-vehiculo">Vehículo *</label>
+          <select class="input-field" id="rep-vehiculo" [(ngModel)]="formData.idAuto">
             <option [ngValue]="0" disabled>Seleccionar...</option>
             @if (formData.idReserva) {
               @for (r of reservas(); track r.idReserva) {
@@ -140,8 +148,8 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label">Catalogo Reparacion</label>
-          <select class="input-field" [(ngModel)]="formData.idCatalogoReparacion">
+          <label class="input-label" for="rep-catalogo">Catálogo Reparación</label>
+          <select class="input-field" id="rep-catalogo" [(ngModel)]="formData.idCatalogoReparacion">
             <option [ngValue]="undefined">Seleccionar...</option>
             @for (c of catalogo(); track c.idCatalogoReparacion) {
               <option [ngValue]="c.idCatalogoReparacion">{{ c.descripcion }} (S/{{ c.costoEstimado }})</option>
@@ -149,12 +157,12 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
           </select>
         </div>
         <div>
-          <label class="input-label">Costo Estimado *</label>
-          <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.costo" />
+          <label class="input-label" for="rep-costo">Costo Estimado *</label>
+          <input class="input-field" id="rep-costo" type="number" step="0.01" [(ngModel)]="formData.costo" />
         </div>
         <div>
-          <label class="input-label">Descripcion *</label>
-          <textarea class="input-field" rows="3" [(ngModel)]="formData.descripcion" placeholder="Describa la reparacion..."></textarea>
+          <label class="input-label" for="rep-descripcion">Descripción *</label>
+          <textarea class="input-field" id="rep-descripcion" rows="3" [(ngModel)]="formData.descripcion" placeholder="Describa la reparación..."></textarea>
         </div>
         <div>
           <label class="input-label">Responsable</label>
@@ -188,9 +196,23 @@ export class RepairsComponent implements OnInit {
 
   readonly stats = computed(() => {
     const all = this.reparaciones();
+    const hoy = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const mesActual = now.getMonth();
+    const anioActual = now.getFullYear();
+    const completadasHoy = all.filter(r =>
+      r.estado === 'Completada' && r.fechaFin && r.fechaFin.startsWith(hoy)
+    ).length;
+    const reparacionesMes = all.filter(r => {
+      const f = new Date(r.fechaReporte);
+      return f.getMonth() === mesActual && f.getFullYear() === anioActual;
+    });
+    const costoMensual = reparacionesMes.reduce((s, r) => s + r.costo, 0).toFixed(2);
     return {
       pendientes: all.filter(r => r.estado === 'Pendiente').length,
       enProceso: all.filter(r => r.estado === 'En proceso').length,
+      completadasHoy,
+      costoMensual,
     };
   });
 
@@ -209,11 +231,26 @@ export class RepairsComponent implements OnInit {
     private readonly cdr: ChangeDetectorRef
   ) {}
 
+  readonly loading = signal(true);
+
   ngOnInit(): void {
-    this.reparacionService.getAll().subscribe({ next: (data) => this.reparaciones.set(data) });
-    this.reparacionService.getCatalogo().subscribe({ next: (data) => this.catalogo.set(data) });
-    this.reservaService.getAll().subscribe({ next: (data) => this.reservas.set(data) });
-    this.autoService.getAll().subscribe({ next: (data) => this.autos.set(data) });
+    this.loading.set(true);
+    this.reparacionService.getAll().subscribe({
+      next: (data) => { this.reparaciones.set(data); this.loading.set(false); },
+      error: () => { this.toast.error('Error al cargar reparaciones'); this.loading.set(false); }
+    });
+    this.reparacionService.getCatalogo().subscribe({
+      next: (data) => this.catalogo.set(data),
+      error: () => this.toast.error('Error al cargar catalogo')
+    });
+    this.reservaService.getAll().subscribe({
+      next: (data) => this.reservas.set(data),
+      error: () => this.toast.error('Error al cargar reservas')
+    });
+    this.autoService.getAll().subscribe({
+      next: (data) => this.autos.set(data),
+      error: () => this.toast.error('Error al cargar autos')
+    });
   }
 
   toggleExpand(r: Reparacion): void {

@@ -17,13 +17,16 @@ import { Auto, Marca, Modelo } from '../../models';
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Vehiculos</h1>
-        <p class="text-sm text-slate-500 mt-1">Gestion de flota vehicular</p>
+        <h1 class="text-2xl font-bold text-slate-800">Vehículos</h1>
+        <p class="text-sm text-slate-500 mt-1">Gestión de flota vehicular</p>
       </div>
-      <button class="btn-primary flex items-center gap-2" (click)="openAddModal()">
-        <span class="material-symbols-outlined text-lg">add</span>
-        Agregar Vehiculo
-      </button>
+      <div class="flex gap-3">
+        <input class="input-field w-64" type="search" placeholder="Buscar vehículo..." [(ngModel)]="searchTerm" />
+        <button class="btn-primary flex items-center gap-2" (click)="openAddModal()">
+          <span class="material-symbols-outlined text-lg">add</span>
+          Agregar Vehículo
+        </button>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
@@ -46,7 +49,7 @@ import { Auto, Marca, Modelo } from '../../models';
           <button class="btn-secondary" (click)="loadAutos()">Reintentar</button>
         </div>
       }
-      @for (auto of filteredAutos(); track auto.idAuto) {
+      @for (auto of pagedAutos(); track auto.idAuto) {
         <div class="card">
           <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center" [style.background]="'linear-gradient(135deg, ' + getGradient(auto) + ')'">
             <span class="material-symbols-outlined text-5xl text-white/80">directions_car</span>
@@ -63,38 +66,38 @@ import { Auto, Marca, Modelo } from '../../models';
             <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">speed</span>{{ auto.kilometrajeActual.toLocaleString() }} km</span>
           </div>
           <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-            <p class="text-lg font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /dia</span></p>
+            <p class="text-lg font-bold text-slate-800">S/{{ auto.precioPorDia.toFixed(2) }}<span class="text-xs font-normal text-slate-500"> /día</span></p>
             <div class="flex items-center gap-2">
-              <button class="btn-sm btn-secondary" (click)="openEditModal(auto)" title="Editar">
+              <button class="btn-sm btn-secondary" (click)="openEditModal(auto)" title="Editar" aria-label="Editar vehículo">
                 <span class="material-symbols-outlined text-sm">edit</span>
               </button>
-              <button class="btn-sm btn-danger" (click)="prepareDelete(auto)" title="Eliminar">
+              <button class="btn-sm btn-danger" (click)="prepareDelete(auto)" title="Eliminar" aria-label="Eliminar vehículo">
                 <span class="material-symbols-outlined text-sm">delete</span>
               </button>
             </div>
           </div>
         </div>
       }
-      @if (filteredAutos().length === 0) {
+      @if (!loading() && pagedAutos().length === 0) {
         <div class="col-span-full flex flex-col items-center justify-center py-16 text-center">
           <span class="material-symbols-outlined text-5xl text-slate-300 mb-4">directions_car</span>
-          <p class="text-sm text-slate-400">No se encontraron vehiculos</p>
+          <p class="text-sm text-slate-400">No se encontraron vehículos</p>
         </div>
       }
     </div>
 
-    <app-pagination [currentPage]="currentPage()" [totalPages]="5" [totalItems]="autos().length" [pageSize]="6" (pageChange)="currentPage.set($event)"></app-pagination>
+    <app-pagination [currentPage]="currentPage()" [totalPages]="totalPagesComputed()" [totalItems]="filteredAutos().length" [pageSize]="pageSize" (pageChange)="currentPage.set($event)"></app-pagination>
 
-    <app-modal [open]="showForm()" [title]="editingAuto() ? 'Editar Vehiculo' : 'Agregar Vehiculo'" (closed)="closeForm()">
+    <app-modal [open]="showForm()" [title]="editingAuto() ? 'Editar Vehículo' : 'Agregar Vehículo'" (closed)="closeForm()">
       <div class="space-y-4">
         <div>
-          <label class="input-label">Placa *</label>
-          <input class="input-field" [(ngModel)]="formData.placa" placeholder="ABC-123" />
+          <label class="input-label" for="veh-placa">Placa *</label>
+          <input class="input-field" id="veh-placa" [(ngModel)]="formData.placa" placeholder="ABC-123" />
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">Marca *</label>
-            <select class="input-field" [(ngModel)]="formData.idMarca" (change)="onMarcaChange()">
+            <label class="input-label" for="veh-marca">Marca *</label>
+            <select class="input-field" id="veh-marca" [(ngModel)]="formData.idMarca" (change)="onMarcaChange()">
               <option [ngValue]="0" disabled>{{ loadingMarcas() ? 'Cargando...' : 'Seleccionar...' }}</option>
               @for (m of marcas(); track m.idMarca) {
                 <option [ngValue]="m.idMarca">{{ m.nombre }}</option>
@@ -102,8 +105,8 @@ import { Auto, Marca, Modelo } from '../../models';
             </select>
           </div>
           <div>
-            <label class="input-label">Modelo *</label>
-            <select class="input-field" [(ngModel)]="formData.idModelo">
+            <label class="input-label" for="veh-modelo">Modelo *</label>
+            <select class="input-field" id="veh-modelo" [(ngModel)]="formData.idModelo">
               <option [ngValue]="0" disabled>Seleccionar...</option>
               @for (m of modelos(); track m.idModelo) {
                 <option [ngValue]="m.idModelo">{{ m.nombre }}</option>
@@ -113,38 +116,38 @@ import { Auto, Marca, Modelo } from '../../models';
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="input-label">Año *</label>
-            <input class="input-field" type="number" [(ngModel)]="formData.anio" />
+            <label class="input-label" for="veh-anio">Año *</label>
+            <input class="input-field" id="veh-anio" type="number" [(ngModel)]="formData.anio" />
           </div>
           <div>
-            <label class="input-label">Color</label>
-            <input class="input-field" [(ngModel)]="formData.color" />
+            <label class="input-label" for="veh-color">Color</label>
+            <input class="input-field" id="veh-color" [(ngModel)]="formData.color" />
           </div>
         </div>
         <div>
-          <label class="input-label">Numero de Motor</label>
-          <input class="input-field" [(ngModel)]="formData.numeroMotor" />
+          <label class="input-label" for="veh-numero-motor">Numero de Motor</label>
+          <input class="input-field" id="veh-numero-motor" [(ngModel)]="formData.numeroMotor" />
         </div>
         <div>
-          <label class="input-label">Numero de Chasis</label>
-          <input class="input-field" [(ngModel)]="formData.numeroChasis" />
+          <label class="input-label" for="veh-numero-chasis">Numero de Chasis</label>
+          <input class="input-field" id="veh-numero-chasis" [(ngModel)]="formData.numeroChasis" />
         </div>
         <div>
-          <label class="input-label">Kilometraje Actual *</label>
-          <input class="input-field" type="number" [(ngModel)]="formData.kilometrajeActual" />
+          <label class="input-label" for="veh-kilometraje">Kilometraje Actual *</label>
+          <input class="input-field" id="veh-kilometraje" type="number" [(ngModel)]="formData.kilometrajeActual" />
         </div>
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="input-label">Precio/Dia *</label>
-            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.precioPorDia" />
+            <label class="input-label" for="veh-precio-dia">Precio/Día *</label>
+            <input class="input-field" id="veh-precio-dia" type="number" step="0.01" [(ngModel)]="formData.precioPorDia" />
           </div>
           <div>
-            <label class="input-label">Precio/Hora</label>
-            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.precioPorHora" />
+            <label class="input-label" for="veh-precio-hora">Precio/Hora</label>
+            <input class="input-field" id="veh-precio-hora" type="number" step="0.01" [(ngModel)]="formData.precioPorHora" />
           </div>
           <div>
-            <label class="input-label">Mora/Dia *</label>
-            <input class="input-field" type="number" step="0.01" [(ngModel)]="formData.moraPorDia" />
+            <label class="input-label" for="veh-mora-dia">Mora/Día *</label>
+            <input class="input-field" id="veh-mora-dia" type="number" step="0.01" [(ngModel)]="formData.moraPorDia" />
           </div>
         </div>
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
@@ -156,8 +159,8 @@ import { Auto, Marca, Modelo } from '../../models';
 
     <app-confirm-dialog
       [open]="showDeleteConfirm()"
-      title="Eliminar Vehiculo"
-      message="¿Esta seguro de eliminar este vehiculo?"
+      title="Eliminar Vehículo"
+      message="¿Está seguro de eliminar este vehículo?"
       confirmLabel="Eliminar"
       [danger]="true"
       (confirmed)="deleteAuto()"
@@ -213,6 +216,17 @@ export class VehiclesComponent implements OnInit {
       (a.marca || '').toLowerCase().includes(term) ||
       (a.modelo || '').toLowerCase().includes(term)
     );
+  });
+
+  readonly pageSize = 6;
+
+  readonly totalPagesComputed = computed(() =>
+    Math.max(1, Math.ceil(this.filteredAutos().length / this.pageSize))
+  );
+
+  readonly pagedAutos = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredAutos().slice(start, start + this.pageSize);
   });
 
   emptyForm(): AutoFormData {

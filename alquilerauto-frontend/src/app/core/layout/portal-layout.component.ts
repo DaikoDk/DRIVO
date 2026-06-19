@@ -23,23 +23,35 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
             </div>
           </a>
           <nav class="hidden md:flex items-center gap-1">
-            <a routerLink="/portal/catalogo" routerLinkActive="bg-white/10" [routerLinkActiveOptions]="{exact:true}" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors text-slate-300 hover:bg-white/10">Catalogo</a>
+            <a routerLink="/portal/catalogo" routerLinkActive="bg-white/10" [routerLinkActiveOptions]="{exact:true}" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors text-slate-300 hover:bg-white/10">Catálogo</a>
             <a routerLink="/portal/mis-reservas" routerLinkActive="bg-white/10" class="px-4 py-2 text-sm font-medium rounded-lg transition-colors text-slate-300 hover:bg-white/10">Mis Reservas</a>
           </nav>
         </div>
         <div class="flex items-center gap-4">
+          <button class="md:hidden text-slate-300" aria-label="Menú" (click)="mobileMenuOpen.set(!mobileMenuOpen())">
+            <span class="material-symbols-outlined">{{ mobileMenuOpen() ? 'close' : 'menu' }}</span>
+          </button>
           <a routerLink="/portal/perfil" class="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
             <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-medium">
               {{ userInitial() }}
             </div>
             <span class="hidden sm:inline">{{ userName() }}</span>
           </a>
-          <button (click)="auth.logout()" class="text-slate-400 hover:text-white transition-colors" title="Cerrar sesion">
+          <button (click)="auth.logout()" class="text-slate-400 hover:text-white transition-colors" title="Cerrar sesión" aria-label="Cerrar sesión">
             <span class="material-symbols-outlined">logout</span>
           </button>
         </div>
       </div>
     </header>
+
+    @if (mobileMenuOpen()) {
+      <div class="md:hidden border-b border-white/10 bg-inverse-surface">
+        <nav class="px-4 py-3 space-y-1">
+          <a routerLink="/portal/catalogo" class="block px-4 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-white/10" (click)="mobileMenuOpen.set(false)">Catálogo</a>
+          <a routerLink="/portal/mis-reservas" class="block px-4 py-2.5 text-sm font-medium rounded-lg text-slate-300 hover:bg-white/10" (click)="mobileMenuOpen.set(false)">Mis Reservas</a>
+        </nav>
+      </div>
+    }
 
     <!-- Contenido -->
     <main class="min-h-[calc(100vh-8rem)]">
@@ -60,12 +72,12 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
                 <p class="text-slate-400 text-xs">Rent-a-Car</p>
               </div>
             </div>
-            <p class="text-sm text-slate-400">Alquiler de autos seguro y confiable. Tu viaje comienza aqui.</p>
+            <p class="text-sm text-slate-400">Alquiler de autos seguro y confiable. Tu viaje comienza aquí.</p>
           </div>
           <div>
             <h4 class="text-white font-medium mb-3">Enlaces</h4>
             <div class="space-y-2 text-sm">
-              <p><a routerLink="/portal/catalogo" class="text-slate-400 hover:text-white">Catalogo</a></p>
+              <p><a routerLink="/portal/catalogo" class="text-slate-400 hover:text-white">Catálogo</a></p>
               <p><a routerLink="/portal/mis-reservas" class="text-slate-400 hover:text-white">Mis Reservas</a></p>
               <p><a routerLink="/portal/perfil" class="text-slate-400 hover:text-white">Perfil</a></p>
             </div>
@@ -90,6 +102,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
 export class PortalLayoutComponent {
   readonly auth: AuthService;
   readonly currentYear = new Date().getFullYear();
+  readonly mobileMenuOpen = signal(false);
 
   readonly pageTitle = signal('');
 
@@ -100,7 +113,7 @@ export class PortalLayoutComponent {
     ).subscribe((e) => {
       const titles: Record<string, string> = {
         '/portal/home': 'Inicio',
-        '/portal/catalogo': 'Catalogo',
+        '/portal/catalogo': 'Catálogo',
         '/portal/mis-reservas': 'Mis Reservas',
         '/portal/perfil': 'Mi Perfil',
       };

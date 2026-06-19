@@ -20,29 +20,29 @@ import { ToastService } from '../../core/services/toast.service';
         </div>
 
         <div class="card">
-          <h2 class="text-lg font-semibold text-slate-800 mb-6 text-center">Iniciar Sesion</h2>
+          <h2 class="text-lg font-semibold text-slate-800 mb-6 text-center">Iniciar Sesión</h2>
 
           <div class="space-y-4">
             <div>
-              <label class="input-label">Correo</label>
-              <input class="input-field" type="email" [(ngModel)]="correo" placeholder="correo@ejemplo.com" />
+              <label for="login-correo" class="input-label">Correo</label>
+              <input id="login-correo" class="input-field" type="email" [(ngModel)]="correo" placeholder="correo@ejemplo.com" />
             </div>
             <div>
-              <label class="input-label">Clave</label>
-              <input class="input-field" type="password" [(ngModel)]="clave" placeholder="••••••••" (keyup.enter)="doLogin()" />
+              <label for="login-clave" class="input-label">Clave</label>
+              <input id="login-clave" class="input-field" type="password" [(ngModel)]="clave" placeholder="••••••••" (keyup.enter)="doLogin()" />
             </div>
             <button class="btn-primary w-full" [disabled]="loading()" (click)="doLogin()">
               {{ loading() ? 'Ingresando...' : 'Ingresar' }}
             </button>
             @if (error()) {
-              <p class="text-sm text-red-600 text-center">{{ error() }}</p>
+              <p role="alert" class="text-sm text-red-600 text-center">{{ error() }}</p>
             }
           </div>
 
             <div class="mt-6 pt-4 border-t border-slate-200 text-center">
             <p class="text-sm text-slate-500">
               ¿No tienes cuenta?
-              <a routerLink="/register" class="text-primary font-medium hover:underline">Registrate</a>
+              <a routerLink="/register" class="text-primary font-medium hover:underline">Regístrate</a>
             </p>
           </div>
 
@@ -81,6 +81,10 @@ export class LoginComponent {
   doLogin(): void {
     if (!this.correo || !this.clave) {
       this.error.set('Complete todos los campos');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.correo)) {
+      this.error.set('Ingrese un email válido');
       return;
     }
     this.loading.set(true);

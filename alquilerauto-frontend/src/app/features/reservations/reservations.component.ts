@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
@@ -83,6 +83,8 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
                       <button class="btn-sm btn-primary" (click)="openFinalizar(r)" title="Finalizar" aria-label="Finalizar reserva">
                         <span class="material-symbols-outlined text-sm">check_circle</span>
                       </button>
+                    }
+                    @if (r.estado !== 'Finalizada' && r.estado !== 'Cancelada') {
                       <button class="btn-sm btn-danger" (click)="cancelarReserva(r)" title="Cancelar" aria-label="Cancelar reserva">
                         <span class="material-symbols-outlined text-sm">cancel</span>
                       </button>
@@ -101,7 +103,10 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
     </div>
 
     <!-- NEW RESERVATION MODAL -->
-    <app-modal [open]="showNewModal()" title="Nueva Reserva" (closed)="showNewModal.set(false)">
+    <app-modal [open]="showNewModal()" title="Nueva Reserva"
+      [headerActionLabel]="holdState() === 'held' ? 'Cancelar' : ''"
+      (headerAction)="cancelHold()"
+      (closed)="closeNewModal()">
       <div class="space-y-4">
         @if (step() === 1) {
           <div>
@@ -128,9 +133,18 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
                 <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }} (S/{{ a.precioPorDia }}/día)</option>
               }
             </select>
+            @if (holdState() === 'held') {
+              <div class="mt-3 bg-amber-50 rounded-lg p-3 flex items-center justify-between">
+                <span class="text-sm text-amber-700">Auto reservado temporalmente</span>
+                <span class="font-mono font-bold text-amber-600">{{ holdTiempo() }}</span>
+              </div>
+            }
+            @if (holdState() === 'expired') {
+              <p class="mt-2 text-sm text-red-600">El tiempo expiró. Selecciona otro vehículo.</p>
+            }
             <div class="flex justify-between mt-4">
-              <button class="btn-secondary" (click)="step.set(1)">Atras</button>
-              <button class="btn-primary flex items-center gap-2" [disabled]="!newData.idAuto" (click)="step.set(3)">
+              <button class="btn-secondary" (click)="step.set(1)">Atrás</button>
+              <button class="btn-primary flex items-center gap-2" [disabled]="!newData.idAuto || holdState() === 'expired'" (click)="goToStep3()">
                 Siguiente <span class="material-symbols-outlined text-sm">arrow_forward</span>
               </button>
             </div>
@@ -138,6 +152,12 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
         }
         @if (step() === 3) {
           <div>
+            @if (holdState() === 'held') {
+              <div class="mb-4 bg-amber-50 rounded-lg p-3 flex items-center justify-between">
+                <span class="text-sm text-amber-700">Tiempo restante para confirmar</span>
+                <span class="font-mono font-bold text-amber-600">{{ holdTiempo() }}</span>
+              </div>
+            }
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="input-label" for="res-fecha-inicio">Fecha Inicio *</label>
@@ -157,8 +177,8 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
               </div>
             </div>
             <div class="flex justify-between mt-4">
-              <button class="btn-secondary" (click)="step.set(2)">Atras</button>
-              <button class="btn-primary" (click)="createReserva()" [disabled]="!newData.fechaInicio || !newData.fechaFin">Crear Reserva</button>
+              <button class="btn-secondary" (click)="step.set(2)">Atrás</button>
+              <button class="btn-primary" (click)="createReserva()" [disabled]="!newData.fechaInicio || !newData.fechaFin || holdState() === 'expired'">Crear Reserva</button>
             </div>
           </div>
         }
@@ -357,7 +377,7 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
     </app-confirm-dialog>
   `
 })
-export class ReservationsComponent implements OnInit {
+export class ReservationsComponent implements OnInit, OnDestroy {
   readonly reservas = signal<Reserva[]>([]);
   readonly clientes = signal<Cliente[]>([]);
   readonly vehiculosDisponibles = signal<Auto[]>([]);
@@ -373,6 +393,9 @@ export class ReservationsComponent implements OnInit {
   readonly filterDateIni = signal('');
   readonly filterDateFin = signal('');
   readonly catalogoReparaciones = signal<CatalogoReparacion[]>([]);
+  readonly holdState = signal<'idle' | 'held' | 'expired'>('idle');
+  readonly holdTiempo = signal('');
+  private holdTimer: ReturnType<typeof setInterval> | null = null;
 
   readonly statsExtra = computed(() => {
     const all = this.reservas();
@@ -433,6 +456,33 @@ export class ReservationsComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this.pararHoldTimer();
+  }
+
+  private iniciarHoldTimer(fechaExpiracion: string): void {
+    this.pararHoldTimer();
+    const fin = new Date(fechaExpiracion).getTime();
+    const actualizar = () => {
+      const restante = Math.max(0, Math.floor((fin - Date.now()) / 1000));
+      if (restante <= 0) {
+        this.holdState.set('expired');
+        this.holdTiempo.set('00:00');
+        this.pararHoldTimer();
+        return;
+      }
+      const min = Math.floor(restante / 60);
+      const seg = restante % 60;
+      this.holdTiempo.set(`${String(min).padStart(2, '0')}:${String(seg).padStart(2, '0')}`);
+    };
+    actualizar();
+    this.holdTimer = setInterval(actualizar, 1000);
+  }
+
+  private pararHoldTimer(): void {
+    if (this.holdTimer) { clearInterval(this.holdTimer); this.holdTimer = null; }
+  }
+
   loadReservas(): void {
     this.loading.set(true);
     this.reservaService.getAll().subscribe({
@@ -444,7 +494,44 @@ export class ReservationsComponent implements OnInit {
   openNewModal(): void {
     this.newData = { idCliente: 0, idAuto: 0, fechaInicio: '', horaInicio: '', fechaFin: '', horaFin: '' };
     this.step.set(1);
+    this.holdState.set('idle');
+    this.holdTiempo.set('');
+    this.pararHoldTimer();
+    this.autoService.getDisponibles().subscribe({
+      next: (d) => this.vehiculosDisponibles.set(d),
+      error: () => this.toast.error('Error al cargar vehiculos')
+    });
     this.showNewModal.set(true);
+  }
+
+  closeNewModal(): void {
+    this.pararHoldTimer();
+    this.showNewModal.set(false);
+  }
+
+  goToStep3(): void {
+    if (!this.newData.idAuto) return;
+    if (this.holdState() === 'held') {
+      this.step.set(3);
+      return;
+    }
+    this.autoService.hold(this.newData.idAuto).subscribe({
+      next: (res) => {
+        this.holdState.set('held');
+        this.iniciarHoldTimer(res.fechaExpiracion);
+        this.step.set(3);
+      },
+      error: (err) => this.toast.error(err.message)
+    });
+  }
+
+  cancelHold(): void {
+    if (!this.newData.idAuto) return;
+    this.pararHoldTimer();
+    this.autoService.cancelHold(this.newData.idAuto).subscribe({
+      next: () => this.closeNewModal(),
+      error: (err) => this.toast.error(err.message)
+    });
   }
 
   openDetail(r: Reserva): void {
@@ -481,17 +568,8 @@ export class ReservationsComponent implements OnInit {
     this.reservaService.create(this.newData).subscribe({
       next: () => {
         this.toast.success('Reserva creada exitosamente');
+        this.pararHoldTimer();
         this.showNewModal.set(false);
-        this.loadReservas();
-      },
-      error: (err) => this.toast.error(err.message)
-    });
-  }
-
-  iniciarReserva(r: Reserva): void {
-    this.reservaService.iniciar(r.idReserva, 0).subscribe({
-      next: () => {
-        this.toast.success('Reserva iniciada');
         this.loadReservas();
       },
       error: (err) => this.toast.error(err.message)

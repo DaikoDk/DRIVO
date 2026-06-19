@@ -82,7 +82,7 @@ public class ReparacionService {
 
         Reparacion saved = repository.save(reparacion);
 
-        if (auto.getEstado().equals("Disponible")) {
+        if (!"En reparación".equals(auto.getEstado())) {
             auto.setEstado("En reparación");
             autoRepository.save(auto);
         }
@@ -110,7 +110,7 @@ public class ReparacionService {
         }
         Reparacion saved = repository.save(reparacion);
 
-        if ("Completada".equals(estado)) {
+        if ("Completada".equals(estado) || "Cancelada".equals(estado)) {
             Auto auto = saved.getAuto();
             List<Reparacion> pendientes = repository.findByAutoIdAuto(auto.getIdAuto())
                     .stream()

@@ -2,8 +2,11 @@ package com.drivo.alquilerauto.controller;
 
 import com.drivo.alquilerauto.dto.ApiResponse;
 import com.drivo.alquilerauto.dto.request.AutoRequest;
+import com.drivo.alquilerauto.dto.request.HoldRequest;
 import com.drivo.alquilerauto.dto.response.AutoResponse;
+import com.drivo.alquilerauto.dto.response.HoldResponse;
 import com.drivo.alquilerauto.service.AutoService;
+import com.drivo.alquilerauto.service.HoldService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,6 +23,7 @@ import java.util.List;
 public class AutoController {
 
     private final AutoService autoService;
+    private final HoldService holdService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<AutoResponse>>> findAllActivos() {
@@ -59,6 +63,20 @@ public class AutoController {
             @PathVariable Integer id,
             @Valid @RequestBody AutoRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(autoService.update(id, request), "Auto actualizado exitosamente"));
+    }
+
+    @PostMapping("/{id}/hold")
+    public ResponseEntity<ApiResponse<HoldResponse>> hold(
+            @PathVariable Integer id,
+            @Valid @RequestBody HoldRequest request) {
+        HoldResponse hold = holdService.hold(id);
+        return ResponseEntity.ok(ApiResponse.ok(hold, "Auto reservado temporalmente"));
+    }
+
+    @PostMapping("/{id}/hold/cancel")
+    public ResponseEntity<ApiResponse<Void>> cancelHold(@PathVariable Integer id) {
+        holdService.cancel(id);
+        return ResponseEntity.ok(ApiResponse.ok("Hold liberado"));
     }
 
     @DeleteMapping("/{id}")

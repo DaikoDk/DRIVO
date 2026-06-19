@@ -1,7 +1,6 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
 import { AutoService } from '../../../core/services/auto.service';
 import { ReservaService } from '../../../core/services/reserva.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -11,19 +10,17 @@ import { Auto } from '../../../models';
 @Component({
   selector: 'app-auto-detail',
   standalone: true,
-  imports: [FormsModule, DatePipe, RouterLink],
+  imports: [FormsModule, RouterLink],
   template: `
     <div class="max-w-7xl mx-auto px-6 py-8">
       @if (auto()) {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <!-- Imagenes y specs -->
           <div class="lg:col-span-2">
             <div class="w-full h-64 lg:h-80 rounded-xl mb-6 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
               <span class="material-symbols-outlined text-8xl text-slate-400">directions_car</span>
             </div>
             <h1 class="text-3xl font-bold text-slate-800 mb-2">{{ auto()?.marca }} {{ auto()?.modelo }} {{ auto()?.anio }}</h1>
             <p class="text-slate-500 mb-6">{{ auto()?.color || 'N/A' }} | Placa: {{ auto()?.placa }}</p>
-            
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div class="card text-center">
                 <span class="material-symbols-outlined text-2xl text-primary mb-2">person</span>
@@ -46,7 +43,6 @@ import { Auto } from '../../../models';
                 <p class="font-semibold text-slate-800">{{ auto()?.numeroMotor || 'N/A' }}</p>
               </div>
             </div>
-
             <div class="card">
               <h3 class="text-lg font-semibold text-slate-800 mb-4">Especificaciones</h3>
               <div class="grid grid-cols-2 gap-4 text-sm">
@@ -58,7 +54,6 @@ import { Auto } from '../../../models';
             </div>
           </div>
 
-          <!-- Panel de reserva -->
           <div>
             <div class="card sticky top-24">
               <div class="mb-4">
@@ -107,9 +102,32 @@ import { Auto } from '../../../models';
                   </div>
                 }
 
-                <button class="btn-primary w-full" [disabled]="!canReservar() || loading()" (click)="reservar()">
-                  {{ loading() ? 'Reservando...' : 'Reservar Ahora' }}
-                </button>
+                @if (holdState() === 'idle') {
+                  <button class="btn-primary w-full" [disabled]="!canReservar() || loading()" (click)="reservar()">
+                    {{ loading() ? 'Reservando...' : 'Reservar Ahora' }}
+                  </button>
+                }
+
+                @if (holdState() === 'held') {
+                  <div class="bg-amber-50 rounded-lg p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm text-amber-700 font-medium">Completa tu reserva</span>
+                      <span class="text-lg font-bold text-amber-600 font-mono">{{ tiempoRestante() }}</span>
+                    </div>
+                    <button class="btn-primary w-full" [disabled]="loading()" (click)="confirmar()">
+                      {{ loading() ? 'Confirmando...' : 'Confirmar Reserva' }}
+                    </button>
+                    <button class="w-full text-sm text-red-600 hover:text-red-800 font-medium py-1" (click)="cancelarHold()">
+                      Cancelar
+                    </button>
+                  </div>
+                }
+
+                @if (holdState() === 'expired') {
+                  <div class="bg-red-50 rounded-lg p-4">
+                    <p class="text-sm text-red-700">El tiempo de reserva expiró. Intenta nuevamente.</p>
+                  </div>
+                }
 
                 @if (msg()) {
                   <p class="text-sm text-center" [class.text-error]="isError()" [class.text-success]="!isError()">{{ msg() }}</p>
@@ -132,11 +150,14 @@ import { Auto } from '../../../models';
     </div>
   `
 })
-export class AutoDetailComponent implements OnInit {
+export class AutoDetailComponent implements OnInit, OnDestroy {
   readonly auto = signal<Auto | null>(null);
   readonly loading = signal(false);
   readonly msg = signal('');
   readonly isError = signal(false);
+  readonly holdState = signal<'idle' | 'held' | 'expired'>('idle');
+  readonly tiempoRestante = signal('');
+  private holdTimer: ReturnType<typeof setInterval> | null = null;
 
   fechaInicio = '';
   horaInicio = '08:00';
@@ -160,6 +181,10 @@ export class AutoDetailComponent implements OnInit {
       next: (d) => this.auto.set(d),
       error: () => this.loadError.set('No se pudo cargar el vehiculo')
     });
+  }
+
+  ngOnDestroy(): void {
+    this.pararTimer();
   }
 
   dias(): number {
@@ -195,6 +220,29 @@ export class AutoDetailComponent implements OnInit {
     return new Date().toISOString().split('T')[0];
   }
 
+  private iniciarTimer(fechaExpiracion: string): void {
+    this.pararTimer();
+    const fin = new Date(fechaExpiracion).getTime();
+    const actualizar = () => {
+      const restante = Math.max(0, Math.floor((fin - Date.now()) / 1000));
+      if (restante <= 0) {
+        this.holdState.set('expired');
+        this.tiempoRestante.set('00:00');
+        this.pararTimer();
+        return;
+      }
+      const min = Math.floor(restante / 60);
+      const seg = restante % 60;
+      this.tiempoRestante.set(`${String(min).padStart(2, '0')}:${String(seg).padStart(2, '0')}`);
+    };
+    actualizar();
+    this.holdTimer = setInterval(actualizar, 1000);
+  }
+
+  private pararTimer(): void {
+    if (this.holdTimer) { clearInterval(this.holdTimer); this.holdTimer = null; }
+  }
+
   reservar(): void {
     if (!this.canReservar()) return;
     if (this.fechaFin < this.fechaInicio) {
@@ -205,6 +253,23 @@ export class AutoDetailComponent implements OnInit {
     this.loading.set(true);
     this.msg.set('');
 
+    this.autoService.hold(this.auto()!.idAuto).subscribe({
+      next: (res) => {
+        this.holdState.set('held');
+        this.loading.set(false);
+        this.iniciarTimer(res.fechaExpiracion);
+      },
+      error: (err) => {
+        this.msg.set(err.message || 'Error al reservar el auto');
+        this.isError.set(true);
+        this.loading.set(false);
+      }
+    });
+  }
+
+  confirmar(): void {
+    this.loading.set(true);
+    this.msg.set('');
     this.reservaService.createDesdePortal({
       idAuto: this.auto()!.idAuto,
       fechaInicio: this.fechaInicio,
@@ -213,6 +278,7 @@ export class AutoDetailComponent implements OnInit {
       horaFin: this.horaFin,
     }).subscribe({
       next: () => {
+        this.pararTimer();
         this.toast.success('Reserva creada exitosamente');
         this.router.navigate(['/portal/mis-reservas']);
       },
@@ -221,6 +287,17 @@ export class AutoDetailComponent implements OnInit {
         this.isError.set(true);
         this.loading.set(false);
       }
+    });
+  }
+
+  cancelarHold(): void {
+    this.pararTimer();
+    this.autoService.cancelHold(this.auto()!.idAuto).subscribe({
+      next: () => {
+        this.holdState.set('idle');
+        this.tiempoRestante.set('');
+      },
+      error: (err) => this.msg.set(err.message || 'Error al liberar el auto')
     });
   }
 }

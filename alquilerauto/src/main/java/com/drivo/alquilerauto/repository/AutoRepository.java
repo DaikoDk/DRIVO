@@ -1,8 +1,10 @@
 package com.drivo.alquilerauto.repository;
 
 import com.drivo.alquilerauto.entity.Auto;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -34,4 +36,8 @@ public interface AutoRepository extends JpaRepository<Auto, Integer> {
     List<Auto> findDisponiblesEnRango(
             @Param("fechaInicio") java.time.LocalDate fechaInicio,
             @Param("fechaFin") java.time.LocalDate fechaFin);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM Auto a WHERE a.idAuto = :id")
+    Optional<Auto> findByIdWithLock(@Param("id") Integer id);
 }

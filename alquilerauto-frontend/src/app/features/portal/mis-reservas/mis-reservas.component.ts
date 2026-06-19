@@ -49,7 +49,7 @@ import { Reserva } from '../../../models';
                     <span class="badge" [class.badge-warning]="r.estado === 'Pendiente'" [class.badge-info]="r.estado === 'En proceso'" [class.badge-success]="r.estado === 'Confirmada' || r.estado === 'Finalizada'" [class.badge-error]="r.estado === 'Cancelada'">{{ r.estado }}</span>
                   </td>
                   <td class="px-4 py-3 text-right">
-                    @if (r.estado === 'En proceso') {
+                    @if (r.estado !== 'Finalizada' && r.estado !== 'Cancelada') {
                       <button class="btn-sm btn-danger" (click)="cancelar(r)">Cancelar</button>
                     }
                   </td>

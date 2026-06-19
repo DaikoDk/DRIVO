@@ -48,10 +48,6 @@ export class ReservaService {
     return this.api.post<Reserva>('/reservas', data);
   }
 
-  iniciar(id: number, kilometrajeInicio: number): Observable<Reserva> {
-    return this.api.patchCustom<Reserva>(`/reservas/${id}/iniciar`, { kilometrajeInicio });
-  }
-
   finalizar(id: number, kilometrajeFin: number, estadoEntrega: string, reparaciones?: { descripcion: string; costo: number; idCatalogoReparacion?: number; responsable?: string }[]): Observable<Reserva> {
     return this.api.patchCustom<Reserva>(`/reservas/${id}/finalizar`, {
       kilometrajeFin,

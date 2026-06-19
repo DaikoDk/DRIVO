@@ -1,7 +1,6 @@
 package com.drivo.alquilerauto.controller;
 
 import com.drivo.alquilerauto.dto.ApiResponse;
-import com.drivo.alquilerauto.dto.request.IniciarRequest;
 import com.drivo.alquilerauto.dto.request.ReservaCreateRequest;
 import com.drivo.alquilerauto.dto.request.ReservaFinalizarRequest;
 import com.drivo.alquilerauto.dto.request.ReservaPortalRequest;
@@ -53,15 +52,6 @@ public class ReservaController {
             @Valid @RequestBody ReservaCreateRequest request) {
         ReservaResponse creada = reservaService.create(request);
         return ResponseEntity.ok(ApiResponse.ok(creada, "Reserva creada exitosamente"));
-    }
-
-    @PatchMapping("/{id}/iniciar")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ReservaResponse>> iniciar(
-            @PathVariable Integer id,
-            @Valid @RequestBody IniciarRequest request) {
-        ReservaResponse iniciada = reservaService.iniciar(id, request);
-        return ResponseEntity.ok(ApiResponse.ok(iniciada, "Reserva iniciada exitosamente"));
     }
 
     @PatchMapping("/{id}/finalizar")

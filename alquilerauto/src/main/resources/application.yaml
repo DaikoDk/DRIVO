@@ -37,3 +37,5 @@ app:
   jwt:
     secret: ${JWT_SECRET:drivo-alquilerauto-jwt-secret-key-2026-must-be-256-bits-minimum}
     expiration-ms: 86400000
+  reserva:
+    tiempo-maximo-minutos: 10

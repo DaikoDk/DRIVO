@@ -53,4 +53,12 @@ export class AutoService {
   delete(id: number): Observable<void> {
     return this.api.delete<void>('/autos', id);
   }
+
+  hold(idAuto: number): Observable<{ fechaExpiracion: string }> {
+    return this.api.post<{ fechaExpiracion: string }>(`/autos/${idAuto}/hold`, {});
+  }
+
+  cancelHold(idAuto: number): Observable<void> {
+    return this.api.post<void>(`/autos/${idAuto}/hold/cancel`, {});
+  }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Repository
@@ -63,6 +64,13 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
     @Query("SELECT r FROM Reserva r JOIN FETCH r.cliente JOIN FETCH r.auto a JOIN FETCH a.marca JOIN FETCH a.modelo " +
            "WHERE CAST(r.fechaCreacion AS date) = CURRENT_DATE ORDER BY r.fechaCreacion DESC")
     List<Reserva> findReservasHoy();
+
+    @Query("SELECT r FROM Reserva r JOIN FETCH r.auto JOIN FETCH r.cliente " +
+           "WHERE r.estado = 'Confirmada' " +
+           "AND (r.fechaInicio < :hoy OR (r.fechaInicio = :hoy AND r.horaInicio <= :horaAhora))")
+    List<Reserva> findConfirmadasParaIniciar(
+            @Param("hoy") LocalDate hoy,
+            @Param("horaAhora") LocalTime horaAhora);
 
     @Query(value = "SELECT FORMAT(fechaFinalizacion, 'yyyy-MM') AS mes, " +
            "ISNULL(SUM(total), 0) AS monto " +

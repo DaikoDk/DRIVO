@@ -1,6 +1,5 @@
 package com.drivo.alquilerauto.service;
 
-import com.drivo.alquilerauto.dto.request.IniciarRequest;
 import com.drivo.alquilerauto.dto.request.ReparacionItemRequest;
 import com.drivo.alquilerauto.dto.request.ReservaCreateRequest;
 import com.drivo.alquilerauto.dto.request.ReservaFinalizarRequest;
@@ -18,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +34,7 @@ public class ReservaService {
     private final ReparacionRepository reparacionRepository;
     private final CatalogoReparacionRepository catalogoReparacionRepository;
     private final ReservaMapper reservaMapper;
+    private final HoldService holdService;
 
     @Transactional(readOnly = true)
     public List<Reserva> findAllWithDetails() {
@@ -77,10 +78,14 @@ public class ReservaService {
             throw new BadRequestException("Cliente bloqueado");
         }
 
+        if (!holdService.isValid(request.idAuto())) {
+            throw new BadRequestException("El tiempo de reserva expiró. Seleccione el auto nuevamente");
+        }
+
         Auto auto = autoRepository.findById(request.idAuto())
                 .orElseThrow(() -> new ResourceNotFoundException("Auto no encontrado con id: " + request.idAuto()));
 
-        if (!"Disponible".equals(auto.getEstado())) {
+        if (!"Reservado".equals(auto.getEstado())) {
             throw new BadRequestException("Auto no disponible en ese rango");
         }
 
@@ -112,34 +117,47 @@ public class ReservaService {
         reserva.setMora(BigDecimal.ZERO);
         reserva.setCostoReparaciones(BigDecimal.ZERO);
         reserva.setTotal(subtotal);
-        reserva.setEstado("En proceso");
-        reserva.setEstadoEntrega("Sin entregar");
         reserva.setKilometrajeInicio(auto.getKilometrajeActual());
-        reserva.setFechaHoraInicioReal(LocalDateTime.now());
+        reserva.setEstadoEntrega("Sin entregar");
         reserva.setFechaCreacion(LocalDateTime.now());
 
-        reserva = reservaRepository.save(reserva);
+        boolean inicioInmediato = !request.fechaInicio().isAfter(LocalDate.now())
+                && (request.fechaInicio().isAfter(LocalDate.now()) || !request.horaInicio().isAfter(LocalTime.now()));
+        if (inicioInmediato) {
+            reserva.setEstado("En proceso");
+            reserva.setFechaHoraInicioReal(LocalDateTime.now());
+            auto.setEstado("En proceso");
+        } else {
+            reserva.setEstado("Confirmada");
+        }
 
-        auto.setEstado("En proceso");
+        reserva = reservaRepository.save(reserva);
         autoRepository.save(auto);
 
         cliente.setNumeroReservas(cliente.getNumeroReservas() + 1);
         clienteRepository.save(cliente);
 
+        holdService.release(request.idAuto());
+
         return reservaMapper.toResponse(reserva);
     }
 
-    public ReservaResponse iniciar(Integer idReserva, IniciarRequest request) {
-        Reserva reserva = findById(idReserva);
-
-        if (!"Pendiente".equals(reserva.getEstado())) {
-            throw new BadRequestException("Solo se puede iniciar una reserva Pendiente");
+    @Transactional
+    public void autoIniciarConfirmadas() {
+        LocalDate hoy = LocalDate.now();
+        LocalTime ahora = LocalTime.now();
+        List<Reserva> paraIniciar = reservaRepository.findConfirmadasParaIniciar(hoy, ahora);
+        for (Reserva reserva : paraIniciar) {
+            Auto auto = reserva.getAuto();
+            reserva.setEstado("En proceso");
+            reserva.setKilometrajeInicio(auto.getKilometrajeActual());
+            reserva.setFechaHoraInicioReal(LocalDateTime.now());
+            reservaRepository.save(reserva);
+            if ("Reservado".equals(auto.getEstado())) {
+                auto.setEstado("En proceso");
+                autoRepository.save(auto);
+            }
         }
-
-        reserva.setKilometrajeInicio(request.kilometrajeInicio());
-        reserva.setFechaHoraInicioReal(LocalDateTime.now());
-        reserva.setEstado("En proceso");
-        return reservaMapper.toResponse(reservaRepository.save(reserva));
     }
 
     public ReservaResponse finalizar(Integer idReserva, ReservaFinalizarRequest request) {
@@ -231,7 +249,8 @@ public class ReservaService {
     public ReservaResponse cancelar(Integer idReserva) {
         Reserva reserva = findById(idReserva);
 
-        if (!"En proceso".equals(reserva.getEstado())) {
+        String estado = reserva.getEstado();
+        if (!"Pendiente".equals(estado) && !"Confirmada".equals(estado) && !"En proceso".equals(estado)) {
             throw new BadRequestException("No se puede cancelar");
         }
 
@@ -240,7 +259,12 @@ public class ReservaService {
         reservaRepository.save(reserva);
 
         Auto auto = reserva.getAuto();
-        auto.setEstado("Disponible");
+        boolean tienePendientes = false;
+        if ("En proceso".equals(estado)) {
+            tienePendientes = reparacionRepository.findByAutoIdAuto(auto.getIdAuto())
+                    .stream().anyMatch(r -> !"Completada".equals(r.getEstado()) && !"Cancelada".equals(r.getEstado()));
+        }
+        auto.setEstado(tienePendientes ? "En reparación" : "Disponible");
         autoRepository.save(auto);
 
         return reservaMapper.toResponse(reserva);
@@ -284,7 +308,8 @@ public class ReservaService {
                     "No puedes cancelar una reserva que no te pertenece");
         }
 
-        if (!"En proceso".equals(reserva.getEstado())) {
+        String estado = reserva.getEstado();
+        if (!"Pendiente".equals(estado) && !"Confirmada".equals(estado) && !"En proceso".equals(estado)) {
             throw new BadRequestException("No se puede cancelar");
         }
 
@@ -293,7 +318,12 @@ public class ReservaService {
         reservaRepository.save(reserva);
 
         Auto auto = reserva.getAuto();
-        auto.setEstado("Disponible");
+        boolean tienePendientes = false;
+        if ("En proceso".equals(estado)) {
+            tienePendientes = reparacionRepository.findByAutoIdAuto(auto.getIdAuto())
+                    .stream().anyMatch(r -> !"Completada".equals(r.getEstado()) && !"Cancelada".equals(r.getEstado()));
+        }
+        auto.setEstado(tienePendientes ? "En reparación" : "Disponible");
         autoRepository.save(auto);
 
         return reservaMapper.toResponse(reserva);

@@ -74,9 +74,9 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
             @for (r of filteredReparaciones(); track r.idReparacion) {
               <tr class="hover:bg-slate-50 cursor-pointer" tabindex="0" [attr.aria-expanded]="expandedId() === r.idReparacion" (click)="toggleExpand(r)" (keyup.enter)="toggleExpand(r)">
                 <td class="px-4 py-3 text-slate-700">#{{ r.idReparacion }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.auto?.placa }}</td>
-                <td class="px-4 py-3 text-slate-700">#{{ r.reserva?.idReserva }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.catalogoReparacion?.descripcion || '-' }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.placa }}</td>
+                <td class="px-4 py-3 text-slate-700">#{{ r.idReserva }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.descripcionCatalogo || '-' }}</td>
                 <td class="px-4 py-3 text-slate-700 max-w-[200px] truncate">{{ r.descripcion }}</td>
                 <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.costo.toFixed(2) }}</td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estado" [label]="r.estado"></app-status-badge></td>

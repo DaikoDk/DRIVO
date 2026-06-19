@@ -1,6 +1,7 @@
 package com.drivo.alquilerauto.service;
 
 import com.drivo.alquilerauto.dto.request.IniciarRequest;
+import com.drivo.alquilerauto.dto.request.ReparacionItemRequest;
 import com.drivo.alquilerauto.dto.request.ReservaCreateRequest;
 import com.drivo.alquilerauto.dto.request.ReservaFinalizarRequest;
 import com.drivo.alquilerauto.dto.request.ReservaPortalRequest;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -29,6 +31,8 @@ public class ReservaService {
     private final AutoRepository autoRepository;
     private final ClienteRepository clienteRepository;
     private final HistorialKilometrajeRepository historialKmRepository;
+    private final ReparacionRepository reparacionRepository;
+    private final CatalogoReparacionRepository catalogoReparacionRepository;
     private final ReservaMapper reservaMapper;
 
     @Transactional(readOnly = true)
@@ -163,10 +167,38 @@ public class ReservaService {
             mora = auto.getMoraPorDia().multiply(BigDecimal.valueOf(diasRetraso));
         }
 
-        BigDecimal nuevoTotal = reserva.getSubtotal().add(mora).add(reserva.getCostoReparaciones());
+        BigDecimal costoReparaciones = reserva.getCostoReparaciones();
+        if (request.reparaciones() != null && !request.reparaciones().isEmpty()) {
+            costoReparaciones = BigDecimal.ZERO;
+            for (ReparacionItemRequest item : request.reparaciones()) {
+                Reparacion reparacion = new Reparacion();
+                reparacion.setReserva(reserva);
+                reparacion.setAuto(auto);
+                reparacion.setDescripcion(item.descripcion());
+                reparacion.setCosto(item.costo());
+                reparacion.setResponsable(item.responsable() != null ? item.responsable() : "Cliente");
+                reparacion.setEstado(item.estado() != null ? item.estado() : "Pendiente");
+                reparacion.setFechaReporte(now);
+                reparacion.setUsuarioReporte(request.usuario());
+
+                if (item.idCatalogoReparacion() != null) {
+                    CatalogoReparacion catalogo = catalogoReparacionRepository
+                            .findById(item.idCatalogoReparacion())
+                            .orElseThrow(() -> new ResourceNotFoundException(
+                                    "Catálogo de reparación no encontrado con id: " + item.idCatalogoReparacion()));
+                    reparacion.setCatalogoReparacion(catalogo);
+                }
+
+                reparacionRepository.saveAndFlush(reparacion);
+                costoReparaciones = costoReparaciones.add(item.costo());
+            }
+        }
+
+        BigDecimal nuevoTotal = reserva.getSubtotal().add(mora).add(costoReparaciones);
 
         reserva.setKilometrajeFin(request.kilometrajeFin());
         reserva.setMora(mora);
+        reserva.setCostoReparaciones(costoReparaciones);
         reserva.setTotal(nuevoTotal);
         reserva.setObservacionesEntrega(request.observaciones());
         reserva.setEstado("Finalizada");

@@ -1,12 +1,10 @@
-import { Reserva } from './reserva.model';
-import { Auto } from './auto.model';
-import { CatalogoReparacion } from './catalogo-reparacion.model';
-
 export interface Reparacion {
   idReparacion: number;
-  reserva: Reserva;
-  auto: Auto;
-  catalogoReparacion?: CatalogoReparacion;
+  idReserva: number;
+  idAuto: number;
+  placa: string;
+  idCatalogoReparacion?: number;
+  descripcionCatalogo?: string;
   descripcion: string;
   costo: number;
   estado: string;

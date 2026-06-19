@@ -8,8 +8,9 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
 import { ReservaService, ReservaFormData } from '../../core/services/reserva.service';
 import { ClienteService } from '../../core/services/cliente.service';
 import { AutoService } from '../../core/services/auto.service';
+import { ReparacionService } from '../../core/services/reparacion.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Reserva, Cliente, Auto } from '../../models';
+import { Reserva, Cliente, Auto, CatalogoReparacion } from '../../models';
 
 @Component({
   selector: 'app-reservations',
@@ -213,6 +214,62 @@ import { Reserva, Cliente, Auto } from '../../models';
             <option value="Entregado con retraso">Entregado con retraso</option>
           </select>
         </div>
+
+        @if (estadoEntrega === 'Entregado con daños') {
+          <div class="border-t border-slate-100 pt-4">
+            <p class="text-sm font-semibold text-slate-700 mb-3">Reparaciones</p>
+            @for (item of reparaciones(); track $index) {
+              <div class="p-3 rounded-lg bg-slate-50 mb-3">
+                <div class="flex items-start justify-between mb-2">
+                  <span class="text-xs font-medium text-slate-500">Reparación #{{ $index + 1 }}</span>
+                  <button type="button" class="text-slate-400 hover:text-error" (click)="removerReparacion($index)" title="Eliminar reparación" aria-label="Eliminar reparación">
+                    <span class="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                </div>
+                <div class="space-y-3">
+                  <div>
+                    <label class="input-label">Catálogo</label>
+                    <select class="input-field" [(ngModel)]="item.idCatalogoReparacion">
+                      <option [ngValue]="undefined">Seleccionar...</option>
+                      @for (c of catalogoReparaciones(); track c.idCatalogoReparacion) {
+                        <option [ngValue]="c.idCatalogoReparacion">{{ c.descripcion }} (S/{{ c.costoEstimado }})</option>
+                      }
+                    </select>
+                  </div>
+                  <div>
+                    <label class="input-label">Descripción *</label>
+                    <textarea class="input-field" rows="2" [(ngModel)]="item.descripcion" placeholder="Describa la reparación..."></textarea>
+                  </div>
+                  <div class="grid grid-cols-3 gap-3">
+                    <div>
+                      <label class="input-label">Costo *</label>
+                      <input class="input-field" type="number" step="0.01" [(ngModel)]="item.costo" />
+                    </div>
+                    <div>
+                      <label class="input-label">Responsable</label>
+                      <select class="input-field" [(ngModel)]="item.responsable">
+                        <option value="Cliente">Cliente</option>
+                        <option value="Empresa">Empresa</option>
+                        <option value="Seguro">Seguro</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="input-label">Estado</label>
+                      <select class="input-field" [(ngModel)]="item.estado">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Completada">Completada</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+            <button type="button" class="btn-sm btn-secondary w-full" (click)="agregarReparacion()">
+              <span class="material-symbols-outlined text-sm">add</span> Agregar reparación
+            </button>
+          </div>
+        }
+
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button class="btn-secondary" (click)="showFinalizar.set(false)">Cancelar</button>
           <button class="btn-primary" (click)="finalizarReserva()">Finalizar</button>
@@ -245,6 +302,7 @@ export class ReservationsComponent implements OnInit {
   readonly cancelTargetId = signal<number | null>(null);
   readonly filterDateIni = signal('');
   readonly filterDateFin = signal('');
+  readonly catalogoReparaciones = signal<CatalogoReparacion[]>([]);
 
   readonly statsExtra = computed(() => {
     const all = this.reservas();
@@ -266,11 +324,13 @@ export class ReservationsComponent implements OnInit {
   newData: ReservaFormData = { idCliente: 0, idAuto: 0, fechaInicio: '', horaInicio: '', fechaFin: '', horaFin: '' };
   kilometrajeFin = 0;
   estadoEntrega = 'Entregado OK';
+  readonly reparaciones = signal<{ descripcion: string; costo: number; responsable: string; estado: string; idCatalogoReparacion?: number }[]>([]);
 
   constructor(
     private readonly reservaService: ReservaService,
     private readonly clienteService: ClienteService,
     private readonly autoService: AutoService,
+    private readonly reparacionService: ReparacionService,
     private readonly toast: ToastService
   ) {}
 
@@ -297,6 +357,10 @@ export class ReservationsComponent implements OnInit {
       next: (d) => this.vehiculosDisponibles.set(d),
       error: () => this.toast.error('Error al cargar vehiculos')
     });
+    this.reparacionService.getCatalogo().subscribe({
+      next: (d) => this.catalogoReparaciones.set(d),
+      error: () => this.toast.error('Error al cargar catálogo de reparaciones')
+    });
   }
 
   loadReservas(): void {
@@ -322,7 +386,16 @@ export class ReservationsComponent implements OnInit {
     this.finalizarTarget.set(r);
     this.kilometrajeFin = r.kilometrajeInicio || 0;
     this.estadoEntrega = 'Entregado OK';
+    this.reparaciones.set([]);
     this.showFinalizar.set(true);
+  }
+
+  agregarReparacion(): void {
+    this.reparaciones.update(arr => [...arr, { descripcion: '', costo: 0, responsable: 'Cliente', estado: 'Pendiente' }]);
+  }
+
+  removerReparacion(index: number): void {
+    this.reparaciones.update(arr => arr.filter((_, i) => i !== index));
   }
 
   createReserva(): void {
@@ -357,7 +430,16 @@ export class ReservationsComponent implements OnInit {
       this.toast.warning('El kilometraje final debe ser mayor o igual al inicial');
       return;
     }
-    this.reservaService.finalizar(r.idReserva, this.kilometrajeFin, this.estadoEntrega).subscribe({
+    if (this.estadoEntrega === 'Entregado con daños') {
+      const arr = this.reparaciones();
+      const invalid = arr.some(d => !d.descripcion || !d.costo || d.costo <= 0);
+      if (arr.length === 0 || invalid) {
+        this.toast.warning('Registre al menos una reparación con descripción y costo válido');
+        return;
+      }
+    }
+    this.reservaService.finalizar(r.idReserva, this.kilometrajeFin, this.estadoEntrega,
+      this.estadoEntrega === 'Entregado con daños' ? this.reparaciones() : []).subscribe({
       next: () => {
         this.toast.success('Reserva finalizada');
         this.showFinalizar.set(false);

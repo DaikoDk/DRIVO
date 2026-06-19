@@ -80,7 +80,14 @@ public class ReparacionService {
             reparacion.setCatalogoReparacion(catalogo);
         }
 
-        return mapper.toResponse(repository.save(reparacion));
+        Reparacion saved = repository.save(reparacion);
+
+        if (auto.getEstado().equals("Disponible")) {
+            auto.setEstado("En reparación");
+            autoRepository.save(auto);
+        }
+
+        return mapper.toResponse(saved);
     }
 
     public ReparacionResponse updateEstado(Integer id, ReparacionEstadoRequest request) {

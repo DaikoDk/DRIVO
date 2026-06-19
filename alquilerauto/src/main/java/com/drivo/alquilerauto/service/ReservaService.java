@@ -145,6 +145,10 @@ public class ReservaService {
             throw new BadRequestException("Solo se puede finalizar una reserva En proceso");
         }
 
+        if (request.kilometrajeFin() < reserva.getKilometrajeInicio()) {
+            throw new BadRequestException("El kilometraje final no puede ser menor al kilometraje inicial");
+        }
+
         Auto auto = reserva.getAuto();
 
         LocalDateTime plannedEnd = LocalDateTime.of(reserva.getFechaFin(), reserva.getHoraFin());
@@ -166,7 +170,7 @@ public class ReservaService {
         reserva.setTotal(nuevoTotal);
         reserva.setObservacionesEntrega(request.observaciones());
         reserva.setEstado("Finalizada");
-        reserva.setEstadoEntrega("Entregado OK");
+        reserva.setEstadoEntrega(request.estadoEntrega());
         reserva.setFechaFinalizacion(now);
         reserva.setUsuarioFinalizacion(request.usuario());
         reservaRepository.save(reserva);

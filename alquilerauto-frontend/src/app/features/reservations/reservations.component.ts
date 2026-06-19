@@ -205,6 +205,14 @@ import { Reserva, Cliente, Auto } from '../../models';
           <label class="input-label" for="res-kilometraje-final">Kilometraje Final *</label>
           <input class="input-field" id="res-kilometraje-final" type="number" [(ngModel)]="kilometrajeFin" />
         </div>
+        <div>
+          <label class="input-label" for="res-estado-entrega">Estado de Entrega *</label>
+          <select class="input-field" id="res-estado-entrega" [(ngModel)]="estadoEntrega">
+            <option value="Entregado OK">Entregado OK</option>
+            <option value="Entregado con daños">Entregado con daños</option>
+            <option value="Entregado con retraso">Entregado con retraso</option>
+          </select>
+        </div>
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button class="btn-secondary" (click)="showFinalizar.set(false)">Cancelar</button>
           <button class="btn-primary" (click)="finalizarReserva()">Finalizar</button>
@@ -257,6 +265,7 @@ export class ReservationsComponent implements OnInit {
 
   newData: ReservaFormData = { idCliente: 0, idAuto: 0, fechaInicio: '', horaInicio: '', fechaFin: '', horaFin: '' };
   kilometrajeFin = 0;
+  estadoEntrega = 'Entregado OK';
 
   constructor(
     private readonly reservaService: ReservaService,
@@ -312,6 +321,7 @@ export class ReservationsComponent implements OnInit {
   openFinalizar(r: Reserva): void {
     this.finalizarTarget.set(r);
     this.kilometrajeFin = r.kilometrajeInicio || 0;
+    this.estadoEntrega = 'Entregado OK';
     this.showFinalizar.set(true);
   }
 
@@ -347,7 +357,7 @@ export class ReservationsComponent implements OnInit {
       this.toast.warning('El kilometraje final debe ser mayor o igual al inicial');
       return;
     }
-    this.reservaService.finalizar(r.idReserva, this.kilometrajeFin).subscribe({
+    this.reservaService.finalizar(r.idReserva, this.kilometrajeFin, this.estadoEntrega).subscribe({
       next: () => {
         this.toast.success('Reserva finalizada');
         this.showFinalizar.set(false);

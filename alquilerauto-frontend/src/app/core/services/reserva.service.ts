@@ -52,10 +52,11 @@ export class ReservaService {
     return this.api.patchCustom<Reserva>(`/reservas/${id}/iniciar`, { kilometrajeInicio });
   }
 
-  finalizar(id: number, kilometrajeFin: number, observaciones?: string): Observable<Reserva> {
+  finalizar(id: number, kilometrajeFin: number, estadoEntrega: string, observaciones?: string): Observable<Reserva> {
     return this.api.patchCustom<Reserva>(`/reservas/${id}/finalizar`, {
       kilometrajeFin,
-      observaciones: observaciones || ''
+      observaciones: observaciones || '',
+      estadoEntrega
     });
   }
 

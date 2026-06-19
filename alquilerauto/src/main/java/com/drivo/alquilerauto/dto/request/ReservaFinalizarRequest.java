@@ -11,5 +11,8 @@ public record ReservaFinalizarRequest(
 
         String observaciones,
 
-        String usuario
+        String usuario,
+
+        @NotNull(message = "El estado de entrega es obligatorio")
+        String estadoEntrega
 ) {}

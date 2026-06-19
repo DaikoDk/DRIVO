@@ -101,6 +101,20 @@ public class ReparacionService {
         if ("Completada".equals(estado)) {
             reparacion.setFechaFin(LocalDateTime.now());
         }
-        return mapper.toResponse(repository.save(reparacion));
+        Reparacion saved = repository.save(reparacion);
+
+        if ("Completada".equals(estado)) {
+            Auto auto = saved.getAuto();
+            List<Reparacion> pendientes = repository.findByAutoIdAuto(auto.getIdAuto())
+                    .stream()
+                    .filter(r -> !"Completada".equals(r.getEstado()) && !"Cancelada".equals(r.getEstado()))
+                    .toList();
+            if (pendientes.isEmpty() && "En reparación".equals(auto.getEstado())) {
+                auto.setEstado("Disponible");
+                autoRepository.save(auto);
+            }
+        }
+
+        return mapper.toResponse(saved);
     }
 }

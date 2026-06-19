@@ -219,7 +219,10 @@ public class ReservaService {
         historialKmRepository.save(historial);
 
         auto.setKilometrajeActual(request.kilometrajeFin());
-        auto.setEstado("Disponible");
+
+        boolean tienePendientes = request.reparaciones() != null &&
+                request.reparaciones().stream().anyMatch(r -> !"Completada".equals(r.estado()));
+        auto.setEstado(tienePendientes ? "En reparación" : "Disponible");
         autoRepository.save(auto);
 
         return reservaMapper.toResponse(reserva);

@@ -361,20 +361,13 @@ BEGIN
     SET NOCOUNT ON;
 
     -- Actualizar kilometraje del auto cuando se finaliza
-    IF UPDATE(estado) AND EXISTS (SELECT 1 FROM inserted WHERE estado = 'Finalizada' AND kilometrajeFin IS NOT NULL)
+        IF UPDATE(estado) AND EXISTS (SELECT 1 FROM inserted WHERE estado = 'Finalizada' AND kilometrajeFin IS NOT NULL)
     BEGIN
         UPDATE tb_auto
         SET kilometrajeActual = i.kilometrajeFin
         FROM tb_auto a
         INNER JOIN inserted i ON a.idAuto = i.idAuto
         WHERE i.estado = 'Finalizada' AND i.kilometrajeFin IS NOT NULL;
-
-        -- Marcar auto como Disponible
-        UPDATE tb_auto
-        SET estado = 'Disponible'
-        FROM tb_auto a
-        INNER JOIN inserted i ON a.idAuto = i.idAuto
-        WHERE i.estado = 'Finalizada' AND a.estado = 'En proceso';
     END
 END;
 GO

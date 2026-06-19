@@ -87,6 +87,10 @@ public class ReparacionService {
         Reparacion reparacion = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reparación no encontrada con id: " + id));
 
+        if ("Completada".equals(reparacion.getEstado())) {
+            throw new BadRequestException("No se puede modificar una reparación completada");
+        }
+
         String estado = request.estado();
         if (!estado.equals("Pendiente") && !estado.equals("En proceso")
                 && !estado.equals("Completada") && !estado.equals("Cancelada")) {

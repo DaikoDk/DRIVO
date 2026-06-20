@@ -47,3 +47,7 @@ app:
     tiempo-maximo-minutos: 10
   fotos:
     directorio: uploads/fotos
+  watson:
+    api-key: ${WATSON_API_KEY:}
+    url: ${WATSON_URL:}
+    assistant-id: ${WATSON_ASSISTANT_ID:}

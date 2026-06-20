@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/autos/*/hold").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/autos/*/hold/cancel").authenticated()
                 .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/api/watson/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/marcas/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/modelos/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

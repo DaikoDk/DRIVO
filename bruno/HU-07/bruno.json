@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "DRIVO - HU-07 Reparaciones Mantenimientos Configuracion",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

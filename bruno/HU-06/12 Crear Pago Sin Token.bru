@@ -1,0 +1,25 @@
+meta {
+  name: 12 Crear Pago Sin Token
+  type: http
+  seq: 12
+}
+
+post {
+  url: http://localhost:8080/api/pagos
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "idReserva": 1,
+    "montoBase": 200,
+    "montoMora": 0,
+    "montoDanos": 0,
+    "metodoPago": "Efectivo"
+  }
+}
+
+assert {
+  res.status: eq 401
+}

@@ -1,0 +1,31 @@
+meta {
+  name: 05 POST Reserva Desde Portal
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/api/reservas/desde-portal
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "idAuto": 5,
+    "fechaInicio": "2026-07-10",
+    "horaInicio": "08:00",
+    "fechaFin": "2026-07-12",
+    "horaFin": "18:00"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.estado: eq Pendiente
+}

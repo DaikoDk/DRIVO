@@ -1,0 +1,36 @@
+meta {
+  name: 03 Crear Auto Placa Duplicada
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/api/autos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "placa": "HON-001",
+    "idMarca": 1,
+    "idModelo": 1,
+    "anio": 2026,
+    "color": "Azul",
+    "numeroMotor": "HON-MTR-002",
+    "numeroChasis": "HON-CHS-002",
+    "kilometrajeActual": 0,
+    "precioPorDia": 50.00,
+    "precioPorHora": 5.00,
+    "moraPorDia": 10.00
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+}

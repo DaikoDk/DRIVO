@@ -1,0 +1,15 @@
+meta {
+  name: 10 GET Sin Token
+  type: http
+  seq: 10
+}
+
+get {
+  url: http://localhost:8080/api/autos
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}

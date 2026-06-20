@@ -1,0 +1,20 @@
+meta {
+  name: 07 Listar Modelos Por Marca
+  type: http
+  seq: 7
+}
+
+get {
+  url: http://localhost:8080/api/modelos?idMarca=1
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

@@ -1,0 +1,32 @@
+meta {
+  name: 04 Crear Reserva Fecha Invalida
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/api/reservas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "idCliente": 5,
+    "idAuto": 2,
+    "fechaInicio": "2026-06-15",
+    "horaInicio": "18:00",
+    "fechaFin": "2026-06-14",
+    "horaFin": "08:00",
+    "usuarioCreacion": "admin@drivo.com"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+}

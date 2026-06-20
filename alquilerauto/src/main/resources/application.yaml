@@ -27,6 +27,12 @@ spring:
       hibernate:
         format_sql: true
 
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 6MB
+
 management:
   endpoints:
     web:
@@ -39,3 +45,5 @@ app:
     expiration-ms: 86400000
   reserva:
     tiempo-maximo-minutos: 10
+  fotos:
+    directorio: uploads/fotos

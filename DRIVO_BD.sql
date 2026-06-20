@@ -104,6 +104,7 @@ CREATE TABLE tb_auto (
     activo                  BIT                 NOT NULL DEFAULT 1,
     fechaRegistro           DATETIME            NOT NULL DEFAULT GETDATE(),
     fechaUltimaActualizacion DATETIME,
+    fotoUrl                 VARCHAR(500),
     CONSTRAINT PK_Auto PRIMARY KEY CLUSTERED (idAuto),
     CONSTRAINT UQ_Auto_Placa UNIQUE (placa),
     CONSTRAINT FK_Auto_Marca FOREIGN KEY (idMarca) REFERENCES tb_marca(idMarca),
@@ -402,7 +403,7 @@ SELECT
     a.idAuto, a.placa, m.nombre AS marca, mo.nombre AS modelo, mo.categoria,
     a.anio, a.color, a.numeroMotor, a.numeroChasis,
     a.kilometrajeActual, a.ultimaRevisionKm, a.proximaRevisionKm,
-    a.precioPorDia, a.precioPorHora, a.moraPorDia, a.estado, a.activo
+    a.precioPorDia, a.precioPorHora, a.moraPorDia, a.estado, a.activo, a.fotoUrl
 FROM tb_auto a
 INNER JOIN tb_marca m ON a.idMarca = m.idMarca
 INNER JOIN tb_modelo mo ON a.idModelo = mo.idModelo;
@@ -511,10 +512,10 @@ GO
 -- En proceso: actualmente alquilado (reserva activa)
 -- En reparacion: en taller
 SET IDENTITY_INSERT tb_auto ON;
-INSERT INTO tb_auto (idAuto, placa, idMarca, idModelo, anio, color, kilometrajeActual, ultimaRevisionKm, proximaRevisionKm, precioPorDia, precioPorHora, moraPorDia, estado) VALUES
-(1, 'ABC-123', 1, 1, 2020, 'Blanco', 45500, 40000, 50000, 120.00, 15.00, 30.00, 'Disponible'),
-(2, 'DEF-456', 2, 2, 2019, 'Negro',  52300, 48000, 58000, 110.00, 13.00, 25.00, 'En proceso'),
-(3, 'GHI-789', 3, 3, 2021, 'Rojo',   38000, 35000, 40000, 130.00, 16.00, 30.00, 'En reparación');
+INSERT INTO tb_auto (idAuto, placa, idMarca, idModelo, anio, color, kilometrajeActual, ultimaRevisionKm, proximaRevisionKm, precioPorDia, precioPorHora, moraPorDia, estado, fotoUrl) VALUES
+(1, 'ABC-123', 1, 1, 2020, 'Blanco', 45500, 40000, 50000, 120.00, 15.00, 30.00, 'Disponible',  NULL),
+(2, 'DEF-456', 2, 2, 2019, 'Negro',  52300, 48000, 58000, 110.00, 13.00, 25.00, 'En proceso',  NULL),
+(3, 'GHI-789', 3, 3, 2021, 'Rojo',   38000, 35000, 40000, 130.00, 16.00, 30.00, 'En reparación', NULL);
 SET IDENTITY_INSERT tb_auto OFF;
 GO
 

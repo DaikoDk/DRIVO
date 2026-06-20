@@ -6,16 +6,20 @@ import com.drivo.alquilerauto.dto.request.HoldRequest;
 import com.drivo.alquilerauto.dto.response.AutoResponse;
 import com.drivo.alquilerauto.dto.response.HoldResponse;
 import com.drivo.alquilerauto.service.AutoService;
+import com.drivo.alquilerauto.service.FotoService;
 import com.drivo.alquilerauto.service.HoldService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/autos")
@@ -24,6 +28,7 @@ public class AutoController {
 
     private final AutoService autoService;
     private final HoldService holdService;
+    private final FotoService fotoService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<AutoResponse>>> findAllActivos() {
@@ -77,6 +82,28 @@ public class AutoController {
     public ResponseEntity<ApiResponse<Void>> cancelHold(@PathVariable Integer id) {
         holdService.cancel(id);
         return ResponseEntity.ok(ApiResponse.ok("Hold liberado"));
+    }
+
+    @PostMapping(value = "/{id}/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> subirFoto(
+            @PathVariable Integer id,
+            @RequestParam("archivo") MultipartFile archivo) {
+        String fotoUrl = fotoService.guardarArchivo(id, archivo);
+        return ResponseEntity.ok(ApiResponse.ok(fotoUrl, "Foto subida exitosamente"));
+    }
+
+    @PutMapping("/{id}/foto-url")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> definirFotoUrl(
+            @PathVariable Integer id,
+            @RequestBody Map<String, String> body) {
+        String url = body.get("url");
+        if (url == null || url.isBlank()) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("La URL es obligatoria"));
+        }
+        String fotoUrl = fotoService.guardarDesdeUrl(id, url);
+        return ResponseEntity.ok(ApiResponse.ok(fotoUrl, "URL de foto actualizada exitosamente"));
     }
 
     @DeleteMapping("/{id}")

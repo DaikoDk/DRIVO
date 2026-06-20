@@ -1,0 +1,31 @@
+meta {
+  name: 06 Finalizar Reserva
+  type: http
+  seq: 7
+}
+
+patch {
+  url: http://localhost:8080/api/reservas/1010/finalizar
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "kilometrajeFin": 800,
+    "observaciones": "Todo en orden",
+    "usuario": "admin@drivo.com"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.estado: eq Finalizada
+  res.body.data.estadoEntrega: eq Devuelto
+  res.body.data.kilometrajeFin: eq 800
+}

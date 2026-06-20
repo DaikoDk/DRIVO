@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "DRIVO - HU-09 Portal Ecommerce Backend",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

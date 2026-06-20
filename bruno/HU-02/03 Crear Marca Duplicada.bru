@@ -1,0 +1,27 @@
+meta {
+  name: 03 Crear Marca Duplicada
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/api/marcas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "nombre": "Toyota"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+  res.body.message: contains Ya existe una marca
+}

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "DRIVO - HU-06 Pagos + Dashboard",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

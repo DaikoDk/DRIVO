@@ -1,0 +1,26 @@
+meta {
+  name: 05 Registro Clave Corta
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Test",
+    "apellidoPaterno": "Corto",
+    "dni": "33333333",
+    "email": "clavecorta@email.com",
+    "clave": "12345"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+}

@@ -14,5 +14,6 @@ public record AutoResponse(
         BigDecimal precioPorDia,
         BigDecimal precioPorHora,
         BigDecimal moraPorDia,
-        String estado
+        String estado,
+        String fotoUrl
 ) {}

@@ -1,0 +1,20 @@
+meta {
+  name: 10 Mantenimientos En Curso
+  type: http
+  seq: 10
+}
+
+get {
+  url: http://localhost:8080/api/mantenimientos/en-curso
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

@@ -1,0 +1,28 @@
+meta {
+  name: 06 Registro Sin Licencia
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8080/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Maria",
+    "apellidoPaterno": "Garcia",
+    "dni": "44444444",
+    "email": "maria@email.com",
+    "clave": "maria123"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.token: isNotEmpty
+  res.body.data.rol: eq CLIENTE
+}

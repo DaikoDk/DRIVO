@@ -88,4 +88,7 @@ public class Auto {
     @OneToMany(mappedBy = "auto")
     @JsonIgnore
     private List<HistorialKilometraje> historialKilometraje = new ArrayList<>();
+
+    @Column(length = 500)
+    private String fotoUrl;
 }

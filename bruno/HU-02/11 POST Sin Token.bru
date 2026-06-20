@@ -1,0 +1,21 @@
+meta {
+  name: 11 POST Sin Token
+  type: http
+  seq: 11
+}
+
+post {
+  url: http://localhost:8080/api/marcas
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "SinToken"
+  }
+}
+
+assert {
+  res.status: eq 401
+}

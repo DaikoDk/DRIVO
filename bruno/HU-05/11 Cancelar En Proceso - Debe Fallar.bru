@@ -1,0 +1,21 @@
+meta {
+  name: 09 Cancelar En Proceso - Debe Fallar
+  type: http
+  seq: 11
+}
+
+patch {
+  url: http://localhost:8080/api/reservas/{{reservaId}}/cancelar
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+  res.body.message: contains No se puede cancelar
+}

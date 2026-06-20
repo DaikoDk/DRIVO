@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "DRIVO - HU-02 Marcas Modelos ResponseWrapper",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

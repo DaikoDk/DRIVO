@@ -16,8 +16,12 @@ import { Auto } from '../../../models';
       @if (auto()) {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div class="lg:col-span-2">
-            <div class="w-full h-64 lg:h-80 rounded-xl mb-6 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
-              <span class="material-symbols-outlined text-8xl text-slate-400">directions_car</span>
+            <div class="w-full aspect-[16/9] rounded-xl mb-6 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden">
+              @if (auto()?.fotoUrl) {
+                <img [src]="fotoCompleta(auto()?.fotoUrl)" alt="{{ auto()?.marca }} {{ auto()?.modelo }}" class="w-full h-full object-cover" />
+              } @else {
+                <span class="material-symbols-outlined text-8xl text-slate-400">directions_car</span>
+              }
             </div>
             <h1 class="text-3xl font-bold text-slate-800 mb-2">{{ auto()?.marca }} {{ auto()?.modelo }} {{ auto()?.anio }}</h1>
             <p class="text-slate-500 mb-6">{{ auto()?.color || 'N/A' }} | Placa: {{ auto()?.placa }}</p>
@@ -203,6 +207,10 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
       next: (d) => this.auto.set(d),
       error: () => this.loadError.set('No se pudo cargar el vehiculo')
     });
+  }
+
+  fotoCompleta(url?: string | null): string | null {
+    return this.autoService.fotoCompleta(url);
   }
 
   ngOnDestroy(): void {

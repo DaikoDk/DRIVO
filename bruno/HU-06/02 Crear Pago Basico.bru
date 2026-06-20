@@ -1,0 +1,39 @@
+meta {
+  name: 02 Crear Pago Basico
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/api/pagos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "idReserva": 1,
+    "montoBase": 200,
+    "montoMora": 0,
+    "montoDanos": 0,
+    "metodoPago": "Efectivo"
+  }
+}
+
+vars:post-response {
+  pagoId: res.body.idPago
+}
+
+assert {
+  res.status: eq 200
+  res.body.idReserva: eq 1
+  res.body.montoBase: eq 200
+  res.body.montoMora: eq 0
+  res.body.montoDanos: eq 0
+  res.body.montoTotalPagado: eq 200
+  res.body.metodoPago: eq Efectivo
+}

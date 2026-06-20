@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/autos/disponibles", "/api/autos/disponibles-rango", "/api/autos/*", "/api/autos").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/autos/*/hold").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/autos/*/hold/cancel").authenticated()
+                .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/marcas/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/modelos/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

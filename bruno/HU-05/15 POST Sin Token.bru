@@ -1,0 +1,26 @@
+meta {
+  name: 13 POST Sin Token
+  type: http
+  seq: 15
+}
+
+post {
+  url: http://localhost:8080/api/reservas
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "idCliente": 5,
+    "idAuto": 1,
+    "fechaInicio": "2026-06-10",
+    "horaInicio": "08:00",
+    "fechaFin": "2026-06-12",
+    "horaFin": "18:00"
+  }
+}
+
+assert {
+  res.status: eq 401
+}

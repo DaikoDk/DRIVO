@@ -1,0 +1,20 @@
+meta {
+  name: 04 Listar Autos Activos
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:8080/api/autos
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

@@ -1,0 +1,29 @@
+meta {
+  name: 08 Crear Mantenimiento
+  type: http
+  seq: 8
+}
+
+post {
+  url: http://localhost:8080/api/mantenimientos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "idAuto": 1,
+    "fechaIngreso": "2026-06-10",
+    "tipo": "Preventivo",
+    "costo": 150.00
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

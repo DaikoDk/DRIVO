@@ -1,0 +1,42 @@
+meta {
+  name: 02 Crear Cliente Con Licencia
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/api/clientes
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "nombre": "Roberto",
+    "apellidoPaterno": "Gonzalez",
+    "apellidoMaterno": "Diaz",
+    "dni": "99887766",
+    "telefono": "999888777",
+    "email": "roberto@example.com",
+    "direccion": "Av. Siempre Viva 742",
+    "licencia": {
+      "numeroLicencia": "Q99887766",
+      "categoria": "A-IIa",
+      "fechaVencimiento": "2028-12-31"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.nombre: eq Roberto
+  res.body.data.estado: eq activo
+  res.body.data.bloqueado: eq false
+  res.body.data.numeroLicencia: isNotEmpty
+  res.body.data.idLicencia: isNotEmpty
+}

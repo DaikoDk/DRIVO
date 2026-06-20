@@ -1,0 +1,20 @@
+meta {
+  name: 08 Listar Modelos Activos
+  type: http
+  seq: 8
+}
+
+get {
+  url: http://localhost:8080/api/modelos/activos
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

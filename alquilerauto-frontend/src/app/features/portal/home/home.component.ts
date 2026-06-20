@@ -77,7 +77,7 @@ import { Auto } from '../../../models';
           @if (loading()) {
             @for (i of [1,2,3]; track i) {
               <div class="card animate-pulse">
-                <div class="w-full h-40 rounded-lg mb-4 bg-slate-200"></div>
+                <div class="w-full aspect-[3/2] rounded-lg mb-4 bg-slate-200"></div>
                 <div class="h-4 bg-slate-200 rounded mb-2 w-3/4"></div>
                 <div class="h-3 bg-slate-200 rounded mb-4 w-1/2"></div>
                 <div class="h-4 bg-slate-200 rounded w-20"></div>
@@ -86,8 +86,12 @@ import { Auto } from '../../../models';
           }
           @for (auto of destacados(); track auto.idAuto) {
             <a class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
-              <div class="w-full h-40 rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300">
-                <span class="material-symbols-outlined text-6xl text-slate-400">directions_car</span>
+              <div class="w-full aspect-[3/2] rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden">
+                @if (auto.fotoUrl) {
+                  <img [src]="fotoCompleta(auto.fotoUrl)" alt="{{ auto.marca }} {{ auto.modelo }}" class="w-full h-full object-cover" />
+                } @else {
+                  <span class="material-symbols-outlined text-6xl text-slate-400">directions_car</span>
+                }
               </div>
               <div class="flex items-start justify-between mb-1">
                 <h3 class="text-base font-semibold text-slate-800">{{ auto.marca }} {{ auto.modelo }}</h3>
@@ -130,5 +134,9 @@ export class HomeComponent implements OnInit {
       next: (data) => { this.destacados.set(data.slice(0, 6)); this.loading.set(false); },
       error: () => { this.toast.error('Error al cargar autos destacados'); this.loading.set(false); }
     });
+  }
+
+  fotoCompleta(url?: string | null): string | null {
+    return this.autoService.fotoCompleta(url);
   }
 }

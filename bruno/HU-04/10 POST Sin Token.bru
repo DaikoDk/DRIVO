@@ -1,0 +1,29 @@
+meta {
+  name: 10 POST Sin Token
+  type: http
+  seq: 10
+}
+
+post {
+  url: http://localhost:8080/api/clientes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Sin",
+    "apellidoPaterno": "Token",
+    "dni": "00000001",
+    "email": "sintoken@example.com",
+    "licencia": {
+      "numeroLicencia": "Q00000001",
+      "categoria": "A-I",
+      "fechaVencimiento": "2028-01-01"
+    }
+  }
+}
+
+assert {
+  res.status: eq 401
+}

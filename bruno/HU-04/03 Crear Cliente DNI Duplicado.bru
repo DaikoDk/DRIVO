@@ -1,0 +1,35 @@
+meta {
+  name: 03 Crear Cliente DNI Duplicado
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/api/clientes
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "nombre": "Otro",
+    "apellidoPaterno": "Usuario",
+    "dni": "12345678",
+    "email": "otro@example.com",
+    "licencia": {
+      "numeroLicencia": "Q11119999",
+      "categoria": "A-I",
+      "fechaVencimiento": "2028-06-15"
+    }
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+  res.body.message: contains DNI ya registrado
+}

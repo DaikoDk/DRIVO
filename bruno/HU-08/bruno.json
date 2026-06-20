@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "DRIVO - HU-08 Registro Cliente Role Routing",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

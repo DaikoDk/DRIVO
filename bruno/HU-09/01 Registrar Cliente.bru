@@ -1,0 +1,36 @@
+meta {
+  name: 01 Registrar Cliente
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Portal",
+    "apellidoPaterno": "User",
+    "dni": "22223333",
+    "email": "portal@email.com",
+    "clave": "portal123",
+    "licencia": {
+      "numeroLicencia": "Q22223333",
+      "categoria": "A-IIa",
+      "fechaVencimiento": "2028-06-15"
+    }
+  }
+}
+
+vars:post-response {
+  token: res.body.data.token
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.rol: eq CLIENTE
+}

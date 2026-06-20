@@ -1,0 +1,28 @@
+meta {
+  name: 14 Configuracion Tipo Invalido
+  type: http
+  seq: 14
+}
+
+post {
+  url: http://localhost:8080/api/configuraciones
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "clave": "TestInvalido",
+    "valor": "42",
+    "tipo": "invalido"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+}

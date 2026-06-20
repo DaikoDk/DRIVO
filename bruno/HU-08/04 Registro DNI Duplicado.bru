@@ -1,0 +1,32 @@
+meta {
+  name: 04 Registro DNI Duplicado
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8080/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Otro",
+    "apellidoPaterno": "Usuario",
+    "dni": "78585965",
+    "email": "otro@email.com",
+    "clave": "otro1234",
+    "licencia": {
+      "numeroLicencia": "Q22222222",
+      "categoria": "A-I",
+      "fechaVencimiento": "2028-06-15"
+    }
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+  res.body.message: contains DNI ya registrado
+}

@@ -1,9 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-topbar',
   standalone: true,
+  imports: [RouterLink],
   template: `
     <header class="h-16 sticky top-0 z-30 flex items-center justify-between px-6 border-b bg-surface-container border-slate-200">
       <div class="flex items-center gap-4">
@@ -18,11 +20,14 @@ import { AuthService } from '../services/auth.service';
           <button type="button" aria-label="Notificaciones" class="material-symbols-outlined cursor-pointer text-slate-500 bg-transparent border-0">notifications</button>
           <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-error"></span>
         </div>
-        <button type="button" aria-label="Menú de usuario" class="flex items-center gap-2 cursor-pointer bg-transparent border-0">
+        <button type="button" aria-label="Menú de usuario" class="flex items-center gap-2 cursor-pointer bg-transparent border-0" routerLink="/admin/perfil">
           <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium bg-primary">
             {{ userInitial() }}
           </div>
           <span class="text-sm font-medium text-slate-700">{{ userName() }}</span>
+        </button>
+        <button (click)="logout()" class="text-slate-400 hover:text-slate-600 transition-colors bg-transparent border-0 cursor-pointer" title="Cerrar sesión" aria-label="Cerrar sesión">
+          <span class="material-symbols-outlined">logout</span>
         </button>
       </div>
     </header>
@@ -33,6 +38,10 @@ export class TopbarComponent {
   @Output() toggleSidebar = new EventEmitter<void>();
 
   constructor(private readonly auth: AuthService) {}
+
+  logout(): void {
+    this.auth.logout();
+  }
 
   userName(): string {
     return this.auth.currentUser()?.nombre || 'Admin';

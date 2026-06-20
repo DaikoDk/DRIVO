@@ -29,7 +29,7 @@ import { Auto, Marca, Modelo } from '../../models';
       </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       @if (loading()) {
         @for (i of [1,2,3,4,5,6]; track i) {
             <div class="card animate-pulse">
@@ -241,7 +241,7 @@ export class VehiclesComponent implements OnInit {
     );
   });
 
-  readonly pageSize = 6;
+  readonly pageSize = 16;
 
   readonly totalPagesComputed = computed(() =>
     Math.max(1, Math.ceil(this.filteredAutos().length / this.pageSize))

@@ -61,4 +61,13 @@ public class JwtTokenProvider {
                 .getPayload()
                 .get("rol", String.class);
     }
+
+    public Date getExpirationFromToken(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getExpiration();
+    }
 }

@@ -13,6 +13,9 @@ import com.drivo.alquilerauto.repository.ClienteRepository;
 import com.drivo.alquilerauto.repository.LicenciaRepository;
 import com.drivo.alquilerauto.repository.UsuarioRepository;
 import com.drivo.alquilerauto.security.JwtTokenProvider;
+import com.drivo.alquilerauto.service.TokenBlacklistService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +26,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -36,6 +41,7 @@ public class AuthController {
     private final ClienteRepository clienteRepository;
     private final LicenciaRepository licenciaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -103,5 +109,17 @@ public class AuthController {
 
         RegisterResponse response = new RegisterResponse(token, usuario.getNombre(), "CLIENTE");
         return ResponseEntity.ok(ApiResponse.ok(response, "Registro exitoso"));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (jwtTokenProvider.validateToken(token)) {
+                Date exp = jwtTokenProvider.getExpirationFromToken(token);
+                tokenBlacklistService.blacklist(token, exp.toInstant());
+            }
+        }
+        return ResponseEntity.ok(ApiResponse.ok("Sesion cerrada"));
     }
 }

@@ -32,6 +32,7 @@ export class AdminLayoutComponent {
     '/admin/reparaciones': 'Reparaciones',
     '/admin/mantenimientos': 'Mantenimientos',
     '/admin/configuracion': 'Configuración',
+    '/admin/perfil': 'Mi Perfil',
   };
 
   readonly pageTitle = signal('Dashboard');

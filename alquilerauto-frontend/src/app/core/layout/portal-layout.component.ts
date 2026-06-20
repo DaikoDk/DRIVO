@@ -3,11 +3,12 @@ import { RouterOutlet, Router, NavigationEnd, RouterLink, RouterLinkActive } fro
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { ToastComponent } from '../../shared/components/toast/toast.component';
+import { ChatWidgetComponent } from '../../shared/components/chat-widget/chat-widget.component';
 
 @Component({
   selector: 'app-portal-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastComponent, ChatWidgetComponent],
   template: `
     <!-- Navbar -->
     <header class="sticky top-0 z-30 border-b border-white/10 bg-inverse-surface">
@@ -97,6 +98,7 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
     </footer>
 
     <app-toast></app-toast>
+    <app-chat-widget></app-chat-widget>
   `
 })
 export class PortalLayoutComponent {

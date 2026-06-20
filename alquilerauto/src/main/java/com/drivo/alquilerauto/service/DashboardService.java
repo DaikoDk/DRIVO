@@ -39,8 +39,8 @@ public class DashboardService {
         long totalClientes = clienteRepository.findByActivoTrue().size();
         long clientesActivos = clienteRepository.findByActivoTrueAndEstado("activo").size();
 
-        long reservasActivas = reservaRepository.findByEstadoIn(
-                List.of("Pendiente", "Confirmada", "En proceso")).size();
+        long reservasActivas = reservaRepository.findByEstadoInWithDetails(
+                List.of("RESERVA_PENDIENTE", "RESERVA_CONFIRMADA", "ALQUILER_EN_CURSO")).size();
         long reservasHoy = reservaRepository.countReservasHoy();
         BigDecimal ingresosMes = reservaRepository.sumIngresosMesActual();
 
@@ -63,7 +63,7 @@ public class DashboardService {
                     r.getHoraInicio(),
                     r.getFechaFin(),
                     r.getHoraFin(),
-                    r.getEstado(),
+                    r.getEstado().getCodigo(),
                     r.getTotal()
             ));
         }

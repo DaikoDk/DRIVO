@@ -46,10 +46,10 @@ import { Reserva } from '../../../models';
                   <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd/MM/yy' }} {{ r.horaFin }}</td>
                   <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.total.toFixed(2) }}</td>
                   <td class="px-4 py-3">
-                    <span class="badge" [class.badge-warning]="r.estado === 'Pendiente'" [class.badge-info]="r.estado === 'En proceso'" [class.badge-success]="r.estado === 'Confirmada' || r.estado === 'Finalizada'" [class.badge-error]="r.estado === 'Cancelada'">{{ r.estado }}</span>
+                    <span class="badge" [class.badge-warning]="r.estado === 'RESERVA_PENDIENTE'" [class.badge-info]="r.estado === 'ALQUILER_EN_CURSO'" [class.badge-success]="r.estado === 'RESERVA_CONFIRMADA' || r.estado === 'ALQUILER_FINALIZADO'" [class.badge-error]="r.estado === 'RESERVA_CANCELADA' || r.estado === 'RESERVA_EXPIRADA'">{{ r.estado }}</span>
                   </td>
                   <td class="px-4 py-3 text-right">
-                    @if (r.estado !== 'Finalizada' && r.estado !== 'Cancelada') {
+                    @if (r.estado === 'RESERVA_PENDIENTE') {
                       <button class="btn-sm btn-danger" (click)="cancelar(r)">Cancelar</button>
                     }
                   </td>

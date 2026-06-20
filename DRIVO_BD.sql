@@ -1,7 +1,7 @@
 -- ============================================================
 --  CREACION DE BASE DE DATOS - ALQUILER AUTO (BD_RentCar)
 --  Motor: SQL Server  |  Proyecto: EFSRT - AlquilerAuto
---  Fecha: 18/06/2026  |  Flujo: auto-inicio (reserva nace En proceso)
+--  Fecha: 19/06/2026  |  Flujo: check-in + 8 estados con FK
 -- ============================================================
 
 -- CREAR BASE DE DATOS (elimina version anterior si existe)
@@ -42,6 +42,7 @@ IF OBJECT_ID('dbo.tb_catalogo_reparacion', 'U') IS NOT NULL DROP TABLE dbo.tb_ca
 IF OBJECT_ID('dbo.tb_pago', 'U') IS NOT NULL DROP TABLE dbo.tb_pago;
 IF OBJECT_ID('dbo.tb_mantenimiento', 'U') IS NOT NULL DROP TABLE dbo.tb_mantenimiento;
 IF OBJECT_ID('dbo.tb_reserva', 'U') IS NOT NULL DROP TABLE dbo.tb_reserva;
+IF OBJECT_ID('dbo.tb_estado', 'U') IS NOT NULL DROP TABLE dbo.tb_estado;
 IF OBJECT_ID('dbo.tb_auto', 'U') IS NOT NULL DROP TABLE dbo.tb_auto;
 IF OBJECT_ID('dbo.tb_modelo', 'U') IS NOT NULL DROP TABLE dbo.tb_modelo;
 IF OBJECT_ID('dbo.tb_marca', 'U') IS NOT NULL DROP TABLE dbo.tb_marca;
@@ -78,7 +79,7 @@ CREATE TABLE tb_modelo (
     fechaRegistro   DATETIME            NOT NULL DEFAULT GETDATE(),
     CONSTRAINT PK_Modelo PRIMARY KEY CLUSTERED (idModelo),
     CONSTRAINT FK_Modelo_Marca FOREIGN KEY (idMarca) REFERENCES tb_marca(idMarca),
-    CONSTRAINT CK_Modelo_Categoria CHECK (categoria IN ('Sedán','SUV','Hatchback','Pickup','Deportivo','Van','Coupé','Convertible')),
+    CONSTRAINT CK_Modelo_Categoria CHECK (categoria IN ('Sedan','SUV','Hatchback','Pickup','Deportivo','Van','Coupe','Convertible')),
     CONSTRAINT CK_Modelo_Pasajeros CHECK (numeroPasajeros >= 2 AND numeroPasajeros <= 15)
 );
 GO
@@ -172,11 +173,26 @@ CREATE TABLE tb_cliente (
 );
 GO
 
--- 2.6 tb_reserva -----------------------------------------------
+-- 2.7 tb_estado (catalogo de estados por entidad) ---------------
+CREATE TABLE tb_estado (
+    id_estado    INT IDENTITY(1,1)  NOT NULL,
+    entidad      VARCHAR(20)        NOT NULL,
+    codigo       VARCHAR(30)        NOT NULL,
+    nombre       VARCHAR(50)        NOT NULL,
+    descripcion  VARCHAR(200)       NULL,
+    orden        INT                NOT NULL DEFAULT 0,
+    activo       BIT                NOT NULL DEFAULT 1,
+    CONSTRAINT PK_Estado PRIMARY KEY CLUSTERED (id_estado),
+    CONSTRAINT UQ_Estado_Entidad_Codigo UNIQUE (entidad, codigo)
+);
+GO
+
+-- 2.8 tb_reserva (con FK a tb_estado) --------------------------
 CREATE TABLE tb_reserva (
     idReserva               INT IDENTITY(1,1)   NOT NULL,
     idCliente               INT                 NOT NULL,
     idAuto                  INT                 NOT NULL,
+    id_estado               INT                 NOT NULL,
     fechaInicio             DATE                NOT NULL,
     horaInicio              TIME                NOT NULL,
     fechaFin                DATE                NOT NULL,
@@ -187,11 +203,11 @@ CREATE TABLE tb_reserva (
     mora                    DECIMAL(10,2)       NOT NULL DEFAULT 0,
     costoReparaciones       DECIMAL(10,2)       NOT NULL DEFAULT 0,
     total                   DECIMAL(10,2)       NOT NULL,
-    estado                  VARCHAR(20)         NOT NULL DEFAULT 'En proceso',
     estadoEntrega           VARCHAR(30)         NOT NULL DEFAULT 'Sin entregar',
     observacionesEntrega    VARCHAR(500),
     fechaHoraInicioReal     DATETIME,
     fechaHoraFinReal        DATETIME,
+    fechaHoraCheckIn        DATETIME            NULL,
     fechaCreacion           DATETIME            NOT NULL DEFAULT GETDATE(),
     usuarioCreacion         VARCHAR(100),
     fechaFinalizacion       DATETIME,
@@ -199,17 +215,17 @@ CREATE TABLE tb_reserva (
     CONSTRAINT PK_Reserva PRIMARY KEY CLUSTERED (idReserva),
     CONSTRAINT FK_Reserva_Cliente FOREIGN KEY (idCliente) REFERENCES tb_cliente(idCliente),
     CONSTRAINT FK_Reserva_Auto FOREIGN KEY (idAuto) REFERENCES tb_auto(idAuto),
+    CONSTRAINT FK_Reserva_Estado FOREIGN KEY (id_estado) REFERENCES tb_estado(id_estado),
     CONSTRAINT CK_Reserva_Fechas CHECK (fechaFin >= fechaInicio),
     CONSTRAINT CK_Reserva_Subtotal CHECK (subtotal >= 0),
     CONSTRAINT CK_Reserva_Mora CHECK (mora >= 0),
     CONSTRAINT CK_Reserva_CostoRep CHECK (costoReparaciones >= 0),
     CONSTRAINT CK_Reserva_Total CHECK (total >= 0),
-    CONSTRAINT CK_Reserva_Estado CHECK (estado IN ('Pendiente','Confirmada','En proceso','Finalizada','Cancelada')),
     CONSTRAINT CK_Reserva_EstadoEntrega CHECK (estadoEntrega IN ('Sin entregar','Entregado OK','Entregado con daños','Entregado con retraso'))
 );
 GO
 
--- 2.7 tb_pago --------------------------------------------------
+-- 2.9 tb_pago --------------------------------------------------
 CREATE TABLE tb_pago (
     idPago              INT IDENTITY(1,1)   NOT NULL,
     idReserva           INT                 NOT NULL,
@@ -229,7 +245,7 @@ CREATE TABLE tb_pago (
 );
 GO
 
--- 2.8 tb_catalogo_reparacion -----------------------------------
+-- 2.10 tb_catalogo_reparacion -----------------------------------
 CREATE TABLE tb_catalogo_reparacion (
     idCatalogoReparacion    INT IDENTITY(1,1)   NOT NULL,
     descripcion             VARCHAR(200)        NOT NULL,
@@ -243,7 +259,7 @@ CREATE TABLE tb_catalogo_reparacion (
 );
 GO
 
--- 2.9 tb_reparacion --------------------------------------------
+-- 2.11 tb_reparacion --------------------------------------------
 CREATE TABLE tb_reparacion (
     idReparacion            INT IDENTITY(1,1)   NOT NULL,
     idReserva               INT                 NOT NULL,
@@ -267,7 +283,7 @@ CREATE TABLE tb_reparacion (
 );
 GO
 
--- 2.10 tb_mantenimiento ----------------------------------------
+-- 2.12 tb_mantenimiento ----------------------------------------
 CREATE TABLE tb_mantenimiento (
     idMantenimiento     INT IDENTITY(1,1)   NOT NULL,
     idAuto              INT                 NOT NULL,
@@ -283,7 +299,7 @@ CREATE TABLE tb_mantenimiento (
 );
 GO
 
--- 2.11 tb_historial_kilometraje --------------------------------
+-- 2.13 tb_historial_kilometraje --------------------------------
 CREATE TABLE tb_historial_kilometraje (
     idHistorial         INT IDENTITY(1,1)   NOT NULL,
     idAuto              INT                 NOT NULL,
@@ -303,7 +319,7 @@ CREATE TABLE tb_historial_kilometraje (
 );
 GO
 
--- 2.12 tb_configuracion ----------------------------------------
+-- 2.14 tb_configuracion ----------------------------------------
 CREATE TABLE tb_configuracion (
     idConfiguracion     INT IDENTITY(1,1)   NOT NULL,
     clave               VARCHAR(50)         NOT NULL,
@@ -325,8 +341,8 @@ CREATE INDEX IX_Auto_Marca     ON tb_auto(idMarca);
 CREATE INDEX IX_Auto_Modelo    ON tb_auto(idModelo);
 CREATE INDEX IX_Cliente_DNI    ON tb_cliente(dni);
 CREATE INDEX IX_Cliente_Estado ON tb_cliente(estado) WHERE activo = 1;
-CREATE INDEX IX_Reserva_Cliente ON tb_reserva(idCliente, estado);
-CREATE INDEX IX_Reserva_Auto    ON tb_reserva(idAuto, estado);
+CREATE INDEX IX_Reserva_Cliente ON tb_reserva(idCliente, id_estado);
+CREATE INDEX IX_Reserva_Auto    ON tb_reserva(idAuto, id_estado);
 CREATE INDEX IX_Reserva_Fechas  ON tb_reserva(fechaInicio, fechaFin);
 CREATE INDEX IX_Pago_Reserva    ON tb_pago(idReserva);
 CREATE INDEX IX_Reparacion_Reserva ON tb_reparacion(idReserva);
@@ -359,152 +375,28 @@ AFTER UPDATE
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @idEntregado INT = (
+        SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_ENTREGADO'
+    );
 
-    -- Actualizar kilometraje del auto cuando se finaliza
-        IF UPDATE(estado) AND EXISTS (SELECT 1 FROM inserted WHERE estado = 'Finalizada' AND kilometrajeFin IS NOT NULL)
+    IF UPDATE(id_estado) AND EXISTS (
+        SELECT 1 FROM inserted WHERE id_estado = @idEntregado AND kilometrajeFin IS NOT NULL
+    )
     BEGIN
         UPDATE tb_auto
         SET kilometrajeActual = i.kilometrajeFin
         FROM tb_auto a
         INNER JOIN inserted i ON a.idAuto = i.idAuto
-        WHERE i.estado = 'Finalizada' AND i.kilometrajeFin IS NOT NULL;
+        WHERE i.id_estado = @idEntregado AND i.kilometrajeFin IS NOT NULL;
     END
 END;
 GO
 
 -- ============================================================
---  SECCION 5: DATOS SEMILLA (maximo 3 por tabla)
+--  SECCION 5: VISTAS PARA REPORTES
 -- ============================================================
 
--- 6.1 Marcas (3) -----------------------------------------------
-SET IDENTITY_INSERT tb_marca ON;
-INSERT INTO tb_marca (idMarca, nombre, paisOrigen) VALUES
-(1, 'Toyota', 'Japón'),
-(2, 'Hyundai', 'Corea del Sur'),
-(3, 'Kia', 'Corea del Sur');
-SET IDENTITY_INSERT tb_marca OFF;
-GO
-
--- 6.2 Modelos (3) ----------------------------------------------
-SET IDENTITY_INSERT tb_modelo ON;
-INSERT INTO tb_modelo (idModelo, idMarca, nombre, categoria, numeroPasajeros) VALUES
-(1, 1, 'Yaris', 'Sedán', 5),
-(2, 2, 'Accent', 'Sedán', 5),
-(3, 3, 'Rio', 'Hatchback', 5);
-SET IDENTITY_INSERT tb_modelo OFF;
-GO
-
--- 6.3 Autos (3) ------------------------------------------------
--- Disponible: listo para alquilar
--- En proceso: actualmente alquilado (reserva activa)
--- En reparación: en taller
-SET IDENTITY_INSERT tb_auto ON;
-INSERT INTO tb_auto (idAuto, placa, idMarca, idModelo, anio, color, kilometrajeActual, ultimaRevisionKm, proximaRevisionKm, precioPorDia, precioPorHora, moraPorDia, estado) VALUES
-(1, 'ABC-123', 1, 1, 2020, 'Blanco', 45500, 40000, 50000, 120.00, 15.00, 30.00, 'Disponible'),
-(2, 'DEF-456', 2, 2, 2019, 'Negro',  52300, 48000, 58000, 110.00, 13.00, 25.00, 'En proceso'),
-(3, 'GHI-789', 3, 3, 2021, 'Rojo',   38000, 35000, 40000, 130.00, 16.00, 30.00, 'En reparación');
-SET IDENTITY_INSERT tb_auto OFF;
-GO
-
--- 6.4 Licencias (3) --------------------------------------------
-SET IDENTITY_INSERT tb_licencia ON;
-INSERT INTO tb_licencia (idLicencia, numeroLicencia, categoria, fechaVencimiento) VALUES
-(1, 'Q12345678', 'A-IIa', '2027-06-15'),
-(2, 'Q87654321', 'A-IIa', '2027-12-20'),
-(3, 'Q11223344', 'A-I',   '2028-03-10');
-SET IDENTITY_INSERT tb_licencia OFF;
-GO
-
--- 6.5 Clientes (3) ---------------------------------------------
-SET IDENTITY_INSERT tb_cliente ON;
-INSERT INTO tb_cliente (idCliente, nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado) VALUES
-(1, 'Juan',   'Pérez',  'García',  '12345678', '987654321', 'juanperez@example.com',   'Av. Los Olivos 123, Lima',   1, 1, 'activo'),
-(2, 'María',  'López',  'Flores',  '87654321', '912345678', 'marialopez@example.com',  'Jr. Las Palmeras 456, Lima', 2, 1, 'activo'),
-(3, 'Carlos', 'Gómez',  'Ríos',    '11223344', '999555444', 'carlosgomez@example.com', 'Calle Real 789, Callao',     3, 1, 'activo');
-SET IDENTITY_INSERT tb_cliente OFF;
-GO
-
--- 6.6 Reservas (3) ---------------------------------------------
--- #1: Finalizada OK (cliente María, auto Yaris)
--- #2: Finalizada con daños (cliente Carlos, auto Yaris)
--- #3: En proceso - activa (cliente Juan, auto Accent, cruza fecha actual)
-SET IDENTITY_INSERT tb_reserva ON;
-INSERT INTO tb_reserva (idReserva, idCliente, idAuto, fechaInicio, horaInicio, fechaFin, horaFin, kilometrajeInicio, subtotal, total, estado, estadoEntrega, fechaCreacion, usuarioCreacion, fechaHoraInicioReal, fechaFinalizacion, usuarioFinalizacion) VALUES
-(1, 2, 1, '2026-05-10', '09:00', '2026-05-12', '18:00', 45000, 360.00, 360.00, 'Finalizada', 'Entregado OK',     '2026-05-08 10:30:00', 'admin', '2026-05-10 09:00:00', '2026-05-12 17:45:00', 'admin'),
-(2, 3, 1, '2026-05-20', '08:00', '2026-05-22', '20:00', 45500, 450.00, 520.00, 'Finalizada', 'Entregado con daños', '2026-05-18 14:00:00', 'admin', '2026-05-20 08:00:00', '2026-05-22 18:00:00', 'admin'),
-(3, 1, 2, '2026-06-15', '10:00', '2026-06-20', '16:00', 52300, 660.00, 660.00, 'En proceso', 'Sin entregar',       '2026-06-14 09:00:00', 'admin', '2026-06-15 10:00:00', NULL, NULL);
-SET IDENTITY_INSERT tb_reserva OFF;
-GO
-
--- Actualizar kilometrajeFin de las finalizadas
-UPDATE tb_reserva SET kilometrajeFin = 45500, fechaHoraFinReal = '2026-05-12 17:45:00' WHERE idReserva = 1;
-UPDATE tb_reserva SET kilometrajeFin = 45800, fechaHoraFinReal = '2026-05-22 18:00:00', costoReparaciones = 70.00, observacionesEntrega = 'Rayón leve en puerta trasera' WHERE idReserva = 2;
-GO
-
--- 6.7 Pagos (2) ------------------------------------------------
-SET IDENTITY_INSERT tb_pago ON;
-INSERT INTO tb_pago (idPago, idReserva, montoBase, montoMora, montoDanos, montoTotalPagado, fechaPago, metodoPago) VALUES
-(1, 1, 360.00, 0,    0,     360.00, '2026-05-12 17:50:00', 'Tarjeta'),
-(2, 2, 450.00, 0,    70.00, 520.00, '2026-05-22 18:10:00', 'Efectivo');
-SET IDENTITY_INSERT tb_pago OFF;
-GO
-
--- 6.8 Catálogo de Reparaciones (3) -----------------------------
-SET IDENTITY_INSERT tb_catalogo_reparacion ON;
-INSERT INTO tb_catalogo_reparacion (idCatalogoReparacion, descripcion, costoEstimado, tiempoEstimadoHoras) VALUES
-(1, 'Rayón de pintura', 200.00, 4),
-(2, 'Abolladura de carrocería', 500.00, 8),
-(3, 'Rotura de espejo lateral', 150.00, 2);
-SET IDENTITY_INSERT tb_catalogo_reparacion OFF;
-GO
-
--- 6.9 Reparaciones (1) -----------------------------------------
-SET IDENTITY_INSERT tb_reparacion ON;
-INSERT INTO tb_reparacion (idReparacion, idReserva, idAuto, idCatalogoReparacion, descripcion, costo, estado, responsable, fechaReporte, usuarioReporte) VALUES
-(1, 2, 1, 1, 'Rayón leve en puerta trasera derecha', 70.00, 'Completada', 'Cliente', '2026-05-22 18:00:00', 'admin');
-SET IDENTITY_INSERT tb_reparacion OFF;
-GO
-
--- 6.10 Mantenimientos (2) --------------------------------------
--- Auto #3 en taller (correctivo, sin salida aún) + uno finalizado
-INSERT INTO tb_mantenimiento (idAuto, fechaIngreso, fechaSalida, tipo, costo, detalle) VALUES
-(3, '2026-06-10', NULL,           'Correctivo', 350.00, 'Cambio de pastillas de freno delanteras'),
-(1, '2026-04-01', '2026-04-01',   'Preventivo', 120.00, 'Cambio de aceite y filtros programado');
-GO
-
--- 6.11 Historial de Kilometraje (3) ----------------------------
-INSERT INTO tb_historial_kilometraje (idAuto, idReserva, kilometrajeAnterior, kilometrajeNuevo, tipoRegistro, usuarioRegistro) VALUES
-(1, 1, 45000, 45500, 'Reserva', 'admin'),
-(1, 2, 45500, 45800, 'Reserva', 'admin'),
-(2, 3, 52300, 52300, 'Reserva', 'admin');
-GO
-
--- 6.12 Configuraciones (3) -------------------------------------
-INSERT INTO tb_configuracion (clave, valor, descripcion, tipo) VALUES
-('MoraPorHora',        '10.00', 'Penalización por cada hora de retraso en la devolución', 'decimal'),
-('TiempoGraciaMinutos', '60',   'Minutos de tolerancia antes de aplicar mora',            'entero'),
-('KmRevisionPreventiva', '5000','Cada cuántos kilómetros se recomienda mantenimiento preventivo', 'entero');
-GO
-
--- 6.13 Usuarios (2) --------------------------------------------
--- Contraseñas BCrypt:
---   admin123   -> $2a$10$txCV75IDyzhVolXP1WiHxO8yKJz578AtDfaEbTRPLww3RfvIf3D9y
---   cliente123 -> $2a$10$GJKccfi4IMsR1n.Qkim30eLsBURpVGBdo3dsxqs9YxUIhBmgJU/hi
-
-INSERT INTO tb_usuario (Nombre, Correo, Clave, Rol) VALUES
-('Admin DRIVO',  'admin@drivo.com',   '$2a$10$txCV75IDyzhVolXP1WiHxO8yKJz578AtDfaEbTRPLww3RfvIf3D9y', 'ADMIN'),
-('Carlos López', 'carlos@email.com',  '$2a$10$GJKccfi4IMsR1n.Qkim30eLsBURpVGBdo3dsxqs9YxUIhBmgJU/hi', 'CLIENTE');
-GO
-
--- Vincular cliente Carlos con su usuario
-UPDATE tb_cliente SET idUsuario = (SELECT IdUsuario FROM tb_usuario WHERE Correo = 'carlos@email.com') WHERE dni = '11223344';
-GO
-
--- ============================================================
---  SECCION 6: VISTAS PARA REPORTES
--- ============================================================
-
--- Vista: Autos con información completa
+-- Vista: Autos con informacion completa
 CREATE OR ALTER VIEW vw_Auto_Completo AS
 SELECT
     a.idAuto, a.placa, m.nombre AS marca, mo.nombre AS modelo, mo.categoria,
@@ -533,17 +425,20 @@ SELECT
     r.kilometrajeInicio, r.kilometrajeFin,
     r.kilometrajeFin - r.kilometrajeInicio AS kilometrosRecorridos,
     r.subtotal, r.mora, r.costoReparaciones, r.total,
-    r.estado, r.estadoEntrega,
+    e.codigo AS estado,
+    r.estadoEntrega,
     r.fechaHoraInicioReal, r.fechaHoraFinReal,
+    r.fechaHoraCheckIn,
     r.fechaCreacion, r.usuarioCreacion
 FROM tb_reserva r
 INNER JOIN tb_cliente c ON r.idCliente = c.idCliente
 INNER JOIN tb_auto a ON r.idAuto = a.idAuto
 INNER JOIN tb_marca m ON a.idMarca = m.idMarca
-INNER JOIN tb_modelo mo ON a.idModelo = mo.idModelo;
+INNER JOIN tb_modelo mo ON a.idModelo = mo.idModelo
+INNER JOIN tb_estado e ON r.id_estado = e.id_estado;
 GO
 
--- Vista: Reporte de ingresos por período
+-- Vista: Reporte de ingresos por periodo
 CREATE OR ALTER VIEW vw_Ingresos_Periodo AS
 SELECT
     YEAR(r.fechaFinalizacion) AS anio,
@@ -556,12 +451,173 @@ SELECT
     ISNULL(SUM(p.montoTotalPagado), 0) AS totalPagado
 FROM tb_reserva r
 LEFT JOIN tb_pago p ON r.idReserva = p.idReserva
-WHERE r.estado = 'Finalizada'
+WHERE r.id_estado = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO')
 GROUP BY YEAR(r.fechaFinalizacion), MONTH(r.fechaFinalizacion);
+GO
+
+-- ============================================================
+--  SECCION 6: DATOS SEMILLA (maximo 3 por tabla)
+-- ============================================================
+
+-- 6.1 Estados (catalogo) ----------------------------------------
+INSERT INTO tb_estado (entidad, codigo, nombre, descripcion, orden) VALUES
+-- RESERVA (8)
+('RESERVA', 'RESERVA_PENDIENTE',   'Pendiente',   'Reserva creada, esperando check-in del cliente',       1),
+('RESERVA', 'RESERVA_CONFIRMADA',  'Confirmada',  'Cliente hizo check-in, esperando fecha de inicio',      2),
+('RESERVA', 'RESERVA_CANCELADA',   'Cancelada',   'Cancelada manualmente por cliente o admin',             3),
+('RESERVA', 'RESERVA_EXPIRADA',    'Expirada',    'Check-in no realizado dentro del plazo',                 4),
+('RESERVA', 'ALQUILER_EN_CURSO',   'En curso',    'Alquiler activo, auto en posesion del cliente',          5),
+('RESERVA', 'ALQUILER_EN_DEMORA',  'En demora',   'Cliente no ha devuelto el auto pasado el tiempo limite', 6),
+('RESERVA', 'ALQUILER_ENTREGADO',  'Entregado',   'Auto devuelto por el cliente',                          7),
+('RESERVA', 'ALQUILER_FINALIZADO', 'Finalizado',  'Pago procesado, reserva completada',                    8),
+
+-- AUTO (4)
+('AUTO',    'DISPONIBLE',     'Disponible',     'Listo para alquilar',              1),
+('AUTO',    'RESERVADO',      'Reservado',      'Bloqueado por una reserva futura', 2),
+('AUTO',    'EN_PROCESO',     'En proceso',     'Actualmente alquilado',            3),
+('AUTO',    'EN_REPARACION',  'En reparación',  'En taller',                        4),
+
+-- CLIENTE (2)
+('CLIENTE', 'ACTIVO',   'Activo',   'Cliente habilitado para alquilar',    1),
+('CLIENTE', 'INACTIVO', 'Inactivo', 'Cliente deshabilitado',               2),
+
+-- REPARACION (4)
+('REPARACION', 'PENDIENTE',   'Pendiente',   'Reparacion registrada, sin iniciar', 1),
+('REPARACION', 'EN_PROCESO',  'En proceso',  'Reparacion en taller',               2),
+('REPARACION', 'COMPLETADA',  'Completada',  'Reparacion finalizada',               3),
+('REPARACION', 'CANCELADA',   'Cancelada',   'Reparacion cancelada',                4);
+GO
+
+-- 6.2 Marcas (3) -----------------------------------------------
+SET IDENTITY_INSERT tb_marca ON;
+INSERT INTO tb_marca (idMarca, nombre, paisOrigen) VALUES
+(1, 'Toyota', 'Japon'),
+(2, 'Hyundai', 'Corea del Sur'),
+(3, 'Kia', 'Corea del Sur');
+SET IDENTITY_INSERT tb_marca OFF;
+GO
+
+-- 6.3 Modelos (3) ----------------------------------------------
+SET IDENTITY_INSERT tb_modelo ON;
+INSERT INTO tb_modelo (idModelo, idMarca, nombre, categoria, numeroPasajeros) VALUES
+(1, 1, 'Yaris', 'Sedan', 5),
+(2, 2, 'Accent', 'Sedan', 5),
+(3, 3, 'Rio', 'Hatchback', 5);
+SET IDENTITY_INSERT tb_modelo OFF;
+GO
+
+-- 6.4 Autos (3) ------------------------------------------------
+-- Disponible: listo para alquilar
+-- En proceso: actualmente alquilado (reserva activa)
+-- En reparacion: en taller
+SET IDENTITY_INSERT tb_auto ON;
+INSERT INTO tb_auto (idAuto, placa, idMarca, idModelo, anio, color, kilometrajeActual, ultimaRevisionKm, proximaRevisionKm, precioPorDia, precioPorHora, moraPorDia, estado) VALUES
+(1, 'ABC-123', 1, 1, 2020, 'Blanco', 45500, 40000, 50000, 120.00, 15.00, 30.00, 'Disponible'),
+(2, 'DEF-456', 2, 2, 2019, 'Negro',  52300, 48000, 58000, 110.00, 13.00, 25.00, 'En proceso'),
+(3, 'GHI-789', 3, 3, 2021, 'Rojo',   38000, 35000, 40000, 130.00, 16.00, 30.00, 'En reparación');
+SET IDENTITY_INSERT tb_auto OFF;
+GO
+
+-- 6.5 Licencias (3) --------------------------------------------
+SET IDENTITY_INSERT tb_licencia ON;
+INSERT INTO tb_licencia (idLicencia, numeroLicencia, categoria, fechaVencimiento) VALUES
+(1, 'Q12345678', 'A-IIa', '2027-06-15'),
+(2, 'Q87654321', 'A-IIa', '2027-12-20'),
+(3, 'Q11223344', 'A-I',   '2028-03-10');
+SET IDENTITY_INSERT tb_licencia OFF;
+GO
+
+-- 6.6 Clientes (3) ---------------------------------------------
+SET IDENTITY_INSERT tb_cliente ON;
+INSERT INTO tb_cliente (idCliente, nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado) VALUES
+(1, 'Juan',   'Perez',  'Garcia',  '12345678', '987654321', 'juanperez@example.com',   'Av. Los Olivos 123, Lima',   1, 1, 'activo'),
+(2, 'Maria',  'Lopez',  'Flores',  '87654321', '912345678', 'marialopez@example.com',  'Jr. Las Palmeras 456, Lima', 2, 1, 'activo'),
+(3, 'Carlos', 'Gomez',  'Rios',    '11223344', '999555444', 'carlosgomez@example.com', 'Calle Real 789, Callao',     3, 1, 'activo');
+SET IDENTITY_INSERT tb_cliente OFF;
+GO
+
+-- 6.7 Reservas (3) ---------------------------------------------
+-- #1: Finalizada OK (cliente Maria, auto Yaris)
+-- #2: Finalizada con danos (cliente Carlos, auto Yaris)
+-- #3: En curso - activa (cliente Juan, auto Accent, cruza fecha actual)
+
+DECLARE @estadoFinalizado INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO');
+DECLARE @estadoEnCurso   INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_EN_CURSO');
+
+SET IDENTITY_INSERT tb_reserva ON;
+INSERT INTO tb_reserva (idReserva, idCliente, idAuto, id_estado, fechaInicio, horaInicio, fechaFin, horaFin, kilometrajeInicio, subtotal, total, estadoEntrega, fechaCreacion, usuarioCreacion, fechaHoraInicioReal, fechaFinalizacion, usuarioFinalizacion) VALUES
+(1, 2, 1, @estadoFinalizado, '2026-05-10', '09:00', '2026-05-12', '18:00', 45000, 360.00, 360.00, 'Entregado OK',           '2026-05-08 10:30:00', 'admin', '2026-05-10 09:00:00', '2026-05-12 17:45:00', 'admin'),
+(2, 3, 1, @estadoFinalizado, '2026-05-20', '08:00', '2026-05-22', '20:00', 45500, 450.00, 520.00, 'Entregado con daños',    '2026-05-18 14:00:00', 'admin', '2026-05-20 08:00:00', '2026-05-22 18:00:00', 'admin'),
+(3, 1, 2, @estadoEnCurso,    '2026-06-15', '10:00', '2026-06-20', '16:00', 52300, 660.00, 660.00, 'Sin entregar',           '2026-06-14 09:00:00', 'admin', '2026-06-15 10:00:00', NULL, NULL);
+SET IDENTITY_INSERT tb_reserva OFF;
+GO
+
+-- Actualizar kilometrajeFin de las finalizadas
+UPDATE tb_reserva SET kilometrajeFin = 45500, fechaHoraFinReal = '2026-05-12 17:45:00' WHERE idReserva = 1;
+UPDATE tb_reserva SET kilometrajeFin = 45800, fechaHoraFinReal = '2026-05-22 18:00:00', costoReparaciones = 70.00, observacionesEntrega = 'Rayon leve en puerta trasera' WHERE idReserva = 2;
+GO
+
+-- 6.8 Pagos (2) ------------------------------------------------
+SET IDENTITY_INSERT tb_pago ON;
+INSERT INTO tb_pago (idPago, idReserva, montoBase, montoMora, montoDanos, montoTotalPagado, fechaPago, metodoPago) VALUES
+(1, 1, 360.00, 0,    0,     360.00, '2026-05-12 17:50:00', 'Tarjeta'),
+(2, 2, 450.00, 0,    70.00, 520.00, '2026-05-22 18:10:00', 'Efectivo');
+SET IDENTITY_INSERT tb_pago OFF;
+GO
+
+-- 6.9 Catalogo de Reparaciones (3) -----------------------------
+SET IDENTITY_INSERT tb_catalogo_reparacion ON;
+INSERT INTO tb_catalogo_reparacion (idCatalogoReparacion, descripcion, costoEstimado, tiempoEstimadoHoras) VALUES
+(1, 'Rayon de pintura', 200.00, 4),
+(2, 'Abolladura de carroceria', 500.00, 8),
+(3, 'Rotura de espejo lateral', 150.00, 2);
+SET IDENTITY_INSERT tb_catalogo_reparacion OFF;
+GO
+
+-- 6.10 Reparaciones (1) -----------------------------------------
+SET IDENTITY_INSERT tb_reparacion ON;
+INSERT INTO tb_reparacion (idReparacion, idReserva, idAuto, idCatalogoReparacion, descripcion, costo, estado, responsable, fechaReporte, usuarioReporte) VALUES
+(1, 2, 1, 1, 'Rayon leve en puerta trasera derecha', 70.00, 'Completada', 'Cliente', '2026-05-22 18:00:00', 'admin');
+SET IDENTITY_INSERT tb_reparacion OFF;
+GO
+
+-- 6.11 Mantenimientos (2) --------------------------------------
+-- Auto #3 en taller (correctivo, sin salida aun) + uno finalizado
+INSERT INTO tb_mantenimiento (idAuto, fechaIngreso, fechaSalida, tipo, costo, detalle) VALUES
+(3, '2026-06-10', NULL,           'Correctivo', 350.00, 'Cambio de pastillas de freno delanteras'),
+(1, '2026-04-01', '2026-04-01',   'Preventivo', 120.00, 'Cambio de aceite y filtros programado');
+GO
+
+-- 6.12 Historial de Kilometraje (3) ----------------------------
+INSERT INTO tb_historial_kilometraje (idAuto, idReserva, kilometrajeAnterior, kilometrajeNuevo, tipoRegistro, usuarioRegistro) VALUES
+(1, 1, 45000, 45500, 'Reserva', 'admin'),
+(1, 2, 45500, 45800, 'Reserva', 'admin'),
+(2, 3, 52300, 52300, 'Reserva', 'admin');
+GO
+
+-- 6.13 Configuraciones (3) -------------------------------------
+INSERT INTO tb_configuracion (clave, valor, descripcion, tipo) VALUES
+('MoraPorHora',        '10.00', 'Penalizacion por cada hora de retraso en la devolucion', 'decimal'),
+('TiempoGraciaMinutos', '60',   'Minutos de tolerancia antes de aplicar mora',            'entero'),
+('KmRevisionPreventiva', '5000','Cada cuantos kilometros se recomienda mantenimiento preventivo', 'entero');
+GO
+
+-- 6.14 Usuarios (2) --------------------------------------------
+-- Contrasenas BCrypt:
+--   admin123   -> $2a$10$txCV75IDyzhVolXP1WiHxO8yKJz578AtDfaEbTRPLww3RfvIf3D9y
+--   cliente123 -> $2a$10$GJKccfi4IMsR1n.Qkim30eLsBURpVGBdo3dsxqs9YxUIhBmgJU/hi
+
+INSERT INTO tb_usuario (Nombre, Correo, Clave, Rol) VALUES
+('Admin DRIVO',  'admin@drivo.com',   '$2a$10$txCV75IDyzhVolXP1WiHxO8yKJz578AtDfaEbTRPLww3RfvIf3D9y', 'ADMIN'),
+('Carlos Lopez', 'carlos@email.com',  '$2a$10$GJKccfi4IMsR1n.Qkim30eLsBURpVGBdo3dsxqs9YxUIhBmgJU/hi', 'CLIENTE');
+GO
+
+-- Vincular cliente Carlos con su usuario
+UPDATE tb_cliente SET idUsuario = (SELECT IdUsuario FROM tb_usuario WHERE Correo = 'carlos@email.com') WHERE dni = '11223344';
 GO
 
 -- ============================================================
 --  FIN DEL SCRIPT
 -- ============================================================
-PRINT 'Base de datos BD_RentCar creada exitosamente con 13 tablas y datos semilla (max 3 por tabla).';
+PRINT 'Base de datos BD_RentCar creada exitosamente con 14 tablas, catalogo tb_estado y datos semilla (max 3 por tabla).';
 GO

@@ -34,7 +34,7 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <app-stat-card label="Reservas Activas" [value]="reservas().filter(r => r.estado !== 'Finalizada' && r.estado !== 'Cancelada').length" icon="calendar_month" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
+      <app-stat-card label="Reservas Activas" [value]="reservas().filter(r => r.estado !== 'ALQUILER_FINALIZADO' && r.estado !== 'RESERVA_CANCELADA' && r.estado !== 'RESERVA_EXPIRADA').length" icon="calendar_month" iconBg="#dbeafe" iconColor="#2563eb"></app-stat-card>
       <app-stat-card label="Próximas 24h" [value]="statsExtra().proximas24h" icon="schedule" iconBg="#fef3c7" iconColor="#d97706"></app-stat-card>
       <app-stat-card label="Devoluciones Hoy" [value]="statsExtra().devolucionesHoy" icon="assignment_return" iconBg="#d1fae5" iconColor="#059669"></app-stat-card>
       <app-stat-card label="Ingresos Proyectados" [value]="'S/ ' + statsExtra().ingresosProyectados" icon="payments" iconBg="#ede9fe" iconColor="#7c3aed"></app-stat-card>
@@ -79,12 +79,12 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
                     <button class="btn-sm btn-secondary" (click)="openDetail(r)" title="Ver detalle" aria-label="Ver detalle de reserva">
                       <span class="material-symbols-outlined text-sm">visibility</span>
                     </button>
-                    @if (r.estado === 'En proceso') {
+                    @if (r.estado === 'ALQUILER_EN_CURSO') {
                       <button class="btn-sm btn-primary" (click)="openFinalizar(r)" title="Finalizar" aria-label="Finalizar reserva">
                         <span class="material-symbols-outlined text-sm">check_circle</span>
                       </button>
                     }
-                    @if (r.estado !== 'Finalizada' && r.estado !== 'Cancelada') {
+                    @if (r.estado === 'RESERVA_PENDIENTE') {
                       <button class="btn-sm btn-danger" (click)="cancelarReserva(r)" title="Cancelar" aria-label="Cancelar reserva">
                         <span class="material-symbols-outlined text-sm">cancel</span>
                       </button>
@@ -426,13 +426,13 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     const hoy = now.toISOString().split('T')[0];
     const en24h = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const proximas24h = all.filter(r =>
-      r.estado !== 'Cancelada' && r.estado !== 'Finalizada' &&
+      r.estado !== 'RESERVA_CANCELADA' && r.estado !== 'RESERVA_EXPIRADA' && r.estado !== 'ALQUILER_FINALIZADO' &&
       r.fechaInicio >= hoy && r.fechaInicio <= en24h
     ).length;
     const devolucionesHoy = all.filter(r =>
-      r.estado === 'En proceso' && r.fechaFin === hoy
+      r.estado === 'ALQUILER_EN_CURSO' && r.fechaFin === hoy
     ).length;
-    const activas = all.filter(r => r.estado !== 'Finalizada' && r.estado !== 'Cancelada');
+    const activas = all.filter(r => r.estado !== 'ALQUILER_FINALIZADO' && r.estado !== 'RESERVA_CANCELADA' && r.estado !== 'RESERVA_EXPIRADA');
     const ingresosProyectados = activas.reduce((s, r) => s + r.total, 0).toFixed(2);
     return { proximas24h, devolucionesHoy, ingresosProyectados };
   });

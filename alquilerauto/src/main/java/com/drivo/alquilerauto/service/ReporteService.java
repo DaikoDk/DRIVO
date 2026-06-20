@@ -45,7 +45,7 @@ public class ReporteService {
             item.put("mora", r.getMora());
             item.put("costoReparaciones", r.getCostoReparaciones());
             item.put("total", r.getTotal());
-            item.put("estado", r.getEstado());
+            item.put("estado", r.getEstado().getCodigo());
             item.put("totalPagado", r.getPagos().stream()
                     .map(p -> p.getMontoTotalPagado()).reduce(BigDecimal.ZERO, BigDecimal::add));
             item.put("fechaFinalizacion", r.getFechaFinalizacion());
@@ -68,12 +68,12 @@ public class ReporteService {
 
         for (Auto a : autos) {
             long totalReservas = a.getReservas().stream()
-                    .filter(r -> "Finalizada".equals(r.getEstado())
+                    .filter(r -> "ALQUILER_FINALIZADO".equals(r.getEstado().getCodigo())
                             && !r.getFechaInicio().isBefore(inicio)
                             && !r.getFechaFin().isAfter(fin))
                     .count();
             BigDecimal ingresos = a.getReservas().stream()
-                    .filter(r -> "Finalizada".equals(r.getEstado())
+                    .filter(r -> "ALQUILER_FINALIZADO".equals(r.getEstado().getCodigo())
                             && !r.getFechaInicio().isBefore(inicio)
                             && !r.getFechaFin().isAfter(fin))
                     .map(Reserva::getTotal)

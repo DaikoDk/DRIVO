@@ -155,7 +155,7 @@ export class PaymentsComponent implements OnInit {
     const metodoTop = Object.entries(metodos).sort((a, b) => b[1] - a[1])[0]?.[0] || '--';
     const reservasConPago = new Set(this.pagos().map(p => p.idReserva));
     const pendientes = this.reservas().filter(r =>
-      r.estado !== 'Cancelada' && r.estado !== 'Finalizada' && !reservasConPago.has(r.idReserva)
+      r.estado !== 'RESERVA_CANCELADA' && r.estado !== 'ALQUILER_FINALIZADO' && r.estado !== 'RESERVA_EXPIRADA' && !reservasConPago.has(r.idReserva)
     ).length;
     return {
       cobranza: cobranza.toFixed(2),

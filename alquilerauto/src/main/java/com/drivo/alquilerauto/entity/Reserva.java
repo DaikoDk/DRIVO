@@ -61,8 +61,9 @@ public class Reserva {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
 
-    @Column(nullable = false, length = 20)
-    private String estado = "Pendiente";
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_estado", nullable = false)
+    private Estado estado;
 
     @Column(nullable = false, length = 30)
     private String estadoEntrega = "Sin entregar";
@@ -73,6 +74,8 @@ public class Reserva {
     private LocalDateTime fechaHoraInicioReal;
 
     private LocalDateTime fechaHoraFinReal;
+
+    private LocalDateTime fechaHoraCheckIn;
 
     @Column(updatable = false)
     private LocalDateTime fechaCreacion;

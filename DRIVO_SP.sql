@@ -1,9 +1,23 @@
 -- ============================================================
 --  STORED PROCEDURES - ALQUILER AUTO (BD_RentCar)
 --  Motor: SQL Server  |  Proyecto: EFSRT - AlquilerAuto
---  Fecha: 18/06/2026  |  Ejecutar despues de DRIVO_BD.sql
+--  Fecha: 19/06/2026  |  Ejecutar despues de DRIVO_BD.sql
+--  Estados: FK a tb_estado (RESERVA/AUTO/CLIENTE/REPARACION)
 -- ============================================================
 USE BD_RentCar;
+GO
+
+-- ============================================================
+--  Estados frecuentes (variables para reutilizar)
+-- ============================================================
+DECLARE @E_RESERVA_PENDIENTE   INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'RESERVA_PENDIENTE');
+DECLARE @E_RESERVA_CONFIRMADA  INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'RESERVA_CONFIRMADA');
+DECLARE @E_RESERVA_CANCELADA   INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'RESERVA_CANCELADA');
+DECLARE @E_RESERVA_EXPIRADA    INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'RESERVA_EXPIRADA');
+DECLARE @E_ALQUILER_EN_CURSO   INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_EN_CURSO');
+DECLARE @E_ALQUILER_EN_DEMORA  INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_EN_DEMORA');
+DECLARE @E_ALQUILER_ENTREGADO  INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_ENTREGADO');
+DECLARE @E_ALQUILER_FINALIZADO INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO');
 GO
 
 -- ============================================================
@@ -42,7 +56,7 @@ END;
 GO
 
 -- ============================================================
---  5.2 Crear reserva (auto-inicio: nace En proceso)
+--  5.2 Crear reserva (nace como ALQUILER_EN_CURSO)
 -- ============================================================
 IF OBJECT_ID('dbo.sp_Reserva_Crear', 'P') IS NOT NULL
     DROP PROCEDURE dbo.sp_Reserva_Crear;
@@ -61,16 +75,19 @@ CREATE PROCEDURE dbo.sp_Reserva_Crear
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @idEstadoEnCurso INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_EN_CURSO');
+
     BEGIN TRY
         BEGIN TRANSACTION;
 
         INSERT INTO tb_reserva (
-            idCliente, idAuto, fechaInicio, horaInicio, fechaFin, horaFin,
-            subtotal, total, usuarioCreacion, estado, fechaHoraInicioReal, kilometrajeInicio
+            idCliente, idAuto, id_estado, fechaInicio, horaInicio, fechaFin, horaFin,
+            subtotal, total, usuarioCreacion, fechaHoraInicioReal, kilometrajeInicio
         )
         SELECT
-            @idCliente, @idAuto, @fechaInicio, @horaInicio, @fechaFin, @horaFin,
-            @subtotal, @total, @usuario, 'En proceso', GETDATE(), a.kilometrajeActual
+            @idCliente, @idAuto, @idEstadoEnCurso,
+            @fechaInicio, @horaInicio, @fechaFin, @horaFin,
+            @subtotal, @total, @usuario, GETDATE(), a.kilometrajeActual
         FROM tb_auto a
         WHERE a.idAuto = @idAuto;
 
@@ -93,7 +110,7 @@ END;
 GO
 
 -- ============================================================
---  5.3 Finalizar reserva
+--  5.3 Finalizar reserva (â†’ ALQUILER_FINALIZADO)
 -- ============================================================
 IF OBJECT_ID('dbo.sp_Reserva_Finalizar', 'P') IS NOT NULL
     DROP PROCEDURE dbo.sp_Reserva_Finalizar;
@@ -108,6 +125,8 @@ CREATE PROCEDURE dbo.sp_Reserva_Finalizar
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @idEstadoFinalizado INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO');
+
     BEGIN TRY
         BEGIN TRANSACTION;
 
@@ -126,13 +145,13 @@ BEGIN
         END
 
         UPDATE tb_reserva
-        SET estado              = 'Finalizada',
-            estadoEntrega       = @estadoEntrega,
-            kilometrajeFin      = @kilometrajeFin,
+        SET id_estado            = @idEstadoFinalizado,
+            estadoEntrega        = @estadoEntrega,
+            kilometrajeFin       = @kilometrajeFin,
             observacionesEntrega = @observaciones,
-            fechaHoraFinReal    = GETDATE(),
-            fechaFinalizacion   = GETDATE(),
-            usuarioFinalizacion = @usuario
+            fechaHoraFinReal     = GETDATE(),
+            fechaFinalizacion    = GETDATE(),
+            usuarioFinalizacion  = @usuario
         WHERE idReserva = @idReserva;
 
         IF @kilometrajeInicio IS NOT NULL
@@ -166,18 +185,22 @@ CREATE PROCEDURE dbo.sp_Dashboard_Resumen
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @idEnCurso    INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_EN_CURSO');
+    DECLARE @idFinalizado INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO');
+
     SELECT
-        (SELECT COUNT(*)   FROM tb_auto    WHERE activo = 1)                                                                                                AS TotalAutos,
-        (SELECT COUNT(*)   FROM tb_auto    WHERE activo = 1 AND estado = 'Disponible')                                                                      AS AutosDisponibles,
-        (SELECT COUNT(*)   FROM tb_auto    WHERE activo = 1 AND estado = 'En proceso')                                                                      AS AutosAlquilados,
-        (SELECT COUNT(*)   FROM tb_auto    WHERE activo = 1 AND estado = 'En reparación')                                                                   AS AutosMantenimiento,
-        (SELECT COUNT(*)   FROM tb_cliente WHERE activo = 1)                                                                                                AS TotalClientes,
-        (SELECT COUNT(*)   FROM tb_cliente WHERE activo = 1 AND bloqueado = 0 AND estado = 'activo')                                                        AS ClientesActivos,
-        (SELECT COUNT(*)   FROM tb_reserva WHERE estado = 'En proceso')                                                                                     AS ReservasActivas,
-        (SELECT COUNT(*)   FROM tb_reserva WHERE CAST(fechaCreacion AS DATE) = CAST(GETDATE() AS DATE))                                                     AS ReservasHoy,
-        (SELECT ISNULL(SUM(total), 0) FROM tb_reserva WHERE estado = 'Finalizada'
+        (SELECT COUNT(*)   FROM tb_auto    WHERE activo = 1)                                                                                          AS TotalAutos,
+        (SELECT COUNT(*)   FROM tb_auto    WHERE activo = 1 AND estado = 'Disponible')                                                                 AS AutosDisponibles,
+        (SELECT COUNT(*)   FROM tb_auto    WHERE activo = 1 AND estado = 'En proceso')                                                                 AS AutosAlquilados,
+        (SELECT COUNT(*)   FROM tb_auto    WHERE activo = 1 AND estado = 'En reparacion')                                                              AS AutosMantenimiento,
+        (SELECT COUNT(*)   FROM tb_cliente WHERE activo = 1)                                                                                           AS TotalClientes,
+        (SELECT COUNT(*)   FROM tb_cliente WHERE activo = 1 AND bloqueado = 0 AND estado = 'activo')                                                   AS ClientesActivos,
+        (SELECT COUNT(*)   FROM tb_reserva WHERE id_estado = @idEnCurso)                                                                               AS ReservasActivas,
+        (SELECT COUNT(*)   FROM tb_reserva WHERE CAST(fechaCreacion AS DATE) = CAST(GETDATE() AS DATE))                                                AS ReservasHoy,
+        (SELECT ISNULL(SUM(total), 0) FROM tb_reserva WHERE id_estado = @idFinalizado
             AND MONTH(fechaFinalizacion) = MONTH(GETDATE())
-            AND YEAR(fechaFinalizacion)  = YEAR(GETDATE()))                                                                                                 AS IngresosMes;
+            AND YEAR(fechaFinalizacion)  = YEAR(GETDATE()))                                                                                            AS IngresosMes;
 END;
 GO
 
@@ -204,13 +227,14 @@ BEGIN
         r.mora,
         r.costoReparaciones,
         r.total,
-        r.estado,
+        e.codigo                                    AS estado,
         ISNULL(p.montoTotalPagado, 0)               AS totalPagado,
         ISNULL(p.metodoPago, 'Sin pago')            AS metodoPago,
         r.fechaFinalizacion
     FROM tb_reserva r
     INNER JOIN tb_cliente c ON r.idCliente = c.idCliente
     INNER JOIN tb_auto    a ON r.idAuto    = a.idAuto
+    INNER JOIN tb_estado  e ON r.id_estado = e.id_estado
     LEFT  JOIN tb_pago    p ON r.idReserva = p.idReserva
     WHERE r.fechaInicio >= @fechaInicio
       AND r.fechaFin    <= @fechaFin
@@ -231,6 +255,8 @@ CREATE PROCEDURE dbo.sp_Reporte_Operativo
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @idFinalizado INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO');
+
     SELECT
         a.idAuto,
         a.placa,
@@ -243,7 +269,7 @@ BEGIN
     INNER JOIN tb_marca  m  ON a.idMarca  = m.idMarca
     INNER JOIN tb_modelo mo ON a.idModelo = mo.idModelo
     LEFT  JOIN tb_reserva r ON a.idAuto   = r.idAuto
-        AND r.estado     = 'Finalizada'
+        AND r.id_estado   = @idFinalizado
         AND r.fechaInicio >= @fechaInicio
         AND r.fechaFin    <= @fechaFin
     LEFT  JOIN tb_historial_kilometraje hk ON r.idReserva = hk.idReserva
@@ -267,6 +293,8 @@ CREATE PROCEDURE dbo.sp_Reporte_Clientes
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @idFinalizado INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO');
+
     SELECT
         c.idCliente,
         c.nombre + ' ' + c.apellidoPaterno + ISNULL(' ' + c.apellidoMaterno, '') AS nombreCompleto,
@@ -292,7 +320,7 @@ BEGIN
         SELECT r.idCliente, SUM(p.montoTotalPagado) AS totalPagado
         FROM tb_reserva r
         INNER JOIN tb_pago p ON r.idReserva = p.idReserva
-        WHERE r.estado = 'Finalizada'
+        WHERE r.id_estado = @idFinalizado
         GROUP BY r.idCliente
     ) pagos  ON c.idCliente = pagos.idCliente
     LEFT JOIN (
@@ -322,6 +350,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    DECLARE @idEnCurso INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_EN_CURSO');
+
     DECLARE @estadoAuto VARCHAR(20);
     SELECT @estadoAuto = estado FROM tb_auto WHERE idAuto = @idAuto;
 
@@ -340,7 +370,7 @@ BEGIN
     IF EXISTS (
         SELECT 1 FROM tb_reserva
         WHERE idAuto   = @idAuto
-          AND estado   = 'En proceso'
+          AND id_estado = @idEnCurso
           AND (@idReservaExcluir IS NULL OR idReserva != @idReservaExcluir)
           AND fechaInicio <= @fechaFin
           AND fechaFin   >= @fechaInicio
@@ -367,6 +397,7 @@ CREATE PROCEDURE dbo.sp_Reporte_Operativo_Completo
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @idFinalizado INT = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO');
 
     -- Resultado 1: Ranking de autos por reservas
     SELECT
@@ -383,7 +414,7 @@ BEGIN
     INNER JOIN tb_marca  m  ON a.idMarca  = m.idMarca
     INNER JOIN tb_modelo mo ON a.idModelo = mo.idModelo
     LEFT  JOIN tb_reserva r ON a.idAuto   = r.idAuto
-        AND r.estado     = 'Finalizada'
+        AND r.id_estado   = @idFinalizado
         AND r.fechaInicio >= @fechaInicio
         AND r.fechaFin    <= @fechaFin
     LEFT  JOIN tb_historial_kilometraje hk ON r.idReserva = hk.idReserva
@@ -439,5 +470,5 @@ FROM sys.procedures
 ORDER BY name;
 GO
 
-PRINT 'Stored procedures creados exitosamente.';
+PRINT 'Stored procedures actualizados para FK tb_estado.';
 GO

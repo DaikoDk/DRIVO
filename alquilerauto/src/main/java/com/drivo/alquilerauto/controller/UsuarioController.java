@@ -2,6 +2,7 @@ package com.drivo.alquilerauto.controller;
 
 import com.drivo.alquilerauto.dto.ApiResponse;
 import com.drivo.alquilerauto.dto.request.CambiarClaveRequest;
+import com.drivo.alquilerauto.dto.request.UsuarioMeUpdateRequest;
 import com.drivo.alquilerauto.dto.response.UsuarioResponse;
 import com.drivo.alquilerauto.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -22,6 +23,15 @@ public class UsuarioController {
         return ResponseEntity.ok(ApiResponse.ok(
                 usuarioService.getMe(authentication.getName()),
                 "Usuario obtenido"));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<ApiResponse<UsuarioResponse>> updateMe(
+            @RequestBody UsuarioMeUpdateRequest request,
+            Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                usuarioService.updateMe(authentication.getName(), request),
+                "Perfil actualizado"));
     }
 
     @PatchMapping("/cambiar-clave")

@@ -1,6 +1,7 @@
 package com.drivo.alquilerauto.service;
 
 import com.drivo.alquilerauto.dto.request.CambiarClaveRequest;
+import com.drivo.alquilerauto.dto.request.UsuarioMeUpdateRequest;
 import com.drivo.alquilerauto.dto.response.UsuarioResponse;
 import com.drivo.alquilerauto.entity.Usuario;
 import com.drivo.alquilerauto.exception.BadRequestException;
@@ -23,6 +24,16 @@ public class UsuarioService {
     public UsuarioResponse getMe(String correo) {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        return new UsuarioResponse(usuario.getIdUsuario(), usuario.getNombre(), usuario.getCorreo(), usuario.getRol());
+    }
+
+    public UsuarioResponse updateMe(String correo, UsuarioMeUpdateRequest request) {
+        Usuario usuario = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        if (request.nombre() != null) {
+            usuario.setNombre(request.nombre());
+        }
+        usuarioRepository.save(usuario);
         return new UsuarioResponse(usuario.getIdUsuario(), usuario.getNombre(), usuario.getCorreo(), usuario.getRol());
     }
 

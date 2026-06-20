@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface ChatMessage {
   texto: string;
@@ -17,7 +18,7 @@ export interface WatsonResponse {
 
 @Injectable({ providedIn: 'root' })
 export class WatsonService {
-  private readonly baseUrl = 'http://localhost:8080/api/watson';
+  private readonly baseUrl = `${environment.apiUrl}/watson`;
   readonly mensajes = signal<ChatMessage[]>([]);
   readonly abierto = signal(false);
   readonly cargando = signal(false);

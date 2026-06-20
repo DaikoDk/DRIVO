@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Auto } from '../../models';
+import { environment } from '../../../environments/environment';
 
 export interface AutoFormData {
   placa: string;
@@ -25,8 +26,8 @@ export interface AutoFormData {
 export class AutoService {
   constructor(private readonly api: ApiService, private readonly http: HttpClient) {}
 
-  private readonly baseUrl = 'http://localhost:8080/api';
-  private readonly storageUrl = 'http://localhost:8080';
+  private readonly baseUrl = environment.apiUrl;
+  private readonly storageUrl = environment.storageUrl;
 
   fotoCompleta(fotoUrl?: string | null): string | null {
     if (!fotoUrl) return null;

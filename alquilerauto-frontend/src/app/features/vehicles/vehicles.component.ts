@@ -29,11 +29,11 @@ import { Auto, Marca, Modelo } from '../../models';
       </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       @if (loading()) {
         @for (i of [1,2,3,4,5,6]; track i) {
-          <div class="card animate-pulse">
-            <div class="w-full h-32 rounded-lg mb-4 bg-slate-200"></div>
+            <div class="card animate-pulse">
+              <div class="w-full aspect-[3/2] rounded-lg mb-4 bg-slate-200"></div>
             <div class="h-4 bg-slate-200 rounded mb-2 w-3/4"></div>
             <div class="h-3 bg-slate-200 rounded mb-4 w-1/2"></div>
             <div class="flex justify-between pt-3 border-t border-slate-100">
@@ -51,8 +51,12 @@ import { Auto, Marca, Modelo } from '../../models';
       }
       @for (auto of pagedAutos(); track auto.idAuto) {
         <div class="card">
-          <div class="w-full h-32 rounded-lg mb-4 flex items-center justify-center" [style.background]="'linear-gradient(135deg, ' + getGradient(auto) + ')'">
-            <span class="material-symbols-outlined text-5xl text-white/80">directions_car</span>
+          <div class="w-full aspect-[3/2] rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden">
+            @if (auto.fotoUrl) {
+              <img [src]="fotoCompleta(auto.fotoUrl)" alt="{{ auto.marca }} {{ auto.modelo }}" class="w-full h-full object-cover" />
+            } @else {
+              <span class="material-symbols-outlined text-5xl text-slate-400">directions_car</span>
+            }
           </div>
           <div class="flex items-start justify-between mb-2">
             <div>
@@ -136,6 +140,23 @@ import { Auto, Marca, Modelo } from '../../models';
           <label class="input-label" for="veh-kilometraje">Kilometraje Actual *</label>
           <input class="input-field" id="veh-kilometraje" type="number" [(ngModel)]="formData.kilometrajeActual" />
         </div>
+        <div>
+          <label class="input-label">Foto del Vehículo</label>
+          <div class="flex items-center gap-3">
+            <button class="btn-sm btn-secondary" (click)="fotoFileInput.click()">
+              <span class="material-symbols-outlined text-sm">upload</span> Subir archivo
+            </button>
+            <span class="text-xs text-slate-500">o</span>
+            <input class="input-field flex-1" type="text" [(ngModel)]="formData.fotoUrl" placeholder="URL de imagen externa" />
+          </div>
+          <input #fotoFileInput type="file" accept="image/jpeg,image/png,image/webp" (change)="onFotoSelected($event)" class="hidden" />
+          @if (previewUrl()) {
+            <div class="mt-2 relative inline-block">
+              <img [src]="previewUrl()" class="h-24 aspect-[4/3] rounded border border-slate-200 object-cover" alt="Preview" />
+              <button class="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs" (click)="limpiarPreview()">&times;</button>
+            </div>
+          }
+        </div>
         <div class="grid grid-cols-3 gap-4">
           <div>
             <label class="input-label" for="veh-precio-dia">Precio/Día *</label>
@@ -183,6 +204,8 @@ export class VehiclesComponent implements OnInit {
   readonly deletingId = signal<number | null>(null);
 
   formData: AutoFormData = this.emptyForm();
+  readonly previewUrl = signal<string | null>(null);
+  readonly selectedFile = signal<File | null>(null);
 
   constructor(
     private readonly autoService: AutoService,
@@ -218,7 +241,7 @@ export class VehiclesComponent implements OnInit {
     );
   });
 
-  readonly pageSize = 6;
+  readonly pageSize = 16;
 
   readonly totalPagesComputed = computed(() =>
     Math.max(1, Math.ceil(this.filteredAutos().length / this.pageSize))
@@ -241,11 +264,10 @@ export class VehiclesComponent implements OnInit {
 
   openEditModal(auto: Auto): void {
     const marcaId = this.marcas().find(m => m.nombre === auto.marca)?.idMarca || 0;
-    const modeloId = this.modelos().find(m => m.nombre === auto.modelo)?.idModelo || 0;
     this.formData = {
       placa: auto.placa,
       idMarca: marcaId,
-      idModelo: modeloId,
+      idModelo: 0,
       anio: auto.anio,
       color: auto.color,
       numeroMotor: auto.numeroMotor,
@@ -254,15 +276,45 @@ export class VehiclesComponent implements OnInit {
       precioPorDia: auto.precioPorDia,
       precioPorHora: auto.precioPorHora,
       moraPorDia: auto.moraPorDia,
+      fotoUrl: auto.fotoUrl || '',
     };
+    this.previewUrl.set(auto.fotoUrl || null);
+    this.selectedFile.set(null);
     this.editingAuto.set(auto);
-    if (marcaId) { this.onMarcaChange(); }
+    if (marcaId) {
+      this.modeloService.getByMarca(marcaId).subscribe({
+        next: (d) => {
+          this.modelos.set(d);
+          const id = d.find(m => m.nombre === auto.modelo)?.idModelo;
+          if (id) this.formData.idModelo = id;
+        }
+      });
+    }
     this.showForm.set(true);
   }
 
   closeForm(): void {
     this.showForm.set(false);
     this.editingAuto.set(null);
+    this.previewUrl.set(null);
+    this.selectedFile.set(null);
+  }
+
+  onFotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.selectedFile.set(input.files[0]);
+      this.formData.fotoUrl = '';
+      const reader = new FileReader();
+      reader.onload = () => this.previewUrl.set(reader.result as string);
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  limpiarPreview(): void {
+    this.previewUrl.set(null);
+    this.selectedFile.set(null);
+    this.formData.fotoUrl = '';
   }
 
   onMarcaChange(): void {
@@ -276,8 +328,12 @@ export class VehiclesComponent implements OnInit {
   }
 
   saveAuto(): void {
-    if (!this.formData.placa || !this.formData.idMarca || !this.formData.idModelo) {
-      this.toast.warning('Complete los campos obligatorios');
+    const faltantes: string[] = [];
+    if (!this.formData.placa) faltantes.push('Placa');
+    if (!this.formData.idMarca) faltantes.push('Marca');
+    if (!this.formData.idModelo) faltantes.push('Modelo');
+    if (faltantes.length) {
+      this.toast.warning('Complete: ' + faltantes.join(', '));
       return;
     }
 
@@ -286,13 +342,33 @@ export class VehiclesComponent implements OnInit {
       : this.autoService.create(this.formData);
 
     request.subscribe({
-      next: () => {
+      next: (auto) => {
         this.toast.success(this.editingAuto() ? 'Vehiculo actualizado' : 'Vehiculo creado');
         this.closeForm();
         this.loadAutos();
+        const idAuto = this.editingAuto()?.idAuto ?? (auto as any).idAuto ?? auto.idAuto;
+        this.subirFotoSiHay(idAuto);
       },
       error: (err) => this.toast.error(err.message)
     });
+  }
+
+  private subirFotoSiHay(idAuto: number): void {
+    const file = this.selectedFile();
+    const url = this.formData.fotoUrl?.trim();
+    const editing = this.editingAuto();
+
+    if (file) {
+      this.autoService.subirFoto(idAuto, file).subscribe({
+        next: () => this.toast.success('Foto subida exitosamente'),
+        error: (err) => this.toast.error('Error al subir foto: ' + err.message)
+      });
+    } else if (url && !url.startsWith('/uploads/') && (!editing || url !== editing.fotoUrl)) {
+      this.autoService.definirFotoUrl(idAuto, url).subscribe({
+        next: () => this.toast.success('URL de foto actualizada'),
+        error: (err) => this.toast.error('Error al actualizar foto: ' + err.message)
+      });
+    }
   }
 
   prepareDelete(auto: Auto): void {
@@ -311,6 +387,10 @@ export class VehiclesComponent implements OnInit {
       },
       error: (err) => this.toast.error(err.message)
     });
+  }
+
+  fotoCompleta(url?: string | null): string | null {
+    return this.autoService.fotoCompleta(url);
   }
 
   getGradient(auto: Auto): string {

@@ -107,11 +107,35 @@ public class ClienteService {
     public ClienteResponse updateMe(String correo, ClienteMeUpdateRequest request) {
         Cliente cliente = clienteRepository.findByUsuarioCorreo(correo)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado para el usuario"));
+        if (request.nombre() != null) {
+            cliente.setNombre(request.nombre());
+        }
+        if (request.apellidoPaterno() != null) {
+            cliente.setApellidoPaterno(request.apellidoPaterno());
+        }
+        if (request.apellidoMaterno() != null) {
+            cliente.setApellidoMaterno(request.apellidoMaterno());
+        }
         if (request.telefono() != null) {
             cliente.setTelefono(request.telefono());
         }
         if (request.direccion() != null) {
             cliente.setDireccion(request.direccion());
+        }
+        if (request.numeroLicencia() != null) {
+            Licencia licencia = cliente.getLicencia();
+            if (licencia == null) {
+                licencia = new Licencia();
+                licencia.setNumeroLicencia(request.numeroLicencia());
+                licencia.setCategoria(request.categoriaLicencia());
+                licencia.setFechaVencimiento(request.fechaVencimientoLicencia());
+                licencia = licenciaService.create(licencia);
+                cliente.setLicencia(licencia);
+            } else {
+                licencia.setNumeroLicencia(request.numeroLicencia());
+                if (request.categoriaLicencia() != null) licencia.setCategoria(request.categoriaLicencia());
+                if (request.fechaVencimientoLicencia() != null) licencia.setFechaVencimiento(request.fechaVencimientoLicencia());
+            }
         }
         return clienteMapper.toResponse(clienteRepository.save(cliente));
     }

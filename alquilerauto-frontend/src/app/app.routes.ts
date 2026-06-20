@@ -27,6 +27,7 @@ export const routes: Routes = [
       { path: 'reparaciones', loadComponent: () => import('./features/repairs/repairs.component').then(m => m.RepairsComponent) },
       { path: 'mantenimientos', loadComponent: () => import('./features/maintenance/maintenance.component').then(m => m.MaintenanceComponent) },
       { path: 'configuracion', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent) },
+      { path: 'perfil', loadComponent: () => import('./features/portal/perfil/admin-perfil.component').then(m => m.AdminPerfilComponent) },
     ]
   },
 

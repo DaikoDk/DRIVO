@@ -1,10 +1,10 @@
 package com.drivo.alquilerauto.controller;
 
 import com.drivo.alquilerauto.dto.ApiResponse;
-import com.drivo.alquilerauto.dto.request.IniciarRequest;
 import com.drivo.alquilerauto.dto.request.ReservaCreateRequest;
 import com.drivo.alquilerauto.dto.request.ReservaFinalizarRequest;
 import com.drivo.alquilerauto.dto.request.ReservaPortalRequest;
+import com.drivo.alquilerauto.dto.response.BufferCheckResponse;
 import com.drivo.alquilerauto.dto.response.ReservaResponse;
 import com.drivo.alquilerauto.entity.Cliente;
 import com.drivo.alquilerauto.mapper.ReservaMapper;
@@ -12,11 +12,14 @@ import com.drivo.alquilerauto.repository.ClienteRepository;
 import com.drivo.alquilerauto.service.ReservaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -41,6 +44,15 @@ public class ReservaController {
         return ResponseEntity.ok(ApiResponse.ok(reservas, "Reservas obtenidas"));
     }
 
+    @GetMapping("/buffer-check")
+    public ResponseEntity<ApiResponse<BufferCheckResponse>> bufferCheck(
+            @RequestParam Integer idAuto,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime horaInicio) {
+        BufferCheckResponse result = reservaService.bufferCheck(idAuto, fechaInicio, horaInicio);
+        return ResponseEntity.ok(ApiResponse.ok(result, "Validación de buffer completada"));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ReservaResponse>> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(ApiResponse.ok(
@@ -53,15 +65,6 @@ public class ReservaController {
             @Valid @RequestBody ReservaCreateRequest request) {
         ReservaResponse creada = reservaService.create(request);
         return ResponseEntity.ok(ApiResponse.ok(creada, "Reserva creada exitosamente"));
-    }
-
-    @PatchMapping("/{id}/iniciar")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<ReservaResponse>> iniciar(
-            @PathVariable Integer id,
-            @Valid @RequestBody IniciarRequest request) {
-        ReservaResponse iniciada = reservaService.iniciar(id, request);
-        return ResponseEntity.ok(ApiResponse.ok(iniciada, "Reserva iniciada exitosamente"));
     }
 
     @PatchMapping("/{id}/finalizar")

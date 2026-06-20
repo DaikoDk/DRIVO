@@ -1,0 +1,27 @@
+meta {
+  name: 07 PATCH Cambiar Clave Correcta
+  type: http
+  seq: 7
+}
+
+patch {
+  url: http://localhost:8080/api/usuarios/cambiar-clave
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "claveActual": "portal123",
+    "claveNueva": "nueva456"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

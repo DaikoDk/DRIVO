@@ -1,0 +1,27 @@
+meta {
+  name: 11 Finalizar Mantenimiento
+  type: http
+  seq: 11
+}
+
+patch {
+  url: http://localhost:8080/api/mantenimientos/1/finalizar
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "fechaSalida": "2026-06-12",
+    "detalle": "Mantenimiento completado"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

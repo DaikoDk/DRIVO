@@ -1,0 +1,33 @@
+meta {
+  name: 03 Crear Reserva Solapada
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8080/api/reservas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "idCliente": 6,
+    "idAuto": 1,
+    "fechaInicio": "2026-06-11",
+    "horaInicio": "08:00",
+    "fechaFin": "2026-06-13",
+    "horaFin": "18:00",
+    "usuarioCreacion": "admin@drivo.com"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+  res.body.message: contains Auto no disponible en ese rango
+}

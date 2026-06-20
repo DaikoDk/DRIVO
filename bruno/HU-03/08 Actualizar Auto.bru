@@ -1,0 +1,36 @@
+meta {
+  name: 08 Actualizar Auto
+  type: http
+  seq: 8
+}
+
+put {
+  url: http://localhost:8080/api/autos/1
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "placa": "HON-002",
+    "idMarca": 1,
+    "idModelo": 2,
+    "anio": 2026,
+    "color": "Negro",
+    "numeroMotor": "HON-MTR-001",
+    "numeroChasis": "HON-CHS-001",
+    "kilometrajeActual": 1500,
+    "precioPorDia": 55.00,
+    "precioPorHora": 6.00,
+    "moraPorDia": 12.00
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

@@ -1,0 +1,28 @@
+meta {
+  name: 01 Login Admin
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "correo": "admin@drivo.com",
+    "clave": "admin123"
+  }
+}
+
+vars:post-response {
+  token: res.body.token
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.token: isNotEmpty
+}

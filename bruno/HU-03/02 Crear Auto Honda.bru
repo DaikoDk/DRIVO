@@ -1,0 +1,38 @@
+meta {
+  name: 02 Crear Auto Honda
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/api/autos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "placa": "HON-001",
+    "idMarca": 1,
+    "idModelo": 1,
+    "anio": 2026,
+    "color": "Rojo",
+    "numeroMotor": "HON-MTR-001",
+    "numeroChasis": "HON-CHS-001",
+    "kilometrajeActual": 0,
+    "precioPorDia": 50.00,
+    "precioPorHora": 5.00,
+    "moraPorDia": 10.00
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.estado: eq Disponible
+  res.body.data.placa: eq HON-001
+}

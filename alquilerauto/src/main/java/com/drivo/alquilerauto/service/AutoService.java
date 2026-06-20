@@ -43,7 +43,7 @@ public class AutoService {
 
     @Transactional(readOnly = true)
     public List<AutoResponse> findDisponibles() {
-        return autoMapper.toResponseList(autoRepository.findByActivoTrueAndEstado("Disponible"));
+        return autoMapper.toResponseList(autoRepository.findByActivoTrueAndEstadoIn(List.of("Disponible", "En proceso")));
     }
 
     @Transactional(readOnly = true)

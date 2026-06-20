@@ -1,0 +1,25 @@
+meta {
+  name: 07 Autos Disponibles Rango
+  type: http
+  seq: 7
+}
+
+get {
+  url: http://localhost:8080/api/autos/disponibles-rango?fechaInicio=2026-06-01&fechaFin=2026-06-05
+  body: none
+  auth: bearer
+}
+
+params:query {
+  fechaInicio: 2026-06-01
+  fechaFin: 2026-06-05
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

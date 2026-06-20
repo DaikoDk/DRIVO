@@ -9,6 +9,7 @@ import com.drivo.alquilerauto.exception.ResourceNotFoundException;
 import com.drivo.alquilerauto.mapper.MantenimientoMapper;
 import com.drivo.alquilerauto.repository.AutoRepository;
 import com.drivo.alquilerauto.repository.MantenimientoRepository;
+import com.drivo.alquilerauto.repository.ReparacionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class MantenimientoService {
 
     private final MantenimientoRepository repository;
     private final AutoRepository autoRepository;
+    private final ReparacionRepository reparacionRepository;
     private final MantenimientoMapper mapper;
 
     @Transactional(readOnly = true)
@@ -80,7 +82,9 @@ public class MantenimientoService {
         Mantenimiento saved = repository.save(mantenimiento);
 
         Auto auto = mantenimiento.getAuto();
-        auto.setEstado("Disponible");
+        boolean tienePendientes = reparacionRepository.findByAutoIdAuto(auto.getIdAuto())
+                .stream().anyMatch(r -> !"Completada".equals(r.getEstado()) && !"Cancelada".equals(r.getEstado()));
+        auto.setEstado(tienePendientes ? "En reparación" : "Disponible");
         autoRepository.save(auto);
 
         return mapper.toResponse(saved);

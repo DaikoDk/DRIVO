@@ -48,14 +48,11 @@ export class ReservaService {
     return this.api.post<Reserva>('/reservas', data);
   }
 
-  iniciar(id: number, kilometrajeInicio: number): Observable<Reserva> {
-    return this.api.patchCustom<Reserva>(`/reservas/${id}/iniciar`, { kilometrajeInicio });
-  }
-
-  finalizar(id: number, kilometrajeFin: number, observaciones?: string): Observable<Reserva> {
+  finalizar(id: number, kilometrajeFin: number, estadoEntrega: string, reparaciones?: { descripcion: string; costo: number; idCatalogoReparacion?: number; responsable?: string }[]): Observable<Reserva> {
     return this.api.patchCustom<Reserva>(`/reservas/${id}/finalizar`, {
       kilometrajeFin,
-      observaciones: observaciones || ''
+      estadoEntrega,
+      reparaciones: reparaciones || []
     });
   }
 
@@ -73,5 +70,10 @@ export class ReservaService {
 
   cancelarDesdePortal(id: number): Observable<Reserva> {
     return this.api.patchCustom<Reserva>(`/reservas/${id}/cancelar-desde-portal`);
+  }
+
+  bufferCheck(idAuto: number, fechaInicio: string, horaInicio: string): Observable<{ riesgo: boolean; mensaje: string | null; horasMargen: number; fechaFinAnterior: string | null; horaFinAnterior: string | null }> {
+    return this.api.get<{ riesgo: boolean; mensaje: string | null; horasMargen: number; fechaFinAnterior: string | null; horaFinAnterior: string | null }>(
+      '/reservas/buffer-check', { idAuto, fechaInicio, horaInicio });
   }
 }

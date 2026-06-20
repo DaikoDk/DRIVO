@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "DRIVO - HU-05 Reservas",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

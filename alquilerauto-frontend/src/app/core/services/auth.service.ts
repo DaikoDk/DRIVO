@@ -80,11 +80,24 @@ export class AuthService {
     localStorage.setItem('drivo_token', user.token);
   }
 
+  logoutRemoto(): Observable<void> {
+    const token = this.getToken();
+    if (!token) return of(undefined);
+    return this.http.post<ApiResponse<void>>(`${this.baseUrl}/logout`, {}, {
+      headers: { Authorization: 'Bearer ' + token }
+    }).pipe(
+      map(() => undefined),
+      catchError(() => of(undefined))
+    );
+  }
+
   logout(): void {
-    this.currentUser.set(null);
-    localStorage.removeItem('drivo_user');
-    localStorage.removeItem('drivo_token');
-    this.router.navigate(['/login']);
+    this.logoutRemoto().subscribe(() => {
+      this.currentUser.set(null);
+      localStorage.removeItem('drivo_user');
+      localStorage.removeItem('drivo_token');
+      this.router.navigate(['/login']);
+    });
   }
 
   getToken(): string | null {

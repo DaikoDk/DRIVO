@@ -80,12 +80,23 @@ public class ReparacionService {
             reparacion.setCatalogoReparacion(catalogo);
         }
 
-        return mapper.toResponse(repository.save(reparacion));
+        Reparacion saved = repository.save(reparacion);
+
+        if (!"En reparación".equals(auto.getEstado())) {
+            auto.setEstado("En reparación");
+            autoRepository.save(auto);
+        }
+
+        return mapper.toResponse(saved);
     }
 
     public ReparacionResponse updateEstado(Integer id, ReparacionEstadoRequest request) {
         Reparacion reparacion = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reparación no encontrada con id: " + id));
+
+        if ("Completada".equals(reparacion.getEstado())) {
+            throw new BadRequestException("No se puede modificar una reparación completada");
+        }
 
         String estado = request.estado();
         if (!estado.equals("Pendiente") && !estado.equals("En proceso")
@@ -97,6 +108,20 @@ public class ReparacionService {
         if ("Completada".equals(estado)) {
             reparacion.setFechaFin(LocalDateTime.now());
         }
-        return mapper.toResponse(repository.save(reparacion));
+        Reparacion saved = repository.save(reparacion);
+
+        if ("Completada".equals(estado) || "Cancelada".equals(estado)) {
+            Auto auto = saved.getAuto();
+            List<Reparacion> pendientes = repository.findByAutoIdAuto(auto.getIdAuto())
+                    .stream()
+                    .filter(r -> !"Completada".equals(r.getEstado()) && !"Cancelada".equals(r.getEstado()))
+                    .toList();
+            if (pendientes.isEmpty() && "En reparación".equals(auto.getEstado())) {
+                auto.setEstado("Disponible");
+                autoRepository.save(auto);
+            }
+        }
+
+        return mapper.toResponse(saved);
     }
 }

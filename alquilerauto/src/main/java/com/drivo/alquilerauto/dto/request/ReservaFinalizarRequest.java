@@ -1,7 +1,10 @@
 package com.drivo.alquilerauto.dto.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+
+import java.util.List;
 
 public record ReservaFinalizarRequest(
 
@@ -11,5 +14,10 @@ public record ReservaFinalizarRequest(
 
         String observaciones,
 
-        String usuario
+        String usuario,
+
+        @NotNull(message = "El estado de entrega es obligatorio")
+        String estadoEntrega,
+
+        List<@Valid ReparacionItemRequest> reparaciones
 ) {}

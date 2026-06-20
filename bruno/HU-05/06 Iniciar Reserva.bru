@@ -1,0 +1,27 @@
+meta {
+  name: 05 Iniciar Reserva
+  type: http
+  seq: 6
+}
+
+patch {
+  url: http://localhost:8080/api/reservas/1010/iniciar
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "kilometrajeInicio": 500
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.estado: eq En proceso
+}

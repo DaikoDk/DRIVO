@@ -1,0 +1,28 @@
+meta {
+  name: 11 POST Sin Token
+  type: http
+  seq: 11
+}
+
+post {
+  url: http://localhost:8080/api/autos
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "placa": "SIN-001",
+    "idMarca": 1,
+    "idModelo": 1,
+    "anio": 2026,
+    "color": "Gris",
+    "precioPorDia": 40.00,
+    "precioPorHora": 4.00,
+    "moraPorDia": 8.00
+  }
+}
+
+assert {
+  res.status: eq 401
+}

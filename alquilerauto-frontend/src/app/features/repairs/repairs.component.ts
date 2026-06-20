@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { ReparacionService, ReparacionFormData } from '../../core/services/reparacion.service';
 import { ReservaService } from '../../core/services/reserva.service';
 import { AutoService } from '../../core/services/auto.service';
@@ -13,7 +14,7 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
 @Component({
   selector: 'app-repairs',
   standalone: true,
-  imports: [FormsModule, DatePipe, StatCardComponent, StatusBadgeComponent, ModalComponent],
+  imports: [FormsModule, DatePipe, StatCardComponent, StatusBadgeComponent, ModalComponent, ConfirmDialogComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -74,9 +75,9 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
             @for (r of filteredReparaciones(); track r.idReparacion) {
               <tr class="hover:bg-slate-50 cursor-pointer" tabindex="0" [attr.aria-expanded]="expandedId() === r.idReparacion" (click)="toggleExpand(r)" (keyup.enter)="toggleExpand(r)">
                 <td class="px-4 py-3 text-slate-700">#{{ r.idReparacion }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.auto?.placa }}</td>
-                <td class="px-4 py-3 text-slate-700">#{{ r.reserva?.idReserva }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.catalogoReparacion?.descripcion || '-' }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.placa }}</td>
+                <td class="px-4 py-3 text-slate-700">#{{ r.idReserva }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.descripcionCatalogo || '-' }}</td>
                 <td class="px-4 py-3 text-slate-700 max-w-[200px] truncate">{{ r.descripcion }}</td>
                 <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.costo.toFixed(2) }}</td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estado" [label]="r.estado"></app-status-badge></td>
@@ -102,8 +103,12 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
                       </div>
                       <div>
                         <p class="font-medium text-slate-600 mb-1">Estado</p>
-                        <button class="btn-sm" [class.btn-primary]="r.estado === 'Pendiente'" [class.btn-secondary]="r.estado !== 'Pendiente'" (click)="$event.stopPropagation(); updateEstado(r, 'En proceso')">En proceso</button>
-                        <button class="btn-sm ml-1" [class.btn-primary]="r.estado === 'En proceso'" [class.btn-secondary]="r.estado !== 'En proceso'" (click)="$event.stopPropagation(); updateEstado(r, 'Completada')">Completar</button>
+                        @if (r.estado !== 'Completada') {
+                          <button class="btn-sm" [class.btn-primary]="r.estado === 'Pendiente'" [class.btn-secondary]="r.estado !== 'Pendiente'" (click)="$event.stopPropagation(); preUpdateEstado(r, 'En proceso', 'En proceso')">En proceso</button>
+                          <button class="btn-sm ml-1" [class.btn-primary]="r.estado === 'En proceso'" [class.btn-secondary]="r.estado !== 'En proceso'" (click)="$event.stopPropagation(); preUpdateEstado(r, 'Completada', 'Completar')">Completar</button>
+                        } @else {
+                          <span class="badge badge-success">Completada</span>
+                        }
                       </div>
                     </div>
                   </td>
@@ -181,6 +186,15 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
         </div>
       </div>
     </app-modal>
+
+    <app-confirm-dialog
+      [open]="showEstadoConfirm()"
+      title="Cambiar Estado"
+      [message]="'¿Está seguro de cambiar el estado a ' + (estadoTarget()?.label || '') + '?'"
+      confirmLabel="Cambiar"
+      (confirmed)="confirmUpdateEstado()"
+      (cancelled)="showEstadoConfirm.set(false)">
+    </app-confirm-dialog>
   `
 })
 export class RepairsComponent implements OnInit {
@@ -191,6 +205,8 @@ export class RepairsComponent implements OnInit {
   readonly activeTab = signal<'activas' | 'historial'>('activas');
   readonly expandedId = signal<number | null>(null);
   readonly showReportModal = signal(false);
+  readonly showEstadoConfirm = signal(false);
+  readonly estadoTarget = signal<{ idReparacion: number; estado: string; label: string } | null>(null);
 
   formData: ReparacionFormData = { idReserva: 0, idAuto: 0, descripcion: '', costo: 0, responsable: 'Cliente' };
 
@@ -282,6 +298,28 @@ export class RepairsComponent implements OnInit {
         this.reparacionService.getAll().subscribe({ next: (data) => this.reparaciones.set(data) });
       },
       error: (err) => this.toast.error(err.message)
+    });
+  }
+
+  preUpdateEstado(r: Reparacion, estado: string, label: string): void {
+    this.estadoTarget.set({ idReparacion: r.idReparacion, estado, label });
+    this.showEstadoConfirm.set(true);
+  }
+
+  confirmUpdateEstado(): void {
+    const target = this.estadoTarget();
+    if (!target) return;
+    this.reparacionService.updateEstado(target.idReparacion, target.estado).subscribe({
+      next: () => {
+        this.toast.success('Estado actualizado');
+        this.showEstadoConfirm.set(false);
+        this.estadoTarget.set(null);
+        this.reparacionService.getAll().subscribe({ next: (data) => this.reparaciones.set(data) });
+      },
+      error: (err) => {
+        this.toast.error(err.message);
+        this.showEstadoConfirm.set(false);
+      }
     });
   }
 

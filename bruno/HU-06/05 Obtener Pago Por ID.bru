@@ -1,0 +1,20 @@
+meta {
+  name: 05 Obtener Pago Por ID
+  type: http
+  seq: 5
+}
+
+get {
+  url: http://localhost:8080/api/pagos/{{pagoId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.idPago: eq {{pagoId}}
+}

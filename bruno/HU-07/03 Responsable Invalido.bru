@@ -1,0 +1,30 @@
+meta {
+  name: 03 Responsable Invalido
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/api/reparaciones
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "idReserva": 1,
+    "idAuto": 1,
+    "descripcion": "Test",
+    "costo": 100.00,
+    "responsable": "Invalido"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+}

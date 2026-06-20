@@ -1,0 +1,28 @@
+meta {
+  name: 08 PATCH Cambiar Clave Incorrecta
+  type: http
+  seq: 8
+}
+
+patch {
+  url: http://localhost:8080/api/usuarios/cambiar-clave
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "claveActual": "claveequivocada",
+    "claveNueva": "nueva456"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+  res.body.message: contains Clave actual incorrecta
+}

@@ -18,6 +18,7 @@ public interface ReservaMapper {
     @Mapping(source = "auto.placa", target = "placa")
     @Mapping(source = "auto.marca.nombre", target = "marca")
     @Mapping(source = "auto.modelo.nombre", target = "modelo")
+    @Mapping(source = "estado.codigo", target = "estado")
     ReservaResponse toResponse(Reserva r);
 
     List<ReservaResponse> toResponseList(List<Reserva> reservas);

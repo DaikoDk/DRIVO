@@ -1,0 +1,35 @@
+meta {
+  name: 04 Crear Cliente Email Duplicado
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8080/api/clientes
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "nombre": "Otro",
+    "apellidoPaterno": "Usuario",
+    "dni": "55559999",
+    "email": "juanperez@example.com",
+    "licencia": {
+      "numeroLicencia": "Q22229999",
+      "categoria": "A-IIa",
+      "fechaVencimiento": "2028-06-15"
+    }
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+  res.body.message: contains Email ya registrado
+}

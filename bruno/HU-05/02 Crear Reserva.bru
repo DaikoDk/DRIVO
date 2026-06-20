@@ -1,0 +1,38 @@
+meta {
+  name: 02 Crear Reserva
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8080/api/reservas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "idCliente": 4,
+    "idAuto": 6,
+    "fechaInicio": "2026-06-10",
+    "horaInicio": "08:00",
+    "fechaFin": "2026-06-12",
+    "horaFin": "18:00",
+    "usuarioCreacion": "admin@drivo.com"
+  }
+}
+
+vars:post-response {
+  reservaId: res.body.data.idReserva
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.estado: eq Pendiente
+  res.body.data.estadoEntrega: eq Sin entregar
+}

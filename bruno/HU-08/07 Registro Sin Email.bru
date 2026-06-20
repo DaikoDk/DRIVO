@@ -1,0 +1,25 @@
+meta {
+  name: 07 Registro Sin Email
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:8080/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "SinEmail",
+    "apellidoPaterno": "Test",
+    "dni": "55555555",
+    "clave": "test1234"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+}

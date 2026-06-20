@@ -1,0 +1,29 @@
+meta {
+  name: 13 Configuracion Clave Duplicada
+  type: http
+  seq: 13
+}
+
+post {
+  url: http://localhost:8080/api/configuraciones
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "clave": "MoraPorHora",
+    "valor": "20.00",
+    "descripcion": "Duplicada",
+    "tipo": "decimal"
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+}

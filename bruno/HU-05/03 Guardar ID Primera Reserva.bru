@@ -1,0 +1,24 @@
+meta {
+  name: 03 Guardar ID Primera Reserva
+  type: http
+  seq: 3
+}
+
+get {
+  url: http://localhost:8080/api/reservas
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+vars:post-response {
+  reservaId: res.body.data[0].idReserva
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

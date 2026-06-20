@@ -1,0 +1,27 @@
+meta {
+  name: 04 Cambiar Estado En Proceso
+  type: http
+  seq: 4
+}
+
+patch {
+  url: http://localhost:8080/api/reparaciones/1/estado
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "estado": "En proceso"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.estado: eq En proceso
+}

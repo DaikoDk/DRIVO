@@ -1,0 +1,29 @@
+meta {
+  name: 13 Crear Pago Reserva Inexistente
+  type: http
+  seq: 13
+}
+
+post {
+  url: http://localhost:8080/api/pagos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "idReserva": 9999,
+    "montoBase": 200,
+    "montoMora": 0,
+    "montoDanos": 0,
+    "metodoPago": "Efectivo"
+  }
+}
+
+assert {
+  res.status: eq 404
+}

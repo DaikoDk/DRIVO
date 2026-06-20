@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "DRIVO - HU-04 Clientes Licencias",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

@@ -1,0 +1,32 @@
+meta {
+  name: 03 Registro Email Duplicado
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Otro",
+    "apellidoPaterno": "Usuario",
+    "dni": "11111111",
+    "email": "pedro@email.com",
+    "clave": "otro1234",
+    "licencia": {
+      "numeroLicencia": "Q11111111",
+      "categoria": "A-I",
+      "fechaVencimiento": "2028-06-15"
+    }
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+  res.body.message: contains Email ya registrado
+}

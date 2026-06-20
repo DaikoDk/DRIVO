@@ -1,0 +1,29 @@
+meta {
+  name: 09 Tipo Mantenimiento Invalido
+  type: http
+  seq: 9
+}
+
+post {
+  url: http://localhost:8080/api/mantenimientos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "idAuto": 1,
+    "fechaIngreso": "2026-06-10",
+    "tipo": "Invalido",
+    "costo": 150.00
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.success: eq false
+}

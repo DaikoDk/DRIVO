@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "DRIVO - HU-03 Vehiculos Autos",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

@@ -43,5 +43,8 @@ public record AutoRequest(
 
         @NotNull(message = "La mora por día es obligatoria")
         @DecimalMin(value = "0.0", message = "La mora por día no puede ser negativa")
-        BigDecimal moraPorDia
+        BigDecimal moraPorDia,
+
+        @Size(max = 500, message = "La URL de la foto no puede superar 500 caracteres")
+        String fotoUrl
 ) {}

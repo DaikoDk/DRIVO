@@ -1,0 +1,32 @@
+meta {
+  name: 07 Crear Segunda Reserva
+  type: http
+  seq: 8
+}
+
+post {
+  url: http://localhost:8080/api/reservas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "idCliente": 6,
+    "idAuto": 6,
+    "fechaInicio": "2026-07-01",
+    "horaInicio": "09:00",
+    "fechaFin": "2026-07-03",
+    "horaFin": "17:00",
+    "usuarioCreacion": "admin@drivo.com"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.estado: eq Pendiente
+}

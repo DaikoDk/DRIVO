@@ -1,0 +1,15 @@
+meta {
+  name: 15 Dashboard Sin Token
+  type: http
+  seq: 15
+}
+
+get {
+  url: http://localhost:8080/api/dashboard
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}

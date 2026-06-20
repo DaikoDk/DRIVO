@@ -1,0 +1,37 @@
+meta {
+  name: 01 Registro Exitoso
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/auth/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Pedro",
+    "apellidoPaterno": "Ramirez",
+    "apellidoMaterno": "Lopez",
+    "dni": "78585965",
+    "email": "pedro@email.com",
+    "clave": "pedro123",
+    "telefono": "999888777",
+    "direccion": "Av. Siempre Viva 742",
+    "licencia": {
+      "numeroLicencia": "Q78585965",
+      "categoria": "A-IIa",
+      "fechaVencimiento": "2028-12-15"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.token: isNotEmpty
+  res.body.data.nombre: eq Pedro
+  res.body.data.rol: eq CLIENTE
+}

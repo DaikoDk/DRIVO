@@ -174,6 +174,9 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
               <div>
                 <label class="input-label" for="res-fecha-fin">Fecha Fin *</label>
                 <input class="input-field" id="res-fecha-fin" type="date" [(ngModel)]="newData.fechaFin" />
+                @if (newData.fechaInicio && newData.fechaFin && !fechaFinValida) {
+                  <p class="text-red-500 text-xs mt-1">La fecha fin debe ser posterior a la fecha inicio</p>
+                }
               </div>
               <div>
                 <label class="input-label" for="res-hora-fin">Hora devolución</label>
@@ -219,7 +222,7 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
             @if (!showBufferWarning()) {
               <div class="flex justify-between mt-4">
                 <button class="btn-secondary" (click)="step.set(2)">Atrás</button>
-                <button class="btn-primary" (click)="createReserva()" [disabled]="!newData.fechaInicio || !newData.fechaFin || holdState() === 'expired'">Crear Reserva</button>
+                <button class="btn-primary" (click)="createReserva()" [disabled]="!newData.fechaInicio || !newData.fechaFin || !fechaFinValida || holdState() === 'expired'">Crear Reserva</button>
               </div>
             }
           </div>
@@ -710,6 +713,11 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.pararBufferTimer();
     this.showBufferWarning.set(false);
     this.doCreate();
+  }
+
+  protected get fechaFinValida(): boolean {
+    if (!this.newData.fechaInicio || !this.newData.fechaFin) return true;
+    return (this.newData.fechaInicio + ' ' + this.newData.horaInicio) < (this.newData.fechaFin + ' ' + this.newData.horaFin);
   }
 
   createReserva(): void {

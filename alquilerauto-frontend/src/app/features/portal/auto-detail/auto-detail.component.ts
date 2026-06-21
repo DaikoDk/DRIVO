@@ -84,6 +84,9 @@ import { Auto } from '../../../models';
                   <div>
                     <label class="input-label" for="auto-fecha-fin">Fecha Fin</label>
                     <input class="input-field" id="auto-fecha-fin" type="date" [min]="today()" [(ngModel)]="fechaFin" />
+                    @if (fechaInicio && fechaFin && !fechaFinValida) {
+                      <p class="text-red-500 text-xs mt-1">La fecha fin debe ser posterior a la fecha inicio</p>
+                    }
                   </div>
                   <div>
                     <label class="input-label" for="auto-hora-fin">Hora devolución</label>
@@ -274,9 +277,14 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
     return base + extra;
   }
 
+  protected get fechaFinValida(): boolean {
+    if (!this.fechaInicio || !this.fechaFin) return true;
+    return (this.fechaInicio + ' ' + this.horaInicio) < (this.fechaFin + ' ' + this.horaFin);
+  }
+
   canReservar(): boolean {
     if (!(this.fechaInicio && this.fechaFin && this.auto())) return false;
-    return this.fechaFin >= this.fechaInicio;
+    return this.fechaFinValida;
   }
 
   today(): string {
@@ -391,11 +399,6 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
 
   reservar(): void {
     if (!this.canReservar()) return;
-    if (this.fechaFin < this.fechaInicio) {
-      this.msg.set('La fecha fin debe ser posterior a la fecha inicio');
-      this.isError.set(true);
-      return;
-    }
     this.loading.set(true);
     this.msg.set('');
     this.autoService.hold(this.auto()!.idAuto).subscribe({

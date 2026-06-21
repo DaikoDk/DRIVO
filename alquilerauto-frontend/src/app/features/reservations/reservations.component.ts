@@ -79,9 +79,9 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
                     <button class="btn-sm btn-secondary" (click)="openDetail(r)" title="Ver detalle" aria-label="Ver detalle de reserva">
                       <span class="material-symbols-outlined text-sm">visibility</span>
                     </button>
-                    @if (r.estado === 'ALQUILER_EN_CURSO') {
-                      <button class="btn-sm btn-primary" (click)="openFinalizar(r)" title="Finalizar" aria-label="Finalizar reserva">
-                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                    @if (r.estado === 'ALQUILER_EN_CURSO' || r.estado === 'ALQUILER_EN_DEMORA') {
+                      <button class="btn-sm btn-primary" (click)="openEntregar(r)" title="Entregar" aria-label="Entregar vehículo">
+                        <span class="material-symbols-outlined text-sm">assignment_return</span>
                       </button>
                     }
                     @if (r.estado === 'RESERVA_PENDIENTE') {
@@ -353,8 +353,8 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
       }
     </app-modal>
 
-    <!-- FINALIZAR MODAL -->
-    <app-modal [open]="showFinalizar()" title="Finalizar Reserva" (closed)="showFinalizar.set(false)">
+    <!-- ENTREGAR MODAL -->
+    <app-modal [open]="showEntregar()" title="Entregar Vehículo" (closed)="showEntregar.set(false)">
       <div class="space-y-4">
         <div>
           <label class="input-label" for="res-kilometraje-final">Kilometraje Final *</label>
@@ -425,8 +425,8 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
         }
 
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-          <button class="btn-secondary" (click)="showFinalizar.set(false)">Cancelar</button>
-          <button class="btn-primary" (click)="finalizarReserva()">Finalizar</button>
+          <button class="btn-secondary" (click)="showEntregar.set(false)">Cancelar</button>
+          <button class="btn-primary" (click)="entregarVehiculo()">Entregar</button>
         </div>
       </div>
     </app-modal>
@@ -449,10 +449,10 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   readonly step = signal(1);
   readonly showNewModal = signal(false);
   readonly showDetail = signal(false);
-  readonly showFinalizar = signal(false);
+  readonly showEntregar = signal(false);
   readonly selectedReserva = signal<Reserva | null>(null);
   readonly reparacionesDetalle = signal<Reparacion[]>([]);
-  readonly finalizarTarget = signal<Reserva | null>(null);
+  readonly entregarTarget = signal<Reserva | null>(null);
   readonly showCancelConfirm = signal(false);
   readonly cancelTargetId = signal<number | null>(null);
   readonly filterDateIni = signal('');
@@ -680,12 +680,12 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.showDetail.set(true);
   }
 
-  openFinalizar(r: Reserva): void {
-    this.finalizarTarget.set(r);
+  openEntregar(r: Reserva): void {
+    this.entregarTarget.set(r);
     this.kilometrajeFin = r.kilometrajeInicio || 0;
     this.estadoEntrega = 'Entregado OK';
     this.reparaciones.set([]);
-    this.showFinalizar.set(true);
+    this.showEntregar.set(true);
   }
 
   agregarReparacion(): void {
@@ -772,8 +772,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     });
   }
 
-  finalizarReserva(): void {
-    const r = this.finalizarTarget();
+  entregarVehiculo(): void {
+    const r = this.entregarTarget();
     if (!r) return;
     if (r.kilometrajeInicio != null && this.kilometrajeFin < r.kilometrajeInicio) {
       this.toast.warning('El kilometraje final debe ser mayor o igual al inicial');
@@ -787,11 +787,11 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         return;
       }
     }
-    this.reservaService.finalizar(r.idReserva, this.kilometrajeFin, this.estadoEntrega,
+    this.reservaService.entregar(r.idReserva, this.kilometrajeFin, this.estadoEntrega,
       this.estadoEntrega === 'Entregado con daños' ? this.reparaciones() : []).subscribe({
       next: () => {
-        this.toast.success('Reserva finalizada');
-        this.showFinalizar.set(false);
+        this.toast.success('Vehículo entregado. Procese el pago en la sección Pagos');
+        this.showEntregar.set(false);
         this.loadReservas();
       },
       error: (err) => this.toast.error(err.message)

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { SidebarComponent } from './sidebar.component';
@@ -8,21 +8,22 @@ import { ToastComponent } from '../../shared/components/toast/toast.component';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, SidebarComponent, TopbarComponent, ToastComponent],
   template: `
-    <app-sidebar [collapsed]="sidebarCollapsed()"></app-sidebar>
-    <div class="ml-0 lg:ml-[280px] flex flex-col min-h-screen">
-      <app-topbar [pageTitle]="pageTitle()" (toggleSidebar)="sidebarCollapsed.set(!sidebarCollapsed())"></app-topbar>
-      <main class="flex-1 p-6">
-        <router-outlet></router-outlet>
-      </main>
+    <div class="flex">
+      <app-sidebar class="shrink-0"></app-sidebar>
+      <div class="flex flex-col min-h-screen flex-1 min-w-0">
+        <app-topbar [pageTitle]="pageTitle()"></app-topbar>
+        <main class="flex-1 p-6">
+          <router-outlet></router-outlet>
+        </main>
+      </div>
     </div>
     <app-toast></app-toast>
   `
 })
 export class AdminLayoutComponent {
-  readonly sidebarCollapsed = signal(true);
-
   private readonly pageTitles: Record<string, string> = {
     '/admin/dashboard': 'Dashboard',
     '/admin/vehiculos': 'Vehículos',

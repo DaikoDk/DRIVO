@@ -35,9 +35,9 @@ public class ReservaService {
     private static final String CONFIRMADA = "RESERVA_CONFIRMADA";
     private static final String CANCELADA  = "RESERVA_CANCELADA";
     private static final String EXPIRADA   = "RESERVA_EXPIRADA";
-    private static final String EN_CURSO   = "ALQUILER_EN_CURSO";
-    private static final String EN_DEMORA  = "ALQUILER_EN_DEMORA";
-    private static final String ENTREGADO  = "ALQUILER_ENTREGADO";
+    static final String EN_CURSO   = "ALQUILER_EN_CURSO";
+    static final String EN_DEMORA  = "ALQUILER_EN_DEMORA";
+    static final String ENTREGADO  = "ALQUILER_ENTREGADO";
     private static final String FINALIZADO = "ALQUILER_FINALIZADO";
 
     private final ReservaRepository reservaRepository;
@@ -226,6 +226,126 @@ public class ReservaService {
             auto.setEstado("En proceso");
             autoRepository.save(auto);
         }
+    }
+
+    @Transactional
+    public void autoDemorarVencidas() {
+        List<Reserva> enCurso = reservaRepository.findByEstado(EN_CURSO);
+        LocalDateTime now = LocalDateTime.now();
+        for (Reserva r : enCurso) {
+            LocalDateTime plannedEnd = LocalDateTime.of(r.getFechaFin(), r.getHoraFin());
+            if (now.isAfter(plannedEnd)) {
+                r.setEstado(est(EN_DEMORA));
+                r.setFechaHoraFinReal(now);
+                long horasRetraso = ChronoUnit.HOURS.between(plannedEnd, now);
+                long diasRetraso = (horasRetraso + 23) / 24;
+                BigDecimal mora = r.getAuto().getMoraPorDia().multiply(BigDecimal.valueOf(diasRetraso));
+                r.setMora(mora);
+                r.setTotal(r.getSubtotal().add(mora).add(r.getCostoReparaciones()));
+                reservaRepository.save(r);
+                log.info("Reserva #{} auto-demorada: {} horas de retraso, S/{} de mora", r.getIdReserva(), horasRetraso, mora);
+            }
+        }
+    }
+
+    public ReservaResponse entregar(Integer idReserva, ReservaFinalizarRequest request) {
+        Reserva reserva = findById(idReserva);
+        String estadoActual = reserva.getEstado().getCodigo();
+        if (!EN_CURSO.equals(estadoActual) && !EN_DEMORA.equals(estadoActual)) {
+            throw new BadRequestException("Solo se puede entregar una reserva En curso o En demora");
+        }
+        if (request.kilometrajeFin() < reserva.getKilometrajeInicio()) {
+            throw new BadRequestException("El kilometraje final no puede ser menor al kilometraje inicial");
+        }
+
+        Auto auto = reserva.getAuto();
+        LocalDateTime now = LocalDateTime.now();
+
+        // si no estaba en demora, calcular mora al entregar
+        if (!EN_DEMORA.equals(estadoActual)) {
+            LocalDateTime plannedEnd = LocalDateTime.of(reserva.getFechaFin(), reserva.getHoraFin());
+            if (now.isAfter(plannedEnd)) {
+                long horasRetraso = ChronoUnit.HOURS.between(plannedEnd, now);
+                long diasRetraso = (horasRetraso + 23) / 24;
+                BigDecimal mora = auto.getMoraPorDia().multiply(BigDecimal.valueOf(diasRetraso));
+                reserva.setMora(mora);
+            }
+        }
+
+        reserva.setFechaHoraFinReal(now);
+        reserva.setKilometrajeFin(request.kilometrajeFin());
+        reserva.setEstadoEntrega(request.estadoEntrega());
+        reserva.setObservacionesEntrega(request.observaciones());
+
+        BigDecimal costoReparaciones = reserva.getCostoReparaciones();
+        if (request.reparaciones() != null && !request.reparaciones().isEmpty()) {
+            costoReparaciones = BigDecimal.ZERO;
+            for (ReparacionItemRequest item : request.reparaciones()) {
+                Reparacion reparacion = new Reparacion();
+                reparacion.setReserva(reserva);
+                reparacion.setAuto(auto);
+                reparacion.setDescripcion(item.descripcion());
+                reparacion.setCosto(item.costo());
+                reparacion.setResponsable(item.responsable() != null ? item.responsable() : "Cliente");
+                reparacion.setEstado(item.estado() != null ? item.estado() : "Pendiente");
+                reparacion.setFechaReporte(now);
+                reparacion.setUsuarioReporte(request.usuario());
+                if (item.idCatalogoReparacion() != null) {
+                    CatalogoReparacion catalogo = catalogoReparacionRepository
+                            .findById(item.idCatalogoReparacion())
+                            .orElseThrow(() -> new ResourceNotFoundException("Catalogo no encontrado"));
+                    reparacion.setCatalogoReparacion(catalogo);
+                }
+                reparacionRepository.saveAndFlush(reparacion);
+                costoReparaciones = costoReparaciones.add(item.costo());
+            }
+        }
+        reserva.setCostoReparaciones(costoReparaciones);
+        reserva.setTotal(reserva.getSubtotal().add(reserva.getMora()).add(costoReparaciones));
+        reserva.setEstado(est(ENTREGADO));
+        reservaRepository.save(reserva);
+
+        // actualizar auto
+        HistorialKilometraje historial = new HistorialKilometraje();
+        historial.setAuto(auto);
+        historial.setReserva(reserva);
+        historial.setKilometrajeAnterior(auto.getKilometrajeActual());
+        historial.setKilometrajeNuevo(request.kilometrajeFin());
+        historial.setTipoRegistro("Reserva");
+        historial.setObservaciones(request.observaciones());
+        historial.setFechaRegistro(now);
+        historial.setUsuarioRegistro(request.usuario());
+        historialKmRepository.save(historial);
+        auto.setKilometrajeActual(request.kilometrajeFin());
+
+        boolean tienePendientes = request.reparaciones() != null &&
+                request.reparaciones().stream().anyMatch(r -> !"Completada".equals(r.estado()));
+        boolean tieneConfirmadas = reservaRepository.findByAutoIdAuto(auto.getIdAuto())
+                .stream().anyMatch(r -> CONFIRMADA.equals(r.getEstado().getCodigo()));
+        if (tienePendientes) {
+            auto.setEstado("En reparación");
+        } else if (tieneConfirmadas) {
+            auto.setEstado("Reservado");
+        } else {
+            auto.setEstado("Disponible");
+        }
+        autoRepository.save(auto);
+
+        return reservaMapper.toResponse(reserva);
+    }
+
+    public ReservaResponse finalizarPago(Integer idReserva) {
+        Reserva reserva = findById(idReserva);
+        if (!ENTREGADO.equals(reserva.getEstado().getCodigo())) {
+            throw new BadRequestException("La reserva debe estar en estado ALQUILER_ENTREGADO para procesar el pago");
+        }
+        reserva.setEstado(est(FINALIZADO));
+        reserva.setFechaFinalizacion(LocalDateTime.now());
+        org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) reserva.setUsuarioFinalizacion(auth.getName());
+        reservaRepository.save(reserva);
+        return reservaMapper.toResponse(reserva);
     }
 
     public ReservaResponse finalizar(Integer idReserva, ReservaFinalizarRequest request) {

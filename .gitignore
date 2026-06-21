@@ -32,3 +32,11 @@ application-local.properties
 
 # VS Code (mantener solo settings compartidos)
 .vscode/settings.json
+
+# OpenCode config
+.opencode/
+opencode.json
+AGENTS.md
+
+# Issues tracker local (no trackear en commits)
+issues-ux-ui.csv

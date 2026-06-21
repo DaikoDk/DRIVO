@@ -91,7 +91,7 @@ import { Cliente } from '../../models';
                       <div>
                         <p class="font-medium text-slate-600 mb-1">Licencia</p>
                         <p class="text-slate-700">{{ c.numeroLicencia || 'No registrada' }}</p>
-                        <p class="text-slate-500 text-xs">Cat: {{ c.categoriaLicencia || '-' }} | Vence: {{ c.fechaVencimientoLicencia ? (c.fechaVencimientoLicencia | date:'dd/MM/yy') : '-' }}</p>
+                        <p class="text-slate-500 text-xs">Cat: {{ c.categoriaLicencia || '-' }} | Vence: {{ c.fechaVencimientoLicencia ? (c.fechaVencimientoLicencia | date:'dd-MM-yyyy') : '-' }}</p>
                       </div>
                       <div>
                         <p class="font-medium text-slate-600 mb-1">Dirección</p>
@@ -100,7 +100,7 @@ import { Cliente } from '../../models';
                       <div>
                         <p class="font-medium text-slate-600 mb-1">Incidentes</p>
                         <p class="text-slate-700">{{ c.numeroIncidentes }}</p>
-                        <p class="text-slate-500 text-xs">Registro: {{ c.fechaRegistro | date:'dd/MM/yy' }}</p>
+                        <p class="text-slate-500 text-xs">Registro: {{ c.fechaRegistro | date:'dd-MM-yyyy' }}</p>
                       </div>
                     </div>
                   </td>

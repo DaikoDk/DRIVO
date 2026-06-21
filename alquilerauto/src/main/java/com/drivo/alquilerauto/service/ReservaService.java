@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,7 +85,10 @@ public class ReservaService {
     public BufferCheckResponse bufferCheck(Integer idAuto, LocalDate fechaInicio, LocalTime horaInicio) {
         LocalDateTime inicioNueva = LocalDateTime.of(fechaInicio, horaInicio);
         List<Reserva> activas = reservaRepository.findByAutoIdAuto(idAuto).stream()
-                .filter(r -> CONFIRMADA.equals(r.getEstado().getCodigo()) || EN_CURSO.equals(r.getEstado().getCodigo()))
+                .filter(r -> PENDIENTE.equals(r.getEstado().getCodigo())
+                        || CONFIRMADA.equals(r.getEstado().getCodigo())
+                        || EN_CURSO.equals(r.getEstado().getCodigo())
+                        || EN_DEMORA.equals(r.getEstado().getCodigo()))
                 .toList();
         if (activas.isEmpty()) {
             return new BufferCheckResponse(false, null, 24, null, null);
@@ -104,13 +108,18 @@ public class ReservaService {
             return new BufferCheckResponse(false, null, 24, null, null);
         }
         long horas = ChronoUnit.HOURS.between(finConflicto, inicioNueva);
+        LocalDateTime inicioAjustado = finConflicto.plusHours(24);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         String mensaje = String.format(
-                "El vehiculo %s tiene una reserva que finaliza el %s a las %s. " +
-                "Debe esperar al menos 24 horas (Hora de inicio ajustada automaticamente) " +
-                "Riesgo: el cliente anterior podria no entregar a tiempo.",
+                "El vehiculo %s tiene una reserva activa que finaliza el %s a las %s. " +
+                "Se requiere un margen minimo de 24h desde la entrega. " +
+                "La fecha de inicio se ajusto automaticamente al %s a las %s. " +
+                "Si el vehiculo no estuviera disponible a tiempo, te asignaremos otro similar.",
                 conflicto.getAuto().getPlaca(),
-                conflicto.getFechaFin(),
-                conflicto.getHoraFin());
+                conflicto.getFechaFin().format(fmt),
+                conflicto.getHoraFin(),
+                inicioAjustado.toLocalDate().format(fmt),
+                inicioAjustado.toLocalTime());
         return new BufferCheckResponse(true, mensaje, Math.max(0, horas),
                 conflicto.getFechaFin(), conflicto.getHoraFin());
     }
@@ -130,12 +139,13 @@ public class ReservaService {
             throw new BadRequestException("Cliente bloqueado");
         }
 
-        if (!holdService.isValid(request.idAuto())) {
-            throw new BadRequestException("El tiempo de reserva expiro. Seleccione el auto nuevamente");
-        }
-
         Auto auto = autoRepository.findById(request.idAuto())
                 .orElseThrow(() -> new ResourceNotFoundException("Auto no encontrado con id: " + request.idAuto()));
+
+        String estadoOriginal = holdService.getEstadoOriginal(request.idAuto());
+        if ("Disponible".equals(estadoOriginal) && !holdService.isValid(request.idAuto())) {
+            throw new BadRequestException("El tiempo de reserva expiro. Seleccione el auto nuevamente");
+        }
 
         String estadoActual = auto.getEstado();
         if (!"Reservado".equals(estadoActual) && !"En proceso".equals(estadoActual)) {

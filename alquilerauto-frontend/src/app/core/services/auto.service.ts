@@ -61,6 +61,10 @@ export class AutoService {
     return this.api.get<Auto[]>('/autos/disponibles');
   }
 
+  getBookables(): Observable<Auto[]> {
+    return this.api.get<Auto[]>('/autos/bookables');
+  }
+
   getDisponiblesEnRango(fechaInicio: string, fechaFin: string): Observable<Auto[]> {
     return this.api.get<Auto[]>('/autos/disponibles-rango', { fechaInicio, fechaFin });
   }

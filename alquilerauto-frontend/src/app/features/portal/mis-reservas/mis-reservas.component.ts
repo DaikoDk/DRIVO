@@ -42,8 +42,8 @@ import { Reserva } from '../../../models';
                 <tr class="hover:bg-slate-50">
                   <td class="px-4 py-3 text-slate-700">#{{ r.idReserva }}</td>
                   <td class="px-4 py-3 text-slate-700">{{ r.marca }} {{ r.modelo }} ({{ r.placa }})</td>
-                  <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio | date:'dd/MM/yy' }} {{ r.horaInicio }}</td>
-                  <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd/MM/yy' }} {{ r.horaFin }}</td>
+                  <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio | date:'dd-MM-yyyy' }} {{ (r.horaInicio || '').slice(0, 5) }}</td>
+                  <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd-MM-yyyy' }} {{ (r.horaFin || '').slice(0, 5) }}</td>
                   <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.total.toFixed(2) }}</td>
                   <td class="px-4 py-3">
                     <span class="badge" [class.badge-warning]="r.estado === 'RESERVA_PENDIENTE'" [class.badge-info]="r.estado === 'ALQUILER_EN_CURSO'" [class.badge-success]="r.estado === 'RESERVA_CONFIRMADA' || r.estado === 'ALQUILER_FINALIZADO'" [class.badge-error]="r.estado === 'RESERVA_CANCELADA' || r.estado === 'RESERVA_EXPIRADA'">{{ r.estado }}</span>

@@ -36,14 +36,19 @@ public class AutoController {
         return ResponseEntity.ok(ApiResponse.ok(autos, "Autos activos obtenidos"));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<AutoResponse>> findById(@PathVariable Integer id) {
-        return ResponseEntity.ok(ApiResponse.ok(autoService.findById(id), "Auto encontrado"));
+    @GetMapping("/bookables")
+    public ResponseEntity<ApiResponse<List<AutoResponse>>> findBookables() {
+        return ResponseEntity.ok(ApiResponse.ok(autoService.findBookables(), "Autos disponibles obtenidos"));
     }
 
     @GetMapping("/disponibles")
     public ResponseEntity<ApiResponse<List<AutoResponse>>> findDisponibles() {
         return ResponseEntity.ok(ApiResponse.ok(autoService.findDisponibles(), "Autos disponibles obtenidos"));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<AutoResponse>> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.ok(autoService.findById(id), "Auto encontrado"));
     }
 
     @GetMapping("/disponibles-rango")

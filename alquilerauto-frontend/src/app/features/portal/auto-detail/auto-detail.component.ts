@@ -69,21 +69,48 @@ import { Auto } from '../../../models';
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="input-label" for="auto-fecha-inicio">Fecha Inicio</label>
-                    <input class="input-field" id="auto-fecha-inicio" type="date" [min]="today()" [(ngModel)]="fechaInicio" />
+                    <input class="input-field" id="auto-fecha-inicio" type="date" [min]="today()" [(ngModel)]="fechaInicio" (change)="onFechaInicioChange()" />
                   </div>
                   <div>
-                    <label class="input-label" for="auto-hora-inicio">Hora</label>
-                    <input class="input-field" id="auto-hora-inicio" type="time" [(ngModel)]="horaInicio" value="08:00" />
+                    <label class="input-label" for="auto-hora-inicio">Hora recogida</label>
+                    <select class="input-field" id="auto-hora-inicio" [(ngModel)]="horaInicio">
+                      @for (h of horas; track h) {
+                        <option [value]="h">{{ h }}</option>
+                      }
+                    </select>
                   </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="input-label" for="auto-fecha-fin">Fecha Fin</label>
                     <input class="input-field" id="auto-fecha-fin" type="date" [min]="today()" [(ngModel)]="fechaFin" />
+                    @if (fechaInicio && fechaFin && !fechaFinValida) {
+                      <p class="text-red-500 text-xs mt-1">La fecha fin debe ser posterior a la fecha inicio</p>
+                    }
                   </div>
                   <div>
-                    <label class="input-label" for="auto-hora-fin">Hora</label>
-                    <input class="input-field" id="auto-hora-fin" type="time" [(ngModel)]="horaFin" value="18:00" />
+                    <label class="input-label" for="auto-hora-fin">Hora devolución</label>
+                    <select class="input-field" id="auto-hora-fin" [(ngModel)]="horaFin">
+                      @for (h of horas; track h) {
+                        <option [value]="h">{{ h }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="input-label">Duración rápida</label>
+                  <div class="flex gap-2 flex-wrap">
+                    @for (opt of duraciones; track opt.dias) {
+                      <button type="button" class="px-3 py-1.5 text-sm rounded-lg font-medium border transition-colors"
+                        [class.bg-primary]="duracionSeleccionada() === opt.dias"
+                        [class.text-white]="duracionSeleccionada() === opt.dias"
+                        [class.border-primary]="duracionSeleccionada() === opt.dias"
+                        [class.bg-white]="duracionSeleccionada() !== opt.dias"
+                        [class.text-slate-700]="duracionSeleccionada() !== opt.dias"
+                        [class.border-slate-300]="duracionSeleccionada() !== opt.dias"
+                        (click)="seleccionarDuracion(opt.dias)">{{ opt.label }}</button>
+                    }
                   </div>
                 </div>
 
@@ -119,11 +146,11 @@ import { Auto } from '../../../models';
                       <span class="text-lg font-bold text-amber-600 font-mono">{{ tiempoRestante() }}</span>
                     </div>
                     @if (showBufferWarning()) {
-                      <div class="p-3 bg-red-100 border border-red-200 rounded-lg space-y-3">
-                        <p class="text-xs text-red-700 font-medium">⚠️ {{ bufferMensaje() }}</p>
-                        <label class="flex items-center gap-2 text-xs text-red-800 cursor-pointer">
-                          <input type="checkbox" [ngModel]="bufferAcepto()" (change)="bufferAcepto.set(!bufferAcepto())" class="rounded" />
-                          Acepto los riesgos
+                      <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
+                        <p class="text-xs text-amber-800 font-medium">🕐 {{ bufferMensaje() }}</p>
+                        <label class="flex items-start gap-2 text-xs text-amber-700 cursor-pointer">
+                          <input type="checkbox" [ngModel]="bufferAcepto()" (change)="bufferAcepto.set(!bufferAcepto())" class="mt-0.5 rounded" />
+                          Entiendo que el vehiculo podria no estar listo y acepto que me asignen otro similar
                         </label>
                         <div class="flex items-center justify-between gap-2">
                           <button class="text-xs text-slate-500 hover:text-slate-700 font-medium" (click)="cancelarBuffer()">Cancelar</button>
@@ -185,6 +212,14 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
   readonly bufferTimer = signal(10);
   private bufferInterval: ReturnType<typeof setInterval> | null = null;
 
+  readonly duracionSeleccionada = signal<number | null>(null);
+  readonly duraciones = [
+    { dias: 2, label: '2 días' },
+    { dias: 5, label: '5 días' },
+    { dias: 7, label: '1 semana' },
+  ];
+  readonly horas = Array.from({ length: 13 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
+
   fechaInicio = '';
   horaInicio = '08:00';
   fechaFin = '';
@@ -242,9 +277,14 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
     return base + extra;
   }
 
+  protected get fechaFinValida(): boolean {
+    if (!this.fechaInicio || !this.fechaFin) return true;
+    return (this.fechaInicio + ' ' + this.horaInicio) < (this.fechaFin + ' ' + this.horaFin);
+  }
+
   canReservar(): boolean {
     if (!(this.fechaInicio && this.fechaFin && this.auto())) return false;
-    return this.fechaFin >= this.fechaInicio;
+    return this.fechaFinValida;
   }
 
   today(): string {
@@ -359,11 +399,6 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
 
   reservar(): void {
     if (!this.canReservar()) return;
-    if (this.fechaFin < this.fechaInicio) {
-      this.msg.set('La fecha fin debe ser posterior a la fecha inicio');
-      this.isError.set(true);
-      return;
-    }
     this.loading.set(true);
     this.msg.set('');
     this.autoService.hold(this.auto()!.idAuto).subscribe({
@@ -378,5 +413,24 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       }
     });
+  }
+
+  seleccionarDuracion(dias: number): void {
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
+    this.fechaInicio = manana.toISOString().split('T')[0];
+    const fin = new Date(manana);
+    fin.setDate(fin.getDate() + dias);
+    this.fechaFin = fin.toISOString().split('T')[0];
+    this.horaInicio = '08:00';
+    this.horaFin = '08:00';
+    this.duracionSeleccionada.set(dias);
+    this.holdState.set('idle');
+    this.pararTimer();
+    this.msg.set('');
+  }
+
+  onFechaInicioChange(): void {
+    this.duracionSeleccionada.set(null);
   }
 }

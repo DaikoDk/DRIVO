@@ -69,8 +69,8 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
                 <td class="px-4 py-3 text-slate-700">#{{ r.idReserva }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.nombreCliente }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.placa }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio | date:'dd/MM' }} {{ r.horaInicio }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd/MM' }} {{ r.horaFin }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio | date:'dd-MM-yyyy' }} {{ (r.horaInicio || '').slice(0, 5) }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd-MM-yyyy' }} {{ (r.horaFin || '').slice(0, 5) }}</td>
                 <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.total.toFixed(2) }}</td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estado" [label]="r.estado"></app-status-badge></td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estadoEntrega" [label]="r.estadoEntrega"></app-status-badge></td>
@@ -118,7 +118,7 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
               }
             </select>
             <div class="flex justify-end mt-4">
-              <button class="btn-primary flex items-center gap-2" [disabled]="!newData.idCliente" (click)="step.set(2)">
+              <button class="btn-primary flex items-center gap-2" [disabled]="!newData.idCliente" (click)="irAPaso2()">
                 Siguiente <span class="material-symbols-outlined text-sm">arrow_forward</span>
               </button>
             </div>
@@ -130,7 +130,7 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
             <select class="input-field" id="res-vehiculo" [(ngModel)]="newData.idAuto">
               <option [ngValue]="0" disabled>Seleccionar...</option>
               @for (a of vehiculosDisponibles(); track a.idAuto) {
-                <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }} (S/{{ a.precioPorDia }}/día)</option>
+                <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }} (S/{{ a.precioPorDia }}/día) [{{ a.estado }}]</option>
               }
             </select>
             @if (holdState() === 'held') {
@@ -161,27 +161,54 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="input-label" for="res-fecha-inicio">Fecha Inicio *</label>
-                <input class="input-field" id="res-fecha-inicio" type="date" [(ngModel)]="newData.fechaInicio" />
+                <input class="input-field" id="res-fecha-inicio" type="date" [(ngModel)]="newData.fechaInicio" (change)="onFechaInicioChange()" />
               </div>
               <div>
-                <label class="input-label" for="res-hora-inicio">Hora Inicio *</label>
-                <input class="input-field" id="res-hora-inicio" type="time" [(ngModel)]="newData.horaInicio" />
+                <label class="input-label" for="res-hora-inicio">Hora recogida</label>
+                <select class="input-field" id="res-hora-inicio" [(ngModel)]="newData.horaInicio">
+                  @for (h of horas; track h) {
+                    <option [value]="h">{{ h }}</option>
+                  }
+                </select>
               </div>
               <div>
                 <label class="input-label" for="res-fecha-fin">Fecha Fin *</label>
                 <input class="input-field" id="res-fecha-fin" type="date" [(ngModel)]="newData.fechaFin" />
+                @if (newData.fechaInicio && newData.fechaFin && !fechaFinValida) {
+                  <p class="text-red-500 text-xs mt-1">La fecha fin debe ser posterior a la fecha inicio</p>
+                }
               </div>
               <div>
-                <label class="input-label" for="res-hora-fin">Hora Fin *</label>
-                <input class="input-field" id="res-hora-fin" type="time" [(ngModel)]="newData.horaFin" />
+                <label class="input-label" for="res-hora-fin">Hora devolución</label>
+                <select class="input-field" id="res-hora-fin" [(ngModel)]="newData.horaFin">
+                  @for (h of horas; track h) {
+                    <option [value]="h">{{ h }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="input-label">Duración rápida</label>
+              <div class="flex gap-2 flex-wrap">
+                @for (opt of duraciones; track opt.dias) {
+                  <button type="button" class="px-3 py-1.5 text-sm rounded-lg font-medium border transition-colors"
+                    [class.bg-primary]="duracionSeleccionada() === opt.dias"
+                    [class.text-white]="duracionSeleccionada() === opt.dias"
+                    [class.border-primary]="duracionSeleccionada() === opt.dias"
+                    [class.bg-white]="duracionSeleccionada() !== opt.dias"
+                    [class.text-slate-700]="duracionSeleccionada() !== opt.dias"
+                    [class.border-slate-300]="duracionSeleccionada() !== opt.dias"
+                    (click)="seleccionarDuracion(opt.dias)">{{ opt.label }}</button>
+                }
               </div>
             </div>
             @if (showBufferWarning()) {
-              <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg space-y-3">
-                <p class="text-sm text-red-700 font-medium">⚠️ {{ bufferMensaje() }}</p>
-                <label class="flex items-center gap-2 text-sm text-red-800 cursor-pointer">
-                  <input type="checkbox" [ngModel]="bufferAcepto()" (change)="bufferAcepto.set(!bufferAcepto())" class="rounded" />
-                  Acepto los riesgos
+              <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
+                <p class="text-sm text-amber-800 font-medium">🕐 {{ bufferMensaje() }}</p>
+                <label class="flex items-start gap-2 text-sm text-amber-700 cursor-pointer">
+                  <input type="checkbox" [ngModel]="bufferAcepto()" (change)="bufferAcepto.set(!bufferAcepto())" class="mt-0.5 rounded" />
+                  Entiendo que el vehiculo podria no estar listo y acepto que asignen otro similar
                 </label>
                 <div class="flex items-center justify-between gap-2">
                   <button class="btn-secondary" (click)="cancelarBuffer()">Atrás</button>
@@ -195,7 +222,7 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
             @if (!showBufferWarning()) {
               <div class="flex justify-between mt-4">
                 <button class="btn-secondary" (click)="step.set(2)">Atrás</button>
-                <button class="btn-primary" (click)="createReserva()" [disabled]="!newData.fechaInicio || !newData.fechaFin || holdState() === 'expired'">Crear Reserva</button>
+                <button class="btn-primary" (click)="createReserva()" [disabled]="!newData.fechaInicio || !newData.fechaFin || !fechaFinValida || holdState() === 'expired'">Crear Reserva</button>
               </div>
             }
           </div>
@@ -218,11 +245,11 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
             </div>
             <div>
               <p class="text-slate-500">Fecha/Hora Inicio</p>
-              <p class="font-medium text-slate-800">{{ selectedReserva()?.fechaInicio }} {{ selectedReserva()?.horaInicio }}</p>
+              <p class="font-medium text-slate-800">{{ selectedReserva()?.fechaInicio | date:'dd-MM-yyyy' }} {{ (selectedReserva()?.horaInicio || '').slice(0, 5) }}</p>
             </div>
             <div>
               <p class="text-slate-500">Fecha/Hora Fin</p>
-              <p class="font-medium text-slate-800">{{ selectedReserva()?.fechaFin }} {{ selectedReserva()?.horaFin }}</p>
+              <p class="font-medium text-slate-800">{{ selectedReserva()?.fechaFin | date:'dd-MM-yyyy' }} {{ (selectedReserva()?.horaFin || '').slice(0, 5) }}</p>
             </div>
             <div>
               <p class="text-slate-500">KM Inicial</p>
@@ -240,6 +267,26 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
               <p class="text-slate-500">Estado de Entrega</p>
               <app-status-badge [status]="selectedReserva()!.estadoEntrega" [label]="selectedReserva()!.estadoEntrega"></app-status-badge>
             </div>
+            @if (selectedReserva()?.fechaHoraInicioReal; as realInicio) {
+              <div>
+                <p class="text-slate-500">Inicio Real</p>
+                <p class="font-medium text-slate-800">{{ realInicio | date:'dd-MM-yyyy HH:mm' }}</p>
+              </div>
+            }
+            @if (selectedReserva()?.fechaHoraFinReal; as realFin) {
+              <div>
+                <p class="text-slate-500">Devolución Real</p>
+                <p class="font-medium text-slate-800">{{ realFin | date:'dd-MM-yyyy HH:mm' }}</p>
+              </div>
+            }
+            @if (selectedReserva(); as r) {
+              @if (demoraInfo(r); as d) {
+                <div>
+                  <p class="text-slate-500">Tiempo de demora</p>
+                  <p class="font-medium text-error">{{ d }}</p>
+                </div>
+              }
+            }
           </div>
 
           <div class="border-t border-slate-100 pt-3">
@@ -420,6 +467,14 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   readonly bufferTimer = signal(10);
   private bufferInterval: ReturnType<typeof setInterval> | null = null;
 
+  readonly duracionSeleccionada = signal<number | null>(null);
+  readonly duraciones = [
+    { dias: 2, label: '2 días' },
+    { dias: 5, label: '5 días' },
+    { dias: 7, label: '1 semana' },
+  ];
+  readonly horas = Array.from({ length: 13 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
+
   readonly statsExtra = computed(() => {
     const all = this.reservas();
     const now = new Date();
@@ -469,7 +524,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       next: (d) => this.clientes.set(d),
       error: () => this.toast.error('Error al cargar clientes')
     });
-    this.autoService.getDisponibles().subscribe({
+    this.autoService.getBookables().subscribe({
       next: (d) => this.vehiculosDisponibles.set(d),
       error: () => this.toast.error('Error al cargar vehiculos')
     });
@@ -516,13 +571,14 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   }
 
   openNewModal(): void {
-    this.newData = { idCliente: 0, idAuto: 0, fechaInicio: '', horaInicio: '', fechaFin: '', horaFin: '' };
+    this.newData = { idCliente: 0, idAuto: 0, fechaInicio: '', horaInicio: '08:00', fechaFin: '', horaFin: '18:00' };
+    this.duracionSeleccionada.set(null);
     this.step.set(1);
     this.holdState.set('idle');
     this.holdTiempo.set('');
     this.pararHoldTimer();
     this.cancelarBuffer();
-    this.autoService.getDisponibles().subscribe({
+    this.autoService.getBookables().subscribe({
       next: (d) => this.vehiculosDisponibles.set(d),
       error: () => this.toast.error('Error al cargar vehiculos')
     });
@@ -535,20 +591,74 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.showNewModal.set(false);
   }
 
+  irAPaso2(): void {
+    const cliente = this.clientes().find(c => c.idCliente === this.newData.idCliente);
+    if (cliente?.bloqueado) {
+      this.toast.error('Cliente bloqueado. No puede realizar reservas.');
+      return;
+    }
+    this.step.set(2);
+  }
+
+  private verificarBufferYAvanzar(): void {
+    const fechaBase = this.newData.fechaInicio || (() => {
+      const m = new Date(); m.setDate(m.getDate() + 1); return m.toISOString().split('T')[0];
+    })();
+    const horaBase = this.newData.horaInicio || '08:00';
+    if (!this.newData.fechaInicio) this.newData.fechaInicio = fechaBase;
+    if (!this.newData.horaInicio) this.newData.horaInicio = horaBase;
+    if (!this.newData.fechaFin) {
+      const f = new Date(fechaBase); f.setDate(f.getDate() + 1);
+      this.newData.fechaFin = f.toISOString().split('T')[0];
+      this.newData.horaFin = '08:00';
+    }
+
+    this.reservaService.bufferCheck(this.newData.idAuto, this.newData.fechaInicio, this.newData.horaInicio).subscribe({
+      next: (res) => {
+        if (res.riesgo && res.fechaFinAnterior && res.horaFinAnterior) {
+          const finAnterior = new Date(`${res.fechaFinAnterior.slice(0,10)}T${res.horaFinAnterior.slice(0,5)}`);
+          const inicioSeguro = new Date(finAnterior.getTime() + 24 * 60 * 60 * 1000);
+          this.newData.fechaInicio = inicioSeguro.toISOString().split('T')[0];
+          this.newData.horaInicio = `${String(inicioSeguro.getHours()).padStart(2, '0')}:00`;
+          const fin = new Date(inicioSeguro);
+          fin.setDate(fin.getDate() + 1);
+          this.newData.fechaFin = fin.toISOString().split('T')[0];
+          this.newData.horaFin = '08:00';
+
+          this.bufferMensaje.set(res.mensaje!);
+          this.bufferAcepto.set(false);
+          this.bufferTimer.set(10);
+          this.pararBufferTimer();
+          this.bufferInterval = setInterval(() => {
+            this.bufferTimer.update(v => { if (v <= 1) { this.pararBufferTimer(); return 0; } return v - 1; });
+          }, 1000);
+          this.showBufferWarning.set(true);
+        }
+        this.step.set(3);
+      },
+      error: () => this.step.set(3)
+    });
+  }
+
   goToStep3(): void {
     if (!this.newData.idAuto) return;
     if (this.holdState() === 'held') {
-      this.step.set(3);
+      this.verificarBufferYAvanzar();
       return;
     }
-    this.autoService.hold(this.newData.idAuto).subscribe({
-      next: (res) => {
-        this.holdState.set('held');
-        this.iniciarHoldTimer(res.fechaExpiracion);
-        this.step.set(3);
-      },
-      error: (err) => this.toast.error(err.message)
-    });
+    const auto = this.vehiculosDisponibles().find(a => a.idAuto === this.newData.idAuto);
+    if (auto && auto.estado === 'Disponible') {
+      this.autoService.hold(this.newData.idAuto).subscribe({
+        next: (res) => {
+          this.holdState.set('held');
+          this.iniciarHoldTimer(res.fechaExpiracion);
+          this.verificarBufferYAvanzar();
+        },
+        error: (err) => this.toast.error(err.message)
+      });
+    } else {
+      this.verificarBufferYAvanzar();
+    }
   }
 
   cancelHold(): void {
@@ -598,10 +708,47 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.bufferTimer.set(10);
   }
 
+  private fmtDate(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  seleccionarDuracion(dias: number): void {
+    const base = this.newData.fechaInicio
+      ? (() => { const p = this.newData.fechaInicio.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); })()
+      : (() => { const m = new Date(); m.setDate(m.getDate() + 1); return m; })();
+    this.newData.fechaInicio = this.fmtDate(base);
+    const fin = new Date(base);
+    fin.setDate(fin.getDate() + dias);
+    this.newData.fechaFin = this.fmtDate(fin);
+    this.newData.horaInicio = '08:00';
+    this.newData.horaFin = '08:00';
+    this.duracionSeleccionada.set(dias);
+  }
+
+  onFechaInicioChange(): void {
+    this.duracionSeleccionada.set(null);
+  }
+
   confirmarConRiesgo(): void {
     this.pararBufferTimer();
     this.showBufferWarning.set(false);
     this.doCreate();
+  }
+
+  protected get fechaFinValida(): boolean {
+    if (!this.newData.fechaInicio || !this.newData.fechaFin) return true;
+    return (this.newData.fechaInicio + ' ' + this.newData.horaInicio) < (this.newData.fechaFin + ' ' + this.newData.horaFin);
+  }
+
+  protected demoraInfo(r: Reserva): string | null {
+    if (!r.fechaHoraFinReal) return null;
+    const planned = new Date(`${r.fechaFin}T${r.horaFin}`);
+    const actual = new Date(r.fechaHoraFinReal);
+    if (actual <= planned) return null;
+    const min = Math.round((actual.getTime() - planned.getTime()) / 60000);
+    const h = Math.floor(min / 60), m = min % 60;
+    if (h >= 24) return `${Math.floor(h / 24)}d ${h % 24}h`;
+    return `${h}h ${m}m`;
   }
 
   createReserva(): void {
@@ -610,29 +757,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       return;
     }
     if (!this.newData.horaInicio) this.newData.horaInicio = '08:00';
-    if (this.showBufferWarning()) return;
-    this.reservaService.bufferCheck(this.newData.idAuto, this.newData.fechaInicio, this.newData.horaInicio).subscribe({
-      next: (res) => {
-        console.log('bufferCheck:', res);
-        if (res.riesgo && res.fechaFinAnterior && res.horaFinAnterior) {
-          const finAnterior = new Date(`${res.fechaFinAnterior}T${res.horaFinAnterior}`);
-          const inicioSeguro = new Date(finAnterior.getTime() + 24 * 60 * 60 * 1000);
-          this.newData.fechaInicio = inicioSeguro.toISOString().split('T')[0];
-          this.newData.horaInicio = res.horaFinAnterior;
-          this.bufferMensaje.set(res.mensaje!);
-          this.bufferAcepto.set(false);
-          this.bufferTimer.set(10);
-          this.pararBufferTimer();
-          this.bufferInterval = setInterval(() => {
-            this.bufferTimer.update(v => { if (v <= 1) { this.pararBufferTimer(); return 0; } return v - 1; });
-          }, 1000);
-          this.showBufferWarning.set(true);
-        } else {
-          this.doCreate();
-        }
-      },
-      error: () => this.doCreate()
-    });
+    this.doCreate();
   }
 
   doCreate(): void {

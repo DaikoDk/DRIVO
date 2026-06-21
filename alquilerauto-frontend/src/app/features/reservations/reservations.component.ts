@@ -118,7 +118,7 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
               }
             </select>
             <div class="flex justify-end mt-4">
-              <button class="btn-primary flex items-center gap-2" [disabled]="!newData.idCliente" (click)="step.set(2)">
+              <button class="btn-primary flex items-center gap-2" [disabled]="!newData.idCliente" (click)="irAPaso2()">
                 Siguiente <span class="material-symbols-outlined text-sm">arrow_forward</span>
               </button>
             </div>
@@ -566,6 +566,15 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.pararHoldTimer();
     this.pararBufferTimer();
     this.showNewModal.set(false);
+  }
+
+  irAPaso2(): void {
+    const cliente = this.clientes().find(c => c.idCliente === this.newData.idCliente);
+    if (cliente?.bloqueado) {
+      this.toast.error('Cliente bloqueado. No puede realizar reservas.');
+      return;
+    }
+    this.step.set(2);
   }
 
   private verificarBufferYAvanzar(): void {

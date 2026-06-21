@@ -36,7 +36,7 @@ export interface NavItem {
           <a [routerLink]="item.route" routerLinkActive="active"
              [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
              (mouseenter)="onTooltipEnter(item.label, $event)" (mouseleave)="onTooltipLeave()"
-             (dblclick)="isCollapsed() && toggleCollapsed()"
+             (dblclick)="toggleCollapsed()"
              class="sidebar-link flex items-center gap-3 pl-2 pr-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-inverse-surface-on group relative">
             <span class="w-6 h-6 flex items-center justify-center shrink-0">
               <span class="material-symbols-outlined text-xl">{{ item.icon }}</span>
@@ -51,7 +51,7 @@ export interface NavItem {
       <div class="py-4 border-t border-white/10 px-3">
         <a routerLink="/admin/perfil"
            (mouseenter)="onTooltipEnter('Perfil', $event)" (mouseleave)="onTooltipLeave()"
-           (dblclick)="isCollapsed() && toggleCollapsed()"
+           (dblclick)="toggleCollapsed()"
            class="sidebar-link flex items-center gap-3 pl-2 pr-4 py-2.5 text-sm font-medium rounded-lg text-slate-300">
           <span class="w-6 h-6 flex items-center justify-center shrink-0">
             <span class="material-symbols-outlined text-xl">account_circle</span>

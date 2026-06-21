@@ -161,19 +161,43 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="input-label" for="res-fecha-inicio">Fecha Inicio *</label>
-                <input class="input-field" id="res-fecha-inicio" type="date" [(ngModel)]="newData.fechaInicio" />
+                <input class="input-field" id="res-fecha-inicio" type="date" [(ngModel)]="newData.fechaInicio" (change)="onFechaInicioChange()" />
               </div>
               <div>
-                <label class="input-label" for="res-hora-inicio">Hora Inicio *</label>
-                <input class="input-field" id="res-hora-inicio" type="time" [(ngModel)]="newData.horaInicio" />
+                <label class="input-label" for="res-hora-inicio">Hora recogida</label>
+                <select class="input-field" id="res-hora-inicio" [(ngModel)]="newData.horaInicio">
+                  @for (h of horas; track h) {
+                    <option [value]="h">{{ h }}</option>
+                  }
+                </select>
               </div>
               <div>
                 <label class="input-label" for="res-fecha-fin">Fecha Fin *</label>
                 <input class="input-field" id="res-fecha-fin" type="date" [(ngModel)]="newData.fechaFin" />
               </div>
               <div>
-                <label class="input-label" for="res-hora-fin">Hora Fin *</label>
-                <input class="input-field" id="res-hora-fin" type="time" [(ngModel)]="newData.horaFin" />
+                <label class="input-label" for="res-hora-fin">Hora devolución</label>
+                <select class="input-field" id="res-hora-fin" [(ngModel)]="newData.horaFin">
+                  @for (h of horas; track h) {
+                    <option [value]="h">{{ h }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="input-label">Duración rápida</label>
+              <div class="flex gap-2 flex-wrap">
+                @for (opt of duraciones; track opt.dias) {
+                  <button type="button" class="px-3 py-1.5 text-sm rounded-lg font-medium border transition-colors"
+                    [class.bg-primary]="duracionSeleccionada() === opt.dias"
+                    [class.text-white]="duracionSeleccionada() === opt.dias"
+                    [class.border-primary]="duracionSeleccionada() === opt.dias"
+                    [class.bg-white]="duracionSeleccionada() !== opt.dias"
+                    [class.text-slate-700]="duracionSeleccionada() !== opt.dias"
+                    [class.border-slate-300]="duracionSeleccionada() !== opt.dias"
+                    (click)="seleccionarDuracion(opt.dias)">{{ opt.label }}</button>
+                }
               </div>
             </div>
             @if (showBufferWarning()) {
@@ -420,6 +444,14 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   readonly bufferTimer = signal(10);
   private bufferInterval: ReturnType<typeof setInterval> | null = null;
 
+  readonly duracionSeleccionada = signal<number | null>(null);
+  readonly duraciones = [
+    { dias: 2, label: '2 días' },
+    { dias: 5, label: '5 días' },
+    { dias: 7, label: '1 semana' },
+  ];
+  readonly horas = Array.from({ length: 13 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
+
   readonly statsExtra = computed(() => {
     const all = this.reservas();
     const now = new Date();
@@ -516,7 +548,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   }
 
   openNewModal(): void {
-    this.newData = { idCliente: 0, idAuto: 0, fechaInicio: '', horaInicio: '', fechaFin: '', horaFin: '' };
+    this.newData = { idCliente: 0, idAuto: 0, fechaInicio: '', horaInicio: '08:00', fechaFin: '', horaFin: '18:00' };
+    this.duracionSeleccionada.set(null);
     this.step.set(1);
     this.holdState.set('idle');
     this.holdTiempo.set('');
@@ -596,6 +629,22 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.bufferMensaje.set('');
     this.bufferAcepto.set(false);
     this.bufferTimer.set(10);
+  }
+
+  seleccionarDuracion(dias: number): void {
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
+    this.newData.fechaInicio = manana.toISOString().split('T')[0];
+    const fin = new Date(manana);
+    fin.setDate(fin.getDate() + dias);
+    this.newData.fechaFin = fin.toISOString().split('T')[0];
+    this.newData.horaInicio = '08:00';
+    this.newData.horaFin = '08:00';
+    this.duracionSeleccionada.set(dias);
+  }
+
+  onFechaInicioChange(): void {
+    this.duracionSeleccionada.set(null);
   }
 
   confirmarConRiesgo(): void {

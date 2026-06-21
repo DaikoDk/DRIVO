@@ -69,11 +69,15 @@ import { Auto } from '../../../models';
                 <div class="grid grid-cols-2 gap-3">
                   <div>
                     <label class="input-label" for="auto-fecha-inicio">Fecha Inicio</label>
-                    <input class="input-field" id="auto-fecha-inicio" type="date" [min]="today()" [(ngModel)]="fechaInicio" />
+                    <input class="input-field" id="auto-fecha-inicio" type="date" [min]="today()" [(ngModel)]="fechaInicio" (change)="onFechaInicioChange()" />
                   </div>
                   <div>
-                    <label class="input-label" for="auto-hora-inicio">Hora</label>
-                    <input class="input-field" id="auto-hora-inicio" type="time" [(ngModel)]="horaInicio" value="08:00" />
+                    <label class="input-label" for="auto-hora-inicio">Hora recogida</label>
+                    <select class="input-field" id="auto-hora-inicio" [(ngModel)]="horaInicio">
+                      @for (h of horas; track h) {
+                        <option [value]="h">{{ h }}</option>
+                      }
+                    </select>
                   </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -82,8 +86,28 @@ import { Auto } from '../../../models';
                     <input class="input-field" id="auto-fecha-fin" type="date" [min]="today()" [(ngModel)]="fechaFin" />
                   </div>
                   <div>
-                    <label class="input-label" for="auto-hora-fin">Hora</label>
-                    <input class="input-field" id="auto-hora-fin" type="time" [(ngModel)]="horaFin" value="18:00" />
+                    <label class="input-label" for="auto-hora-fin">Hora devolución</label>
+                    <select class="input-field" id="auto-hora-fin" [(ngModel)]="horaFin">
+                      @for (h of horas; track h) {
+                        <option [value]="h">{{ h }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="input-label">Duración rápida</label>
+                  <div class="flex gap-2 flex-wrap">
+                    @for (opt of duraciones; track opt.dias) {
+                      <button type="button" class="px-3 py-1.5 text-sm rounded-lg font-medium border transition-colors"
+                        [class.bg-primary]="duracionSeleccionada() === opt.dias"
+                        [class.text-white]="duracionSeleccionada() === opt.dias"
+                        [class.border-primary]="duracionSeleccionada() === opt.dias"
+                        [class.bg-white]="duracionSeleccionada() !== opt.dias"
+                        [class.text-slate-700]="duracionSeleccionada() !== opt.dias"
+                        [class.border-slate-300]="duracionSeleccionada() !== opt.dias"
+                        (click)="seleccionarDuracion(opt.dias)">{{ opt.label }}</button>
+                    }
                   </div>
                 </div>
 
@@ -184,6 +208,14 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
   readonly bufferAcepto = signal(false);
   readonly bufferTimer = signal(10);
   private bufferInterval: ReturnType<typeof setInterval> | null = null;
+
+  readonly duracionSeleccionada = signal<number | null>(null);
+  readonly duraciones = [
+    { dias: 2, label: '2 días' },
+    { dias: 5, label: '5 días' },
+    { dias: 7, label: '1 semana' },
+  ];
+  readonly horas = Array.from({ length: 13 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
 
   fechaInicio = '';
   horaInicio = '08:00';
@@ -378,5 +410,24 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       }
     });
+  }
+
+  seleccionarDuracion(dias: number): void {
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
+    this.fechaInicio = manana.toISOString().split('T')[0];
+    const fin = new Date(manana);
+    fin.setDate(fin.getDate() + dias);
+    this.fechaFin = fin.toISOString().split('T')[0];
+    this.horaInicio = '08:00';
+    this.horaFin = '08:00';
+    this.duracionSeleccionada.set(dias);
+    this.holdState.set('idle');
+    this.pararTimer();
+    this.msg.set('');
+  }
+
+  onFechaInicioChange(): void {
+    this.duracionSeleccionada.set(null);
   }
 }

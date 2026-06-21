@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
+import { switchMap } from 'rxjs';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { PagoService, PagoFormData } from '../../core/services/pago.service';
@@ -8,10 +9,28 @@ import { ReservaService } from '../../core/services/reserva.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Pago, Reserva } from '../../models';
 
+interface BoletaData {
+  idPago: number;
+  fecha: string;
+  clienteNombre: string;
+  clienteDni: string;
+  vehiculo: string;
+  periodoInicio: string;
+  periodoFin: string;
+  dias: number;
+  precioPorDia: number;
+  subtotal: number;
+  mora: number;
+  costoReparaciones: number;
+  total: number;
+  igv: number;
+  metodoPago: string;
+}
+
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [FormsModule, DatePipe, StatCardComponent, ModalComponent],
+  imports: [FormsModule, DatePipe, DecimalPipe, StatCardComponent, ModalComponent],
   template: `
     <div class="flex items-center justify-between mb-6">
       <div>
@@ -21,8 +40,8 @@ import { Pago, Reserva } from '../../models';
       <div class="flex gap-3">
         <input class="input-field w-48" type="date" [(ngModel)]="filterDate" />
         <button class="btn-primary flex items-center gap-2" (click)="openRegisterModal()">
-          <span class="material-symbols-outlined text-lg">receipt_long</span>
-          Registrar Pago
+          <span class="material-symbols-outlined text-lg">payments</span>
+          Procesar Pago
         </button>
       </div>
     </div>
@@ -85,29 +104,29 @@ import { Pago, Reserva } from '../../models';
       }
     </div>
 
-    <app-modal [open]="showRegisterModal()" title="Registrar Pago" (closed)="showRegisterModal.set(false)">
+    <app-modal [open]="showRegisterModal()" title="Procesar Pago" (closed)="showRegisterModal.set(false)">
       <div class="space-y-4">
         <div>
           <label class="input-label" for="pay-reserva">Reserva *</label>
-          <select class="input-field" id="pay-reserva" [(ngModel)]="formData.idReserva">
+          <select class="input-field" id="pay-reserva" [(ngModel)]="formData.idReserva" (ngModelChange)="onReservaSelected()">
             <option [ngValue]="0" disabled>Seleccionar...</option>
-            @for (r of reservas(); track r.idReserva) {
-              <option [ngValue]="r.idReserva">#{{ r.idReserva }} - {{ r.nombreCliente }}</option>
+            @for (r of reservasEntregadas(); track r.idReserva) {
+              <option [ngValue]="r.idReserva">#{{ r.idReserva }} - {{ r.nombreCliente }} ({{ r.placa }})</option>
             }
           </select>
         </div>
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="input-label" for="pay-monto-base">Monto Base *</label>
-            <input class="input-field" id="pay-monto-base" type="number" step="0.01" [(ngModel)]="formData.montoBase" />
+            <label class="input-label">Monto Base</label>
+            <p class="input-field bg-slate-50 text-slate-700 py-2 px-3 rounded-lg">S/{{ formData.montoBase.toFixed(2) }}</p>
           </div>
           <div>
-            <label class="input-label" for="pay-mora">Mora</label>
-            <input class="input-field" id="pay-mora" type="number" step="0.01" [(ngModel)]="formData.montoMora" />
+            <label class="input-label">Mora</label>
+            <p class="input-field bg-slate-50 text-slate-700 py-2 px-3 rounded-lg">S/{{ formData.montoMora.toFixed(2) }}</p>
           </div>
           <div>
-            <label class="input-label" for="pay-danos">Daños</label>
-            <input class="input-field" id="pay-danos" type="number" step="0.01" [(ngModel)]="formData.montoDanos" />
+            <label class="input-label">Daños</label>
+            <p class="input-field bg-slate-50 text-slate-700 py-2 px-3 rounded-lg">S/{{ formData.montoDanos.toFixed(2) }}</p>
           </div>
         </div>
         <div>
@@ -124,16 +143,93 @@ import { Pago, Reserva } from '../../models';
         </div>
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button class="btn-secondary" (click)="showRegisterModal.set(false)">Cancelar</button>
-          <button class="btn-primary" (click)="registerPago()" [disabled]="!formData.idReserva || !formData.metodoPago">Registrar</button>
+          <button class="btn-primary" (click)="registerPago()" [disabled]="!formData.idReserva || !formData.metodoPago">Procesar Pago</button>
         </div>
       </div>
     </app-modal>
-  `
+
+    <app-modal [open]="showBoleta()" title="Boleta de Pago - B001-{{ boletaData().idPago }}" (closed)="showBoleta.set(false)">
+      <div class="boleta-wrapper">
+        <div class="boleta" id="boleta-content">
+          <div class="text-center border-b pb-4 mb-4">
+            <h2 class="text-xl font-bold text-slate-800">DRIVO Rent-a-Car</h2>
+            <p class="text-sm text-slate-500">RUC: 20601234567</p>
+            <p class="text-sm text-slate-500">Av. La Marina 1234, San Miguel</p>
+            <p class="text-sm text-slate-500">Lima - Perú</p>
+          </div>
+          <div class="flex justify-between text-sm text-slate-600 mb-4">
+            <span><strong>Boleta:</strong> B001-{{ boletaData().idPago }}</span>
+            <span><strong>Fecha:</strong> {{ boletaData().fecha }}</span>
+          </div>
+          <div class="border-t pt-3 mb-4 text-sm space-y-1">
+            <p><strong>Cliente:</strong> {{ boletaData().clienteNombre }}</p>
+            <p><strong>DNI:</strong> {{ boletaData().clienteDni }}</p>
+            <p><strong>Vehículo:</strong> {{ boletaData().vehiculo }}</p>
+          </div>
+          <table class="w-full text-sm mb-4">
+            <thead>
+              <tr class="border-b border-slate-300">
+                <th class="text-left py-2 text-slate-600">Descripción</th>
+                <th class="text-right py-2 text-slate-600">Importe</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              <tr>
+                <td class="py-2 text-slate-700">Alquiler x {{ boletaData().dias }} día(s) (S/{{ boletaData().precioPorDia | number:'1.2-2' }}/día)</td>
+                <td class="py-2 text-right text-slate-700">S/{{ boletaData().subtotal | number:'1.2-2' }}</td>
+              </tr>
+              <tr>
+                <td class="py-2 text-slate-700">Mora por devolución tardía</td>
+                <td class="py-2 text-right" [class.text-red-600]="boletaData().mora > 0">S/{{ boletaData().mora | number:'1.2-2' }}</td>
+              </tr>
+              <tr>
+                <td class="py-2 text-slate-700">Reparaciones / daños</td>
+                <td class="py-2 text-right" [class.text-red-600]="boletaData().costoReparaciones > 0">S/{{ boletaData().costoReparaciones | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="border-t pt-3 space-y-1 text-sm">
+            <div class="flex justify-between text-slate-600"><span>Subtotal (incl. IGV)</span><span>S/{{ boletaData().total | number:'1.2-2' }}</span></div>
+            <div class="flex justify-between text-slate-600"><span>IGV (18%)</span><span>S/{{ boletaData().igv | number:'1.2-2' }}</span></div>
+            <div class="flex justify-between text-base font-bold text-slate-800 border-t pt-2"><span>Total</span><span>S/{{ boletaData().total | number:'1.2-2' }}</span></div>
+          </div>
+          <div class="border-t mt-4 pt-3 text-sm text-slate-500">
+            <p><strong>Método de pago:</strong> {{ boletaData().metodoPago }}</p>
+            <p class="text-xs mt-2 text-center">Gracias por su preferencia</p>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button class="btn-secondary" (click)="showBoleta.set(false)">Cerrar</button>
+          <button class="btn-primary flex items-center gap-2" (click)="printBoleta()">
+            <span class="material-symbols-outlined text-lg">print</span>
+            Imprimir
+          </button>
+        </div>
+      </div>
+    </app-modal>
+  `,
+  styles: [`
+    .boleta-wrapper { max-width: 400px; margin: 0 auto; }
+    .boleta { background: white; padding: 1.5rem; }
+    @media print {
+      body * { visibility: hidden; }
+      #boleta-content, #boleta-content * { visibility: visible; }
+      #boleta-content { position: absolute; left: 0; top: 0; width: 100%; }
+      .boleta-wrapper > .flex { display: none; }
+    }
+  `]
 })
 export class PaymentsComponent implements OnInit {
   readonly pagos = signal<Pago[]>([]);
   readonly reservas = signal<Reserva[]>([]);
   readonly showRegisterModal = signal(false);
+  readonly showBoleta = signal(false);
+  readonly boletaData = signal<BoletaData>({
+    idPago: 0, fecha: '', clienteNombre: '', clienteDni: '',
+    vehiculo: '', periodoInicio: '', periodoFin: '', dias: 0,
+    precioPorDia: 0, subtotal: 0, mora: 0, costoReparaciones: 0,
+    total: 0, igv: 0, metodoPago: ''
+  });
   readonly filterDate = signal('');
 
   formData: PagoFormData = { idReserva: 0, montoBase: 0, montoMora: 0, montoDanos: 0, metodoPago: '' };
@@ -173,6 +269,10 @@ export class PaymentsComponent implements OnInit {
 
   readonly loading = signal(true);
 
+  readonly reservasEntregadas = computed(() =>
+    this.reservas().filter(r => r.estado === 'ALQUILER_ENTREGADO')
+  );
+
   readonly filteredPagos = computed(() => {
     const fd = this.filterDate();
     if (!fd) return this.pagos();
@@ -196,22 +296,70 @@ export class PaymentsComponent implements OnInit {
     this.showRegisterModal.set(true);
   }
 
+  onReservaSelected(): void {
+    const r = this.reservas().find(x => x.idReserva === this.formData.idReserva);
+    if (r) {
+      this.formData.montoBase = r.subtotal;
+      this.formData.montoMora = r.mora;
+      this.formData.montoDanos = r.costoReparaciones;
+    }
+  }
+
   registerPago(): void {
     if (!this.formData.idReserva || !this.formData.metodoPago) {
       this.toast.warning('Complete los campos obligatorios');
       return;
     }
-    this.pagoService.register(this.formData).subscribe({
-      next: () => {
-        this.toast.success('Pago registrado exitosamente');
-        this.showRegisterModal.set(false);
-        this.pagoService.getAll().subscribe({ next: (data) => this.pagos.set(data) });
+    const reserva = this.reservas().find(r => r.idReserva === this.formData.idReserva);
+    if (!reserva) { this.toast.error('Reserva no encontrada'); return; }
+
+    this.pagoService.register(this.formData).pipe(
+      switchMap(pago => this.reservaService.finalizarPago(reserva.idReserva).pipe(
+        switchMap(() => {
+          const igv = reserva.total / 1.18 * 0.18;
+          this.boletaData.set({
+            idPago: pago.idPago,
+            fecha: new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+            clienteNombre: reserva.nombreCliente,
+            clienteDni: reserva.dniCliente ?? '',
+            vehiculo: `${reserva.placa} - ${reserva.marca} ${reserva.modelo}`,
+            periodoInicio: reserva.fechaInicio,
+            periodoFin: reserva.fechaFin,
+            dias: this.calcularDias(reserva.fechaInicio, reserva.fechaFin),
+            precioPorDia: reserva.subtotal / this.calcularDias(reserva.fechaInicio, reserva.fechaFin),
+            subtotal: reserva.subtotal,
+            mora: reserva.mora,
+            costoReparaciones: reserva.costoReparaciones,
+            total: reserva.total,
+            igv,
+            metodoPago: this.formData.metodoPago
+          });
+          this.showRegisterModal.set(false);
+          this.showBoleta.set(true);
+          return this.pagoService.getAll();
+        })
+      ))
+    ).subscribe({
+      next: (data) => {
+        this.toast.success('Pago procesado exitosamente');
+        this.pagos.set(data);
       },
       error: (err) => this.toast.error(err.message)
     });
   }
 
+  private calcularDias(fechaInicio: string, fechaFin: string): number {
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+    const diff = Math.ceil((fin.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 1;
+  }
+
   get total(): number {
     return this.formData.montoBase + this.formData.montoMora + this.formData.montoDanos;
+  }
+
+  printBoleta(): void {
+    window.print();
   }
 }

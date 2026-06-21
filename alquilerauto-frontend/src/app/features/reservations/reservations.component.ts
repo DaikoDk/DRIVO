@@ -17,19 +17,65 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
   standalone: true,
   imports: [FormsModule, DatePipe, StatCardComponent, StatusBadgeComponent, ModalComponent, ConfirmDialogComponent],
   template: `
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-4">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">Reservas</h1>
         <p class="text-sm text-slate-500 mt-1">Gestión de reservas y alquileres</p>
       </div>
-      <div class="flex gap-3">
-        <input class="input-field w-48" type="date" [(ngModel)]="filterDateIni" />
-        <span class="flex items-center text-slate-400">-</span>
-        <input class="input-field w-48" type="date" [(ngModel)]="filterDateFin" />
-        <button class="btn-primary flex items-center gap-2" (click)="openNewModal()">
-          <span class="material-symbols-outlined text-lg">add</span>
-          Nueva Reserva
-        </button>
+      <button class="btn-primary flex items-center gap-2" (click)="openNewModal()">
+        <span class="material-symbols-outlined text-lg">add</span>
+        Nueva Reserva
+      </button>
+    </div>
+
+    <div class="card mb-4">
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label class="input-label text-xs">Cliente</label>
+          <input class="input-field w-44" type="text" placeholder="Mín. 3 caracteres" [(ngModel)]="filterClienteDraft" />
+        </div>
+        <div>
+          <label class="input-label text-xs">Vehículo</label>
+          <input class="input-field w-36" type="text" placeholder="Mín. 3 caracteres" [(ngModel)]="filterVehiculoDraft" />
+        </div>
+        <div>
+          <label class="input-label text-xs">Fecha Inicio</label>
+          <input class="input-field w-40" type="date" [(ngModel)]="filterFechaDraft" />
+        </div>
+        <div>
+          <label class="input-label text-xs">Estado</label>
+          <select class="input-field w-40" [(ngModel)]="filterEstadoDraft">
+            <option value="">Todos</option>
+            <option value="RESERVA_PENDIENTE">Pendiente</option>
+            <option value="RESERVA_CONFIRMADA">Confirmada</option>
+            <option value="ALQUILER_EN_CURSO">En curso</option>
+            <option value="ALQUILER_EN_DEMORA">En demora</option>
+            <option value="ALQUILER_ENTREGADO">Entregado</option>
+            <option value="ALQUILER_FINALIZADO">Finalizado</option>
+            <option value="RESERVA_CANCELADA">Cancelada</option>
+            <option value="RESERVA_EXPIRADA">Expirada</option>
+          </select>
+        </div>
+        <div>
+          <label class="input-label text-xs">Entrega</label>
+          <select class="input-field w-40" [(ngModel)]="filterEntregaDraft">
+            <option value="">Todos</option>
+            <option value="Sin entregar">Sin entregar</option>
+            <option value="Entregado OK">Entregado OK</option>
+            <option value="Entregado con daños">Con daños</option>
+            <option value="Entregado con retraso">Con retraso</option>
+          </select>
+        </div>
+        <div class="flex gap-2 items-end">
+          <button class="btn-primary flex items-center gap-1" (click)="aplicarFiltros()">
+            <span class="material-symbols-outlined text-lg">search</span>
+            Filtrar
+          </button>
+          <button class="btn-secondary flex items-center gap-1" (click)="resetFiltros()">
+            <span class="material-symbols-outlined text-lg">close</span>
+            Reset
+          </button>
+        </div>
       </div>
     </div>
 
@@ -79,12 +125,17 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
                     <button class="btn-sm btn-secondary" (click)="openDetail(r)" title="Ver detalle" aria-label="Ver detalle de reserva">
                       <span class="material-symbols-outlined text-sm">visibility</span>
                     </button>
-                    @if (r.estado === 'ALQUILER_EN_CURSO') {
-                      <button class="btn-sm btn-primary" (click)="openFinalizar(r)" title="Finalizar" aria-label="Finalizar reserva">
-                        <span class="material-symbols-outlined text-sm">check_circle</span>
+                    @if (r.estado === 'RESERVA_PENDIENTE') {
+                      <button class="btn-sm btn-primary" (click)="checkInReserva(r)" title="Check-in" aria-label="Check-in de reserva">
+                        <span class="material-symbols-outlined text-sm">login</span>
                       </button>
                     }
-                    @if (r.estado === 'RESERVA_PENDIENTE') {
+                    @if (r.estado === 'ALQUILER_EN_CURSO' || r.estado === 'ALQUILER_EN_DEMORA') {
+                      <button class="btn-sm btn-primary" (click)="openEntregar(r)" title="Entregar" aria-label="Entregar vehículo">
+                        <span class="material-symbols-outlined text-sm">assignment_return</span>
+                      </button>
+                    }
+                    @if (r.estado === 'RESERVA_PENDIENTE' || r.estado === 'RESERVA_CONFIRMADA') {
                       <button class="btn-sm btn-danger" (click)="cancelarReserva(r)" title="Cancelar" aria-label="Cancelar reserva">
                         <span class="material-symbols-outlined text-sm">cancel</span>
                       </button>
@@ -353,8 +404,8 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
       }
     </app-modal>
 
-    <!-- FINALIZAR MODAL -->
-    <app-modal [open]="showFinalizar()" title="Finalizar Reserva" (closed)="showFinalizar.set(false)">
+    <!-- ENTREGAR MODAL -->
+    <app-modal [open]="showEntregar()" title="Entregar Vehículo" (closed)="showEntregar.set(false)">
       <div class="space-y-4">
         <div>
           <label class="input-label" for="res-kilometraje-final">Kilometraje Final *</label>
@@ -425,8 +476,8 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
         }
 
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-          <button class="btn-secondary" (click)="showFinalizar.set(false)">Cancelar</button>
-          <button class="btn-primary" (click)="finalizarReserva()">Finalizar</button>
+          <button class="btn-secondary" (click)="showEntregar.set(false)">Cancelar</button>
+          <button class="btn-primary" (click)="entregarVehiculo()">Entregar</button>
         </div>
       </div>
     </app-modal>
@@ -449,14 +500,23 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   readonly step = signal(1);
   readonly showNewModal = signal(false);
   readonly showDetail = signal(false);
-  readonly showFinalizar = signal(false);
+  readonly showEntregar = signal(false);
   readonly selectedReserva = signal<Reserva | null>(null);
   readonly reparacionesDetalle = signal<Reparacion[]>([]);
-  readonly finalizarTarget = signal<Reserva | null>(null);
+  readonly entregarTarget = signal<Reserva | null>(null);
   readonly showCancelConfirm = signal(false);
   readonly cancelTargetId = signal<number | null>(null);
-  readonly filterDateIni = signal('');
-  readonly filterDateFin = signal('');
+  readonly filterClienteDraft = signal('');
+  readonly filterVehiculoDraft = signal('');
+  readonly filterFechaDraft = signal('');
+  readonly filterEstadoDraft = signal('');
+  readonly filterEntregaDraft = signal('');
+
+  readonly filterCliente = signal('');
+  readonly filterVehiculo = signal('');
+  readonly filterFecha = signal('');
+  readonly filterEstado = signal('');
+  readonly filterEntrega = signal('');
   readonly catalogoReparaciones = signal<CatalogoReparacion[]>([]);
   readonly holdState = signal<'idle' | 'held' | 'expired'>('idle');
   readonly holdTiempo = signal('');
@@ -508,15 +568,44 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   readonly loading = signal(true);
 
   readonly filteredReservas = computed(() => {
-    const ini = this.filterDateIni();
-    const fin = this.filterDateFin();
-    if (!ini && !fin) return this.reservas();
+    const c = this.filterCliente().toLowerCase();
+    const v = this.filterVehiculo().toLowerCase();
+    const f = this.filterFecha();
+    const e = this.filterEstado();
+    const en = this.filterEntrega();
+    if (!c && !v && !f && !e && !en) return this.reservas();
     return this.reservas().filter(r => {
-      if (ini && r.fechaInicio < ini) return false;
-      if (fin && r.fechaFin > fin) return false;
+      if (c && !r.nombreCliente.toLowerCase().includes(c)) return false;
+      if (v && !r.placa.toLowerCase().includes(v)) return false;
+      if (f && r.fechaInicio !== f) return false;
+      if (e && r.estado !== e) return false;
+      if (en && r.estadoEntrega !== en) return false;
       return true;
     });
   });
+
+  aplicarFiltros(): void {
+    const c = this.filterClienteDraft();
+    const v = this.filterVehiculoDraft();
+    this.filterCliente.set(c.length >= 3 ? c : '');
+    this.filterVehiculo.set(v.length >= 3 ? v : '');
+    this.filterFecha.set(this.filterFechaDraft());
+    this.filterEstado.set(this.filterEstadoDraft());
+    this.filterEntrega.set(this.filterEntregaDraft());
+  }
+
+  resetFiltros(): void {
+    this.filterClienteDraft.set('');
+    this.filterVehiculoDraft.set('');
+    this.filterFechaDraft.set('');
+    this.filterEstadoDraft.set('');
+    this.filterEntregaDraft.set('');
+    this.filterCliente.set('');
+    this.filterVehiculo.set('');
+    this.filterFecha.set('');
+    this.filterEstado.set('');
+    this.filterEntrega.set('');
+  }
 
   ngOnInit(): void {
     this.loadReservas();
@@ -680,12 +769,12 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.showDetail.set(true);
   }
 
-  openFinalizar(r: Reserva): void {
-    this.finalizarTarget.set(r);
+  openEntregar(r: Reserva): void {
+    this.entregarTarget.set(r);
     this.kilometrajeFin = r.kilometrajeInicio || 0;
     this.estadoEntrega = 'Entregado OK';
     this.reparaciones.set([]);
-    this.showFinalizar.set(true);
+    this.showEntregar.set(true);
   }
 
   agregarReparacion(): void {
@@ -772,8 +861,8 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     });
   }
 
-  finalizarReserva(): void {
-    const r = this.finalizarTarget();
+  entregarVehiculo(): void {
+    const r = this.entregarTarget();
     if (!r) return;
     if (r.kilometrajeInicio != null && this.kilometrajeFin < r.kilometrajeInicio) {
       this.toast.warning('El kilometraje final debe ser mayor o igual al inicial');
@@ -787,11 +876,21 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         return;
       }
     }
-    this.reservaService.finalizar(r.idReserva, this.kilometrajeFin, this.estadoEntrega,
+    this.reservaService.entregar(r.idReserva, this.kilometrajeFin, this.estadoEntrega,
       this.estadoEntrega === 'Entregado con daños' ? this.reparaciones() : []).subscribe({
       next: () => {
-        this.toast.success('Reserva finalizada');
-        this.showFinalizar.set(false);
+        this.toast.success('Vehículo entregado. Procese el pago en la sección Pagos');
+        this.showEntregar.set(false);
+        this.loadReservas();
+      },
+      error: (err) => this.toast.error(err.message)
+    });
+  }
+
+  checkInReserva(r: Reserva): void {
+    this.reservaService.checkIn(r.idReserva).subscribe({
+      next: () => {
+        this.toast.success('Check-in confirmado');
         this.loadReservas();
       },
       error: (err) => this.toast.error(err.message)

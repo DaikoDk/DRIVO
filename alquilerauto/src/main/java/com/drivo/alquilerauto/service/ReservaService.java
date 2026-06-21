@@ -35,9 +35,9 @@ public class ReservaService {
     private static final String CONFIRMADA = "RESERVA_CONFIRMADA";
     private static final String CANCELADA  = "RESERVA_CANCELADA";
     private static final String EXPIRADA   = "RESERVA_EXPIRADA";
-    private static final String EN_CURSO   = "ALQUILER_EN_CURSO";
-    private static final String EN_DEMORA  = "ALQUILER_EN_DEMORA";
-    private static final String ENTREGADO  = "ALQUILER_ENTREGADO";
+    static final String EN_CURSO   = "ALQUILER_EN_CURSO";
+    static final String EN_DEMORA  = "ALQUILER_EN_DEMORA";
+    static final String ENTREGADO  = "ALQUILER_ENTREGADO";
     private static final String FINALIZADO = "ALQUILER_FINALIZADO";
 
     private final ReservaRepository reservaRepository;
@@ -187,16 +187,8 @@ public class ReservaService {
         reserva.setEstadoEntrega("Sin entregar");
         reserva.setFechaCreacion(LocalDateTime.now());
 
-        boolean inicioInmediato = !request.fechaInicio().isAfter(LocalDate.now())
-                && (request.fechaInicio().isAfter(LocalDate.now()) || !request.horaInicio().isAfter(LocalTime.now()));
-        if (inicioInmediato) {
-            reserva.setEstado(est(EN_CURSO));
-            reserva.setFechaHoraInicioReal(LocalDateTime.now());
-            auto.setEstado("En proceso");
-        } else {
-            reserva.setEstado(est(CONFIRMADA));
-            auto.setEstado("Reservado");
-        }
+        reserva.setEstado(est(PENDIENTE));
+        auto.setEstado("Reservado");
 
         reserva = reservaRepository.save(reserva);
         autoRepository.save(auto);
@@ -226,6 +218,179 @@ public class ReservaService {
             auto.setEstado("En proceso");
             autoRepository.save(auto);
         }
+    }
+
+    @Transactional
+    public void autoDemorarVencidas() {
+        List<Reserva> enCurso = reservaRepository.findByEstado(EN_CURSO);
+        LocalDateTime now = LocalDateTime.now();
+        for (Reserva r : enCurso) {
+            LocalDateTime plannedEnd = LocalDateTime.of(r.getFechaFin(), r.getHoraFin());
+            if (now.isAfter(plannedEnd)) {
+                r.setEstado(est(EN_DEMORA));
+                r.setFechaHoraFinReal(now);
+                long horasRetraso = ChronoUnit.HOURS.between(plannedEnd, now);
+                long diasRetraso = (horasRetraso + 23) / 24;
+                BigDecimal mora = r.getAuto().getMoraPorDia().multiply(BigDecimal.valueOf(diasRetraso));
+                r.setMora(mora);
+                r.setTotal(r.getSubtotal().add(mora).add(r.getCostoReparaciones()));
+                reservaRepository.save(r);
+                log.info("Reserva #{} auto-demorada: {} horas de retraso, S/{} de mora", r.getIdReserva(), horasRetraso, mora);
+            }
+        }
+    }
+
+    public ReservaResponse confirmarCheckIn(Integer idReserva) {
+        Reserva reserva = findById(idReserva);
+        if (!PENDIENTE.equals(reserva.getEstado().getCodigo())) {
+            throw new BadRequestException("Solo se puede confirmar check-in de una reserva Pendiente");
+        }
+
+        LocalDateTime inicio = LocalDateTime.of(reserva.getFechaInicio(), reserva.getHoraInicio());
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime ventana = inicio.minusHours(24);
+
+        if (now.isBefore(ventana)) {
+            String msg = "El check-in solo puede realizarse hasta 24 horas antes del inicio "
+                    + "(inicio: " + reserva.getFechaInicio() + " " + reserva.getHoraInicio() + ")";
+            throw new BadRequestException(msg);
+        }
+
+        Auto auto = reserva.getAuto();
+        if (now.isBefore(inicio)) {
+            reserva.setEstado(est(CONFIRMADA));
+        } else {
+            reserva.setEstado(est(EN_CURSO));
+            reserva.setFechaHoraInicioReal(now);
+            reserva.setKilometrajeInicio(auto.getKilometrajeActual());
+            auto.setEstado("En proceso");
+            autoRepository.save(auto);
+        }
+
+        reservaRepository.save(reserva);
+        return reservaMapper.toResponse(reserva);
+    }
+
+    @Transactional
+    public void autoExpiracion() {
+        List<Reserva> pendientes = reservaRepository.findByEstado(PENDIENTE);
+        LocalDateTime now = LocalDateTime.now();
+        for (Reserva r : pendientes) {
+            LocalDateTime inicio = LocalDateTime.of(r.getFechaInicio(), r.getHoraInicio());
+            if (!now.isBefore(inicio)) {
+                r.setEstado(est(EXPIRADA));
+                Auto auto = r.getAuto();
+                boolean tieneOtras = reservaRepository.findByAutoIdAuto(auto.getIdAuto())
+                        .stream().anyMatch(otra -> PENDIENTE.equals(otra.getEstado().getCodigo())
+                                || CONFIRMADA.equals(otra.getEstado().getCodigo()));
+                if (!tieneOtras) {
+                    auto.setEstado("Disponible");
+                    autoRepository.save(auto);
+                }
+                reservaRepository.save(r);
+                log.info("Reserva #{} expirada por falta de check-in", r.getIdReserva());
+            }
+        }
+    }
+
+    public ReservaResponse entregar(Integer idReserva, ReservaFinalizarRequest request) {
+        Reserva reserva = findById(idReserva);
+        String estadoActual = reserva.getEstado().getCodigo();
+        if (!EN_CURSO.equals(estadoActual) && !EN_DEMORA.equals(estadoActual)) {
+            throw new BadRequestException("Solo se puede entregar una reserva En curso o En demora");
+        }
+        if (request.kilometrajeFin() < reserva.getKilometrajeInicio()) {
+            throw new BadRequestException("El kilometraje final no puede ser menor al kilometraje inicial");
+        }
+
+        Auto auto = reserva.getAuto();
+        LocalDateTime now = LocalDateTime.now();
+
+        // si no estaba en demora, calcular mora al entregar
+        if (!EN_DEMORA.equals(estadoActual)) {
+            LocalDateTime plannedEnd = LocalDateTime.of(reserva.getFechaFin(), reserva.getHoraFin());
+            if (now.isAfter(plannedEnd)) {
+                long horasRetraso = ChronoUnit.HOURS.between(plannedEnd, now);
+                long diasRetraso = (horasRetraso + 23) / 24;
+                BigDecimal mora = auto.getMoraPorDia().multiply(BigDecimal.valueOf(diasRetraso));
+                reserva.setMora(mora);
+            }
+        }
+
+        reserva.setFechaHoraFinReal(now);
+        reserva.setKilometrajeFin(request.kilometrajeFin());
+        reserva.setEstadoEntrega(request.estadoEntrega());
+        reserva.setObservacionesEntrega(request.observaciones());
+
+        BigDecimal costoReparaciones = reserva.getCostoReparaciones();
+        if (request.reparaciones() != null && !request.reparaciones().isEmpty()) {
+            costoReparaciones = BigDecimal.ZERO;
+            for (ReparacionItemRequest item : request.reparaciones()) {
+                Reparacion reparacion = new Reparacion();
+                reparacion.setReserva(reserva);
+                reparacion.setAuto(auto);
+                reparacion.setDescripcion(item.descripcion());
+                reparacion.setCosto(item.costo());
+                reparacion.setResponsable(item.responsable() != null ? item.responsable() : "Cliente");
+                reparacion.setEstado(item.estado() != null ? item.estado() : "Pendiente");
+                reparacion.setFechaReporte(now);
+                reparacion.setUsuarioReporte(request.usuario());
+                if (item.idCatalogoReparacion() != null) {
+                    CatalogoReparacion catalogo = catalogoReparacionRepository
+                            .findById(item.idCatalogoReparacion())
+                            .orElseThrow(() -> new ResourceNotFoundException("Catalogo no encontrado"));
+                    reparacion.setCatalogoReparacion(catalogo);
+                }
+                reparacionRepository.saveAndFlush(reparacion);
+                costoReparaciones = costoReparaciones.add(item.costo());
+            }
+        }
+        reserva.setCostoReparaciones(costoReparaciones);
+        reserva.setTotal(reserva.getSubtotal().add(reserva.getMora()).add(costoReparaciones));
+        reserva.setEstado(est(ENTREGADO));
+        reservaRepository.save(reserva);
+
+        // actualizar auto
+        HistorialKilometraje historial = new HistorialKilometraje();
+        historial.setAuto(auto);
+        historial.setReserva(reserva);
+        historial.setKilometrajeAnterior(auto.getKilometrajeActual());
+        historial.setKilometrajeNuevo(request.kilometrajeFin());
+        historial.setTipoRegistro("Reserva");
+        historial.setObservaciones(request.observaciones());
+        historial.setFechaRegistro(now);
+        historial.setUsuarioRegistro(request.usuario());
+        historialKmRepository.save(historial);
+        auto.setKilometrajeActual(request.kilometrajeFin());
+
+        boolean tienePendientes = request.reparaciones() != null &&
+                request.reparaciones().stream().anyMatch(r -> !"Completada".equals(r.estado()));
+        boolean tieneConfirmadas = reservaRepository.findByAutoIdAuto(auto.getIdAuto())
+                .stream().anyMatch(r -> CONFIRMADA.equals(r.getEstado().getCodigo()));
+        if (tienePendientes) {
+            auto.setEstado("En reparación");
+        } else if (tieneConfirmadas) {
+            auto.setEstado("Reservado");
+        } else {
+            auto.setEstado("Disponible");
+        }
+        autoRepository.save(auto);
+
+        return reservaMapper.toResponse(reserva);
+    }
+
+    public ReservaResponse finalizarPago(Integer idReserva) {
+        Reserva reserva = findById(idReserva);
+        if (!ENTREGADO.equals(reserva.getEstado().getCodigo())) {
+            throw new BadRequestException("La reserva debe estar en estado ALQUILER_ENTREGADO para procesar el pago");
+        }
+        reserva.setEstado(est(FINALIZADO));
+        reserva.setFechaFinalizacion(LocalDateTime.now());
+        org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) reserva.setUsuarioFinalizacion(auth.getName());
+        reservaRepository.save(reserva);
+        return reservaMapper.toResponse(reserva);
     }
 
     public ReservaResponse finalizar(Integer idReserva, ReservaFinalizarRequest request) {
@@ -325,17 +490,24 @@ public class ReservaService {
     public ReservaResponse cancelar(Integer idReserva) {
         Reserva reserva = findById(idReserva);
 
-        Auto auto = reserva.getAuto();
-        if (!PENDIENTE.equals(reserva.getEstado().getCodigo())) {
-            throw new BadRequestException("No se puede cancelar: la reserva no esta Pendiente");
+        String estado = reserva.getEstado().getCodigo();
+        if (!PENDIENTE.equals(estado) && !CONFIRMADA.equals(estado)) {
+            throw new BadRequestException("No se puede cancelar: la reserva debe estar Pendiente o Confirmada");
         }
 
+        Auto auto = reserva.getAuto();
         reserva.setEstado(est(CANCELADA));
         reserva.setFechaFinalizacion(LocalDateTime.now());
         reservaRepository.save(reserva);
 
-        auto.setEstado("Disponible");
-        autoRepository.save(auto);
+        boolean tieneOtras = reservaRepository.findByAutoIdAuto(auto.getIdAuto())
+                .stream().anyMatch(otra -> PENDIENTE.equals(otra.getEstado().getCodigo())
+                        || CONFIRMADA.equals(otra.getEstado().getCodigo())
+                        || EN_CURSO.equals(otra.getEstado().getCodigo()));
+        if (!tieneOtras) {
+            auto.setEstado("Disponible");
+            autoRepository.save(auto);
+        }
 
         return reservaMapper.toResponse(reserva);
     }
@@ -378,17 +550,24 @@ public class ReservaService {
                     "No puedes cancelar una reserva que no te pertenece");
         }
 
-        Auto auto = reserva.getAuto();
-        if (!PENDIENTE.equals(reserva.getEstado().getCodigo())) {
-            throw new BadRequestException("No se puede cancelar: la reserva no esta Pendiente");
+        String estado = reserva.getEstado().getCodigo();
+        if (!PENDIENTE.equals(estado) && !CONFIRMADA.equals(estado)) {
+            throw new BadRequestException("No se puede cancelar: la reserva debe estar Pendiente o Confirmada");
         }
 
+        Auto auto = reserva.getAuto();
         reserva.setEstado(est(CANCELADA));
         reserva.setFechaFinalizacion(LocalDateTime.now());
         reservaRepository.save(reserva);
 
-        auto.setEstado("Disponible");
-        autoRepository.save(auto);
+        boolean tieneOtras = reservaRepository.findByAutoIdAuto(auto.getIdAuto())
+                .stream().anyMatch(otra -> PENDIENTE.equals(otra.getEstado().getCodigo())
+                        || CONFIRMADA.equals(otra.getEstado().getCodigo())
+                        || EN_CURSO.equals(otra.getEstado().getCodigo()));
+        if (!tieneOtras) {
+            auto.setEstado("Disponible");
+            autoRepository.save(auto);
+        }
 
         return reservaMapper.toResponse(reserva);
     }

@@ -56,8 +56,24 @@ export class ReservaService {
     });
   }
 
+  entregar(id: number, kilometrajeFin: number, estadoEntrega: string, reparaciones?: { descripcion: string; costo: number; idCatalogoReparacion?: number; responsable?: string }[]): Observable<Reserva> {
+    return this.api.patchCustom<Reserva>(`/reservas/${id}/entregar`, {
+      kilometrajeFin,
+      estadoEntrega,
+      reparaciones: reparaciones || []
+    });
+  }
+
   cancelar(id: number): Observable<Reserva> {
     return this.api.patchCustom<Reserva>(`/reservas/${id}/cancelar`);
+  }
+
+  checkIn(id: number): Observable<Reserva> {
+    return this.api.patchCustom<Reserva>(`/reservas/${id}/checkin`);
+  }
+
+  finalizarPago(id: number): Observable<Reserva> {
+    return this.api.patchCustom<Reserva>(`/reservas/${id}/finalizar-pago`);
   }
 
   createDesdePortal(data: ReservaPortalFormData): Observable<Reserva> {

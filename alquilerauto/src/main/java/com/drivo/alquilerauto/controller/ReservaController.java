@@ -67,6 +67,29 @@ public class ReservaController {
         return ResponseEntity.ok(ApiResponse.ok(creada, "Reserva creada exitosamente"));
     }
 
+    @PatchMapping("/{id}/finalizar-pago")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ReservaResponse>> finalizarPago(@PathVariable Integer id) {
+        ReservaResponse finalizada = reservaService.finalizarPago(id);
+        return ResponseEntity.ok(ApiResponse.ok(finalizada, "Pago procesado y reserva finalizada exitosamente"));
+    }
+
+    @PatchMapping("/{id}/checkin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ReservaResponse>> checkin(@PathVariable Integer id) {
+        ReservaResponse checkin = reservaService.confirmarCheckIn(id);
+        return ResponseEntity.ok(ApiResponse.ok(checkin, "Check-in confirmado exitosamente"));
+    }
+
+    @PatchMapping("/{id}/entregar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ReservaResponse>> entregar(
+            @PathVariable Integer id,
+            @Valid @RequestBody ReservaFinalizarRequest request) {
+        ReservaResponse entregada = reservaService.entregar(id, request);
+        return ResponseEntity.ok(ApiResponse.ok(entregada, "Vehículo entregado. Procese el pago en la sección Pagos"));
+    }
+
     @PatchMapping("/{id}/finalizar")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ReservaResponse>> finalizar(

@@ -34,6 +34,6 @@ public class Mantenimiento {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal costo = BigDecimal.ZERO;
 
-    @Column(columnDefinition = "VARCHAR(MAX)")
+    @Lob
     private String detalle;
 }

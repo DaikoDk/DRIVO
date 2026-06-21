@@ -82,12 +82,13 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
             @Param("idAuto") Integer idAuto,
             @Param("fechaInicio") LocalDate fechaInicio);
 
-    @Query(value = "SELECT FORMAT(fechaFinalizacion, 'yyyy-MM') AS mes, " +
+    @Query(value = "SELECT CAST(YEAR(fechaFinalizacion) AS VARCHAR) + '-' + " +
+            "RIGHT('0' + CAST(MONTH(fechaFinalizacion) AS VARCHAR), 2) AS mes, " +
             "ISNULL(SUM(total), 0) AS monto " +
             "FROM tb_reserva " +
             "WHERE id_estado = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO') " +
-            "AND fechaFinalizacion >= DATEADD(MONTH, -5, DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)) " +
-            "GROUP BY FORMAT(fechaFinalizacion, 'yyyy-MM') " +
+            "AND fechaFinalizacion >= DATEADD(MONTH, -5, CAST(CONCAT(YEAR(GETDATE()), '-', MONTH(GETDATE()), '-01') AS DATE)) " +
+            "GROUP BY CAST(YEAR(fechaFinalizacion) AS VARCHAR) + '-' + RIGHT('0' + CAST(MONTH(fechaFinalizacion) AS VARCHAR), 2) " +
             "ORDER BY mes", nativeQuery = true)
     List<Object[]> findIngresosMensuales();
 }

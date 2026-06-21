@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, throwError, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 export interface AuthUser {
   token: string;
@@ -39,7 +40,7 @@ interface ApiResponse<T> {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly baseUrl = 'http://localhost:8080/api/auth';
+  private readonly baseUrl = `${environment.apiUrl}/auth`;
   readonly currentUser = signal<AuthUser | null>(null);
 
   constructor(private readonly http: HttpClient, private readonly router: Router) {
@@ -65,7 +66,7 @@ export class AuthService {
   }
 
   cambiarClave(claveActual: string, claveNueva: string): Observable<void> {
-    return this.http.patch<ApiResponse<null>>('http://localhost:8080/api/usuarios/cambiar-clave', {
+    return this.http.patch<ApiResponse<null>>(`${environment.apiUrl}/usuarios/cambiar-clave`, {
       claveActual,
       claveNueva
     }).pipe(

@@ -64,7 +64,7 @@ import { Configuracion } from '../../models';
                   <td class="px-4 py-3">
                     <span class="badge badge-info">{{ c.tipo || 'General' }}</span>
                   </td>
-                  <td class="px-4 py-3 text-slate-500 text-xs">{{ c.fechaActualizacion | date:'dd/MM/yy HH:mm' }}</td>
+                  <td class="px-4 py-3 text-slate-500 text-xs">{{ c.fechaActualizacion | date:'dd-MM-yyyy HH:mm' }}</td>
                   <td class="px-4 py-3 text-right">
                     <div class="flex items-center justify-end gap-2">
                       <button class="btn-sm btn-secondary" title="Editar" aria-label="Editar configuración" (click)="openEditModal(c)">

@@ -93,9 +93,9 @@ import { Reparacion, CatalogoReparacion, Reserva, Auto } from '../../models';
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <p class="font-medium text-slate-600 mb-1">Fechas</p>
-                        <p class="text-slate-700">Reporte: {{ r.fechaReporte | date:'dd/MM/yy HH:mm' }}</p>
-                        <p class="text-slate-700">Inicio: {{ r.fechaInicio ? (r.fechaInicio | date:'dd/MM/yy HH:mm') : 'Pendiente' }}</p>
-                        <p class="text-slate-700">Fin: {{ r.fechaFin ? (r.fechaFin | date:'dd/MM/yy HH:mm') : 'Pendiente' }}</p>
+                        <p class="text-slate-700">Reporte: {{ r.fechaReporte | date:'dd-MM-yyyy HH:mm' }}</p>
+                        <p class="text-slate-700">Inicio: {{ r.fechaInicio ? (r.fechaInicio | date:'dd-MM-yyyy HH:mm') : 'Pendiente' }}</p>
+                        <p class="text-slate-700">Fin: {{ r.fechaFin ? (r.fechaFin | date:'dd-MM-yyyy HH:mm') : 'Pendiente' }}</p>
                       </div>
                       <div>
                         <p class="font-medium text-slate-600 mb-1">Descripción Completa</p>

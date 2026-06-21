@@ -69,8 +69,8 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
                 <td class="px-4 py-3 text-slate-700">#{{ r.idReserva }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.nombreCliente }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.placa }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio | date:'dd/MM' }} {{ r.horaInicio }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd/MM' }} {{ r.horaFin }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio | date:'dd-MM-yyyy' }} {{ (r.horaInicio || '').slice(0, 5) }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.fechaFin | date:'dd-MM-yyyy' }} {{ (r.horaFin || '').slice(0, 5) }}</td>
                 <td class="px-4 py-3 font-medium text-slate-700">S/{{ r.total.toFixed(2) }}</td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estado" [label]="r.estado"></app-status-badge></td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estadoEntrega" [label]="r.estadoEntrega"></app-status-badge></td>
@@ -245,11 +245,11 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
             </div>
             <div>
               <p class="text-slate-500">Fecha/Hora Inicio</p>
-              <p class="font-medium text-slate-800">{{ selectedReserva()?.fechaInicio }} {{ selectedReserva()?.horaInicio }}</p>
+              <p class="font-medium text-slate-800">{{ selectedReserva()?.fechaInicio | date:'dd-MM-yyyy' }} {{ (selectedReserva()?.horaInicio || '').slice(0, 5) }}</p>
             </div>
             <div>
               <p class="text-slate-500">Fecha/Hora Fin</p>
-              <p class="font-medium text-slate-800">{{ selectedReserva()?.fechaFin }} {{ selectedReserva()?.horaFin }}</p>
+              <p class="font-medium text-slate-800">{{ selectedReserva()?.fechaFin | date:'dd-MM-yyyy' }} {{ (selectedReserva()?.horaFin || '').slice(0, 5) }}</p>
             </div>
             <div>
               <p class="text-slate-500">KM Inicial</p>
@@ -267,6 +267,26 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
               <p class="text-slate-500">Estado de Entrega</p>
               <app-status-badge [status]="selectedReserva()!.estadoEntrega" [label]="selectedReserva()!.estadoEntrega"></app-status-badge>
             </div>
+            @if (selectedReserva()?.fechaHoraInicioReal; as realInicio) {
+              <div>
+                <p class="text-slate-500">Inicio Real</p>
+                <p class="font-medium text-slate-800">{{ realInicio | date:'dd-MM-yyyy HH:mm' }}</p>
+              </div>
+            }
+            @if (selectedReserva()?.fechaHoraFinReal; as realFin) {
+              <div>
+                <p class="text-slate-500">Devolución Real</p>
+                <p class="font-medium text-slate-800">{{ realFin | date:'dd-MM-yyyy HH:mm' }}</p>
+              </div>
+            }
+            @if (selectedReserva(); as r) {
+              @if (demoraInfo(r); as d) {
+                <div>
+                  <p class="text-slate-500">Tiempo de demora</p>
+                  <p class="font-medium text-error">{{ d }}</p>
+                </div>
+              }
+            }
           </div>
 
           <div class="border-t border-slate-100 pt-3">
@@ -718,6 +738,17 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   protected get fechaFinValida(): boolean {
     if (!this.newData.fechaInicio || !this.newData.fechaFin) return true;
     return (this.newData.fechaInicio + ' ' + this.newData.horaInicio) < (this.newData.fechaFin + ' ' + this.newData.horaFin);
+  }
+
+  protected demoraInfo(r: Reserva): string | null {
+    if (!r.fechaHoraFinReal) return null;
+    const planned = new Date(`${r.fechaFin}T${r.horaFin}`);
+    const actual = new Date(r.fechaHoraFinReal);
+    if (actual <= planned) return null;
+    const min = Math.round((actual.getTime() - planned.getTime()) / 60000);
+    const h = Math.floor(min / 60), m = min % 60;
+    if (h >= 24) return `${Math.floor(h / 24)}d ${h % 24}h`;
+    return `${h}h ${m}m`;
   }
 
   createReserva(): void {

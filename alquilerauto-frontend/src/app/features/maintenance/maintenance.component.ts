@@ -76,8 +76,8 @@ import { Mantenimiento, Auto } from '../../models';
               <tr class="hover:bg-slate-50 group">
                 <td class="px-4 py-3 text-slate-700">#{{ m.idMantenimiento }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ m.auto?.placa }} - {{ m.auto?.modelo }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ m.fechaIngreso | date:'dd/MM/yy' }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ m.fechaSalida ? (m.fechaSalida | date:'dd/MM/yy') : 'En curso' }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ m.fechaIngreso | date:'dd-MM-yyyy' }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ m.fechaSalida ? (m.fechaSalida | date:'dd-MM-yyyy') : 'En curso' }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ m.tipo }}</td>
                 <td class="px-4 py-3 font-medium text-slate-700">S/{{ m.costo.toFixed(2) }}</td>
                 <td class="px-4 py-3 text-slate-500 max-w-[200px] truncate">{{ m.detalle || '-' }}</td>

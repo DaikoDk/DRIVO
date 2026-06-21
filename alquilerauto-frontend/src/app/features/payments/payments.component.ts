@@ -70,7 +70,7 @@ import { Pago, Reserva } from '../../models';
                   <td class="px-4 py-3">
                     <span class="badge" [class.badge-info]="p.metodoPago === 'Tarjeta'" [class.badge-success]="p.metodoPago === 'Efectivo'" [class.badge-neutral]="p.metodoPago === 'Transferencia'">{{ p.metodoPago }}</span>
                   </td>
-                  <td class="px-4 py-3 text-slate-500 text-xs">{{ p.fechaPago | date:'dd/MM/yy HH:mm' }}</td>
+                  <td class="px-4 py-3 text-slate-500 text-xs">{{ p.fechaPago | date:'dd-MM-yyyy HH:mm' }}</td>
                 </tr>
               }
             </tbody>

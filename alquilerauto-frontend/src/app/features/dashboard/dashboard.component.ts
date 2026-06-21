@@ -46,7 +46,7 @@ import { ToastService } from '../../core/services/toast.service';
                 <span class="material-symbols-outlined text-warning">engineering</span>
                 <div>
                   <p class="text-sm font-medium text-slate-700">{{ v.placa }} - {{ v.modelo }}</p>
-                  <p class="text-xs text-slate-500">{{ v.tipo }} | Ingreso: {{ v.fechaIngreso | date:'dd/MM/yy' }}</p>
+                  <p class="text-xs text-slate-500">{{ v.tipo }} | Ingreso: {{ v.fechaIngreso | date:'dd-MM-yyyy' }}</p>
                 </div>
               </div>
               <span class="badge badge-warning">En curso</span>
@@ -80,9 +80,9 @@ import { ToastService } from '../../core/services/toast.service';
                 <td class="px-4 py-3 text-slate-700">#{{ r.idReserva }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.cliente }}</td>
                 <td class="px-4 py-3 text-slate-700">{{ r.placa }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.horaInicio }}</td>
-                <td class="px-4 py-3 text-slate-700">{{ r.horaFin }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ r.fechaInicio | date:'dd-MM-yyyy' }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ (r.horaInicio || '').slice(0, 5) }}</td>
+                <td class="px-4 py-3 text-slate-700">{{ (r.horaFin || '').slice(0, 5) }}</td>
                 <td class="px-4 py-3"><app-status-badge [status]="r.estado" [label]="r.estado"></app-status-badge></td>
               </tr>
             }

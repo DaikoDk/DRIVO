@@ -125,12 +125,17 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
                     <button class="btn-sm btn-secondary" (click)="openDetail(r)" title="Ver detalle" aria-label="Ver detalle de reserva">
                       <span class="material-symbols-outlined text-sm">visibility</span>
                     </button>
+                    @if (r.estado === 'RESERVA_PENDIENTE') {
+                      <button class="btn-sm btn-primary" (click)="checkInReserva(r)" title="Check-in" aria-label="Check-in de reserva">
+                        <span class="material-symbols-outlined text-sm">login</span>
+                      </button>
+                    }
                     @if (r.estado === 'ALQUILER_EN_CURSO' || r.estado === 'ALQUILER_EN_DEMORA') {
                       <button class="btn-sm btn-primary" (click)="openEntregar(r)" title="Entregar" aria-label="Entregar vehículo">
                         <span class="material-symbols-outlined text-sm">assignment_return</span>
                       </button>
                     }
-                    @if (r.estado === 'RESERVA_PENDIENTE') {
+                    @if (r.estado === 'RESERVA_PENDIENTE' || r.estado === 'RESERVA_CONFIRMADA') {
                       <button class="btn-sm btn-danger" (click)="cancelarReserva(r)" title="Cancelar" aria-label="Cancelar reserva">
                         <span class="material-symbols-outlined text-sm">cancel</span>
                       </button>
@@ -876,6 +881,16 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       next: () => {
         this.toast.success('Vehículo entregado. Procese el pago en la sección Pagos');
         this.showEntregar.set(false);
+        this.loadReservas();
+      },
+      error: (err) => this.toast.error(err.message)
+    });
+  }
+
+  checkInReserva(r: Reserva): void {
+    this.reservaService.checkIn(r.idReserva).subscribe({
+      next: () => {
+        this.toast.success('Check-in confirmado');
         this.loadReservas();
       },
       error: (err) => this.toast.error(err.message)

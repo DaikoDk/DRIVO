@@ -187,16 +187,8 @@ public class ReservaService {
         reserva.setEstadoEntrega("Sin entregar");
         reserva.setFechaCreacion(LocalDateTime.now());
 
-        boolean inicioInmediato = !request.fechaInicio().isAfter(LocalDate.now())
-                && (request.fechaInicio().isAfter(LocalDate.now()) || !request.horaInicio().isAfter(LocalTime.now()));
-        if (inicioInmediato) {
-            reserva.setEstado(est(EN_CURSO));
-            reserva.setFechaHoraInicioReal(LocalDateTime.now());
-            auto.setEstado("En proceso");
-        } else {
-            reserva.setEstado(est(CONFIRMADA));
-            auto.setEstado("Reservado");
-        }
+        reserva.setEstado(est(PENDIENTE));
+        auto.setEstado("Reservado");
 
         reserva = reservaRepository.save(reserva);
         autoRepository.save(auto);
@@ -244,6 +236,59 @@ public class ReservaService {
                 r.setTotal(r.getSubtotal().add(mora).add(r.getCostoReparaciones()));
                 reservaRepository.save(r);
                 log.info("Reserva #{} auto-demorada: {} horas de retraso, S/{} de mora", r.getIdReserva(), horasRetraso, mora);
+            }
+        }
+    }
+
+    public ReservaResponse confirmarCheckIn(Integer idReserva) {
+        Reserva reserva = findById(idReserva);
+        if (!PENDIENTE.equals(reserva.getEstado().getCodigo())) {
+            throw new BadRequestException("Solo se puede confirmar check-in de una reserva Pendiente");
+        }
+
+        LocalDateTime inicio = LocalDateTime.of(reserva.getFechaInicio(), reserva.getHoraInicio());
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime ventana = inicio.minusHours(24);
+
+        if (now.isBefore(ventana)) {
+            String msg = "El check-in solo puede realizarse hasta 24 horas antes del inicio "
+                    + "(inicio: " + reserva.getFechaInicio() + " " + reserva.getHoraInicio() + ")";
+            throw new BadRequestException(msg);
+        }
+
+        Auto auto = reserva.getAuto();
+        if (now.isBefore(inicio)) {
+            reserva.setEstado(est(CONFIRMADA));
+        } else {
+            reserva.setEstado(est(EN_CURSO));
+            reserva.setFechaHoraInicioReal(now);
+            reserva.setKilometrajeInicio(auto.getKilometrajeActual());
+            auto.setEstado("En proceso");
+            autoRepository.save(auto);
+        }
+
+        reservaRepository.save(reserva);
+        return reservaMapper.toResponse(reserva);
+    }
+
+    @Transactional
+    public void autoExpiracion() {
+        List<Reserva> pendientes = reservaRepository.findByEstado(PENDIENTE);
+        LocalDateTime now = LocalDateTime.now();
+        for (Reserva r : pendientes) {
+            LocalDateTime inicio = LocalDateTime.of(r.getFechaInicio(), r.getHoraInicio());
+            if (!now.isBefore(inicio)) {
+                r.setEstado(est(EXPIRADA));
+                Auto auto = r.getAuto();
+                boolean tieneOtras = reservaRepository.findByAutoIdAuto(auto.getIdAuto())
+                        .stream().anyMatch(otra -> PENDIENTE.equals(otra.getEstado().getCodigo())
+                                || CONFIRMADA.equals(otra.getEstado().getCodigo()));
+                if (!tieneOtras) {
+                    auto.setEstado("Disponible");
+                    autoRepository.save(auto);
+                }
+                reservaRepository.save(r);
+                log.info("Reserva #{} expirada por falta de check-in", r.getIdReserva());
             }
         }
     }
@@ -445,17 +490,24 @@ public class ReservaService {
     public ReservaResponse cancelar(Integer idReserva) {
         Reserva reserva = findById(idReserva);
 
-        Auto auto = reserva.getAuto();
-        if (!PENDIENTE.equals(reserva.getEstado().getCodigo())) {
-            throw new BadRequestException("No se puede cancelar: la reserva no esta Pendiente");
+        String estado = reserva.getEstado().getCodigo();
+        if (!PENDIENTE.equals(estado) && !CONFIRMADA.equals(estado)) {
+            throw new BadRequestException("No se puede cancelar: la reserva debe estar Pendiente o Confirmada");
         }
 
+        Auto auto = reserva.getAuto();
         reserva.setEstado(est(CANCELADA));
         reserva.setFechaFinalizacion(LocalDateTime.now());
         reservaRepository.save(reserva);
 
-        auto.setEstado("Disponible");
-        autoRepository.save(auto);
+        boolean tieneOtras = reservaRepository.findByAutoIdAuto(auto.getIdAuto())
+                .stream().anyMatch(otra -> PENDIENTE.equals(otra.getEstado().getCodigo())
+                        || CONFIRMADA.equals(otra.getEstado().getCodigo())
+                        || EN_CURSO.equals(otra.getEstado().getCodigo()));
+        if (!tieneOtras) {
+            auto.setEstado("Disponible");
+            autoRepository.save(auto);
+        }
 
         return reservaMapper.toResponse(reserva);
     }
@@ -498,17 +550,24 @@ public class ReservaService {
                     "No puedes cancelar una reserva que no te pertenece");
         }
 
-        Auto auto = reserva.getAuto();
-        if (!PENDIENTE.equals(reserva.getEstado().getCodigo())) {
-            throw new BadRequestException("No se puede cancelar: la reserva no esta Pendiente");
+        String estado = reserva.getEstado().getCodigo();
+        if (!PENDIENTE.equals(estado) && !CONFIRMADA.equals(estado)) {
+            throw new BadRequestException("No se puede cancelar: la reserva debe estar Pendiente o Confirmada");
         }
 
+        Auto auto = reserva.getAuto();
         reserva.setEstado(est(CANCELADA));
         reserva.setFechaFinalizacion(LocalDateTime.now());
         reservaRepository.save(reserva);
 
-        auto.setEstado("Disponible");
-        autoRepository.save(auto);
+        boolean tieneOtras = reservaRepository.findByAutoIdAuto(auto.getIdAuto())
+                .stream().anyMatch(otra -> PENDIENTE.equals(otra.getEstado().getCodigo())
+                        || CONFIRMADA.equals(otra.getEstado().getCodigo())
+                        || EN_CURSO.equals(otra.getEstado().getCodigo()));
+        if (!tieneOtras) {
+            auto.setEstado("Disponible");
+            autoRepository.save(auto);
+        }
 
         return reservaMapper.toResponse(reserva);
     }

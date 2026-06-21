@@ -24,6 +24,9 @@ public interface AutoRepository extends JpaRepository<Auto, Integer> {
     @EntityGraph(attributePaths = {"marca", "modelo"})
     List<Auto> findByActivoTrueAndEstadoIn(List<String> estados);
 
+    @EntityGraph(attributePaths = {"marca", "modelo"})
+    List<Auto> findByActivoTrueAndEstadoNot(String estado);
+
     Optional<Auto> findByPlaca(String placa);
 
     boolean existsByPlaca(String placa);

@@ -143,11 +143,11 @@ import { Auto } from '../../../models';
                       <span class="text-lg font-bold text-amber-600 font-mono">{{ tiempoRestante() }}</span>
                     </div>
                     @if (showBufferWarning()) {
-                      <div class="p-3 bg-red-100 border border-red-200 rounded-lg space-y-3">
-                        <p class="text-xs text-red-700 font-medium">⚠️ {{ bufferMensaje() }}</p>
-                        <label class="flex items-center gap-2 text-xs text-red-800 cursor-pointer">
-                          <input type="checkbox" [ngModel]="bufferAcepto()" (change)="bufferAcepto.set(!bufferAcepto())" class="rounded" />
-                          Acepto los riesgos
+                      <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
+                        <p class="text-xs text-amber-800 font-medium">🕐 {{ bufferMensaje() }}</p>
+                        <label class="flex items-start gap-2 text-xs text-amber-700 cursor-pointer">
+                          <input type="checkbox" [ngModel]="bufferAcepto()" (change)="bufferAcepto.set(!bufferAcepto())" class="mt-0.5 rounded" />
+                          Entiendo que el vehiculo podria no estar listo y acepto que me asignen otro similar
                         </label>
                         <div class="flex items-center justify-between gap-2">
                           <button class="text-xs text-slate-500 hover:text-slate-700 font-medium" (click)="cancelarBuffer()">Cancelar</button>

@@ -130,7 +130,7 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
             <select class="input-field" id="res-vehiculo" [(ngModel)]="newData.idAuto">
               <option [ngValue]="0" disabled>Seleccionar...</option>
               @for (a of vehiculosDisponibles(); track a.idAuto) {
-                <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }} (S/{{ a.precioPorDia }}/día)</option>
+                <option [ngValue]="a.idAuto">{{ a.placa }} - {{ a.marca }} {{ a.modelo }} (S/{{ a.precioPorDia }}/día) [{{ a.estado }}]</option>
               }
             </select>
             @if (holdState() === 'held') {
@@ -201,11 +201,11 @@ import { Reserva, Cliente, Auto, CatalogoReparacion, Reparacion } from '../../mo
               </div>
             </div>
             @if (showBufferWarning()) {
-              <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg space-y-3">
-                <p class="text-sm text-red-700 font-medium">⚠️ {{ bufferMensaje() }}</p>
-                <label class="flex items-center gap-2 text-sm text-red-800 cursor-pointer">
-                  <input type="checkbox" [ngModel]="bufferAcepto()" (change)="bufferAcepto.set(!bufferAcepto())" class="rounded" />
-                  Acepto los riesgos
+              <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
+                <p class="text-sm text-amber-800 font-medium">🕐 {{ bufferMensaje() }}</p>
+                <label class="flex items-start gap-2 text-sm text-amber-700 cursor-pointer">
+                  <input type="checkbox" [ngModel]="bufferAcepto()" (change)="bufferAcepto.set(!bufferAcepto())" class="mt-0.5 rounded" />
+                  Entiendo que el vehiculo podria no estar listo y acepto que asignen otro similar
                 </label>
                 <div class="flex items-center justify-between gap-2">
                   <button class="btn-secondary" (click)="cancelarBuffer()">Atrás</button>
@@ -501,7 +501,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       next: (d) => this.clientes.set(d),
       error: () => this.toast.error('Error al cargar clientes')
     });
-    this.autoService.getDisponibles().subscribe({
+    this.autoService.getBookables().subscribe({
       next: (d) => this.vehiculosDisponibles.set(d),
       error: () => this.toast.error('Error al cargar vehiculos')
     });
@@ -555,7 +555,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.holdTiempo.set('');
     this.pararHoldTimer();
     this.cancelarBuffer();
-    this.autoService.getDisponibles().subscribe({
+    this.autoService.getBookables().subscribe({
       next: (d) => this.vehiculosDisponibles.set(d),
       error: () => this.toast.error('Error al cargar vehiculos')
     });
@@ -568,20 +568,65 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.showNewModal.set(false);
   }
 
+  private verificarBufferYAvanzar(): void {
+    const fechaBase = this.newData.fechaInicio || (() => {
+      const m = new Date(); m.setDate(m.getDate() + 1); return m.toISOString().split('T')[0];
+    })();
+    const horaBase = this.newData.horaInicio || '08:00';
+    if (!this.newData.fechaInicio) this.newData.fechaInicio = fechaBase;
+    if (!this.newData.horaInicio) this.newData.horaInicio = horaBase;
+    if (!this.newData.fechaFin) {
+      const f = new Date(fechaBase); f.setDate(f.getDate() + 1);
+      this.newData.fechaFin = f.toISOString().split('T')[0];
+      this.newData.horaFin = '08:00';
+    }
+
+    this.reservaService.bufferCheck(this.newData.idAuto, this.newData.fechaInicio, this.newData.horaInicio).subscribe({
+      next: (res) => {
+        if (res.riesgo && res.fechaFinAnterior && res.horaFinAnterior) {
+          const finAnterior = new Date(`${res.fechaFinAnterior.slice(0,10)}T${res.horaFinAnterior.slice(0,5)}`);
+          const inicioSeguro = new Date(finAnterior.getTime() + 24 * 60 * 60 * 1000);
+          this.newData.fechaInicio = inicioSeguro.toISOString().split('T')[0];
+          this.newData.horaInicio = `${String(inicioSeguro.getHours()).padStart(2, '0')}:00`;
+          const fin = new Date(inicioSeguro);
+          fin.setDate(fin.getDate() + 1);
+          this.newData.fechaFin = fin.toISOString().split('T')[0];
+          this.newData.horaFin = '08:00';
+
+          this.bufferMensaje.set(res.mensaje!);
+          this.bufferAcepto.set(false);
+          this.bufferTimer.set(10);
+          this.pararBufferTimer();
+          this.bufferInterval = setInterval(() => {
+            this.bufferTimer.update(v => { if (v <= 1) { this.pararBufferTimer(); return 0; } return v - 1; });
+          }, 1000);
+          this.showBufferWarning.set(true);
+        }
+        this.step.set(3);
+      },
+      error: () => this.step.set(3)
+    });
+  }
+
   goToStep3(): void {
     if (!this.newData.idAuto) return;
     if (this.holdState() === 'held') {
-      this.step.set(3);
+      this.verificarBufferYAvanzar();
       return;
     }
-    this.autoService.hold(this.newData.idAuto).subscribe({
-      next: (res) => {
-        this.holdState.set('held');
-        this.iniciarHoldTimer(res.fechaExpiracion);
-        this.step.set(3);
-      },
-      error: (err) => this.toast.error(err.message)
-    });
+    const auto = this.vehiculosDisponibles().find(a => a.idAuto === this.newData.idAuto);
+    if (auto && auto.estado === 'Disponible') {
+      this.autoService.hold(this.newData.idAuto).subscribe({
+        next: (res) => {
+          this.holdState.set('held');
+          this.iniciarHoldTimer(res.fechaExpiracion);
+          this.verificarBufferYAvanzar();
+        },
+        error: (err) => this.toast.error(err.message)
+      });
+    } else {
+      this.verificarBufferYAvanzar();
+    }
   }
 
   cancelHold(): void {
@@ -631,13 +676,18 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     this.bufferTimer.set(10);
   }
 
+  private fmtDate(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   seleccionarDuracion(dias: number): void {
-    const manana = new Date();
-    manana.setDate(manana.getDate() + 1);
-    this.newData.fechaInicio = manana.toISOString().split('T')[0];
-    const fin = new Date(manana);
+    const base = this.newData.fechaInicio
+      ? (() => { const p = this.newData.fechaInicio.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); })()
+      : (() => { const m = new Date(); m.setDate(m.getDate() + 1); return m; })();
+    this.newData.fechaInicio = this.fmtDate(base);
+    const fin = new Date(base);
     fin.setDate(fin.getDate() + dias);
-    this.newData.fechaFin = fin.toISOString().split('T')[0];
+    this.newData.fechaFin = this.fmtDate(fin);
     this.newData.horaInicio = '08:00';
     this.newData.horaFin = '08:00';
     this.duracionSeleccionada.set(dias);
@@ -659,29 +709,7 @@ export class ReservationsComponent implements OnInit, OnDestroy {
       return;
     }
     if (!this.newData.horaInicio) this.newData.horaInicio = '08:00';
-    if (this.showBufferWarning()) return;
-    this.reservaService.bufferCheck(this.newData.idAuto, this.newData.fechaInicio, this.newData.horaInicio).subscribe({
-      next: (res) => {
-        console.log('bufferCheck:', res);
-        if (res.riesgo && res.fechaFinAnterior && res.horaFinAnterior) {
-          const finAnterior = new Date(`${res.fechaFinAnterior}T${res.horaFinAnterior}`);
-          const inicioSeguro = new Date(finAnterior.getTime() + 24 * 60 * 60 * 1000);
-          this.newData.fechaInicio = inicioSeguro.toISOString().split('T')[0];
-          this.newData.horaInicio = res.horaFinAnterior;
-          this.bufferMensaje.set(res.mensaje!);
-          this.bufferAcepto.set(false);
-          this.bufferTimer.set(10);
-          this.pararBufferTimer();
-          this.bufferInterval = setInterval(() => {
-            this.bufferTimer.update(v => { if (v <= 1) { this.pararBufferTimer(); return 0; } return v - 1; });
-          }, 1000);
-          this.showBufferWarning.set(true);
-        } else {
-          this.doCreate();
-        }
-      },
-      error: () => this.doCreate()
-    });
+    this.doCreate();
   }
 
   doCreate(): void {

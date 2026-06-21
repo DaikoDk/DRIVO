@@ -47,6 +47,12 @@ public class AutoService {
     }
 
     @Transactional(readOnly = true)
+    public List<AutoResponse> findBookables() {
+        return autoMapper.toResponseList(
+                autoRepository.findByActivoTrueAndEstadoNot("En reparación"));
+    }
+
+    @Transactional(readOnly = true)
     public List<AutoResponse> findDisponiblesEnRango(LocalDate fechaInicio, LocalDate fechaFin) {
         return autoMapper.toResponseList(autoRepository.findDisponiblesEnRango(fechaInicio, fechaFin));
     }

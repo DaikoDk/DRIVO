@@ -118,31 +118,21 @@ export class SidebarComponent implements OnDestroy {
     cancelAnimationFrame(this.animFrameId);
     this.animFrameId = 0;
 
-    if (this.isCollapsed()) {
-      // Expand: animate 64 -> 280
-      const from = aside.offsetWidth;
-      aside.style.width = from + 'px';
-      this.isCollapsed.set(false);
+    const from = aside.offsetWidth;
+    aside.style.width = from + 'px';
+    this.isCollapsed.set(!this.isCollapsed());
 
-      const to = 280, duration = 200, start = performance.now();
-      const step = (now: number) => {
-        const t = Math.min((now - start) / duration, 1);
-        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-        aside.style.width = (from + (to - from) * eased) + 'px';
-
-        if (t < 1) {
-          this.animFrameId = requestAnimationFrame(step);
-        } else {
-          aside.style.width = '';
-          this.animFrameId = 0;
-        }
-      };
-      this.animFrameId = requestAnimationFrame(step);
-    } else {
-      // Collapse: instant snap
-      aside.style.width = '';
-      this.isCollapsed.set(true);
-    }
+    const to = this.isCollapsed() ? 64 : 280;
+    const duration = 200;
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      aside.style.width = (from + (to - from) * eased) + 'px';
+      if (t < 1) this.animFrameId = requestAnimationFrame(step);
+      else { aside.style.width = ''; this.animFrameId = 0; }
+    };
+    this.animFrameId = requestAnimationFrame(step);
   }
 
   readonly navItems: NavItem[] = [

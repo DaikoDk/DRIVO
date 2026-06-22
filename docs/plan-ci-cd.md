@@ -13,10 +13,9 @@ Automatizar la construcción, pruebas y despliegue del proyecto DRIVO Rent-a-Car
  │  Compile │ →  │   Test   │ →  │  Build   │ →  │  Deploy  │
  └──────────┘    └──────────┘    └──────────┘    └──────────┘
    Backend          Backend         Backend        Frontend
-   mvn compile      mvn test        mvn package    (Vercel)
+   mvn compile      mvn test        mvn package    (Render Static Site)
    Frontend         (H2 profile)    Frontend       Backend
-   npm install      Frontend        ng build       (Railway)
-   npm run build    npm run test    --prod
+   pnpm install     Frontend        pnpm build     (Render Web Service)
 ```
 
 ---
@@ -51,9 +50,9 @@ Automatizar la construcción, pruebas y despliegue del proyecto DRIVO Rent-a-Car
 
 | Componente | Plataforma | Método |
 |---|---|---|
-| Frontend (Angular) | Vercel | Conexión directa al repositorio GitHub, deploy automático en cada push a `main` |
-| Backend (Spring Boot) | Railway | Dockerfile o buildpack automático desde el repositorio |
-| Base de datos | SQL Server en Docker | `docker-compose up -d` para entorno local |
+| Frontend (Angular) | Render Static Site | Conexión directa al repositorio GitHub, build con `pnpm build --configuration=render`, deploy automático en cada push a la rama de despliegue |
+| Backend (Spring Boot) | Render Web Service | Dockerfile automático desde el repositorio, perfil `render` con H2 en memoria |
+| Base de datos | H2 en memoria (Render) / SQL Server Docker (local) | `application-render.yaml` (H2) o `docker-compose up -d` (SQL Server) |
 
 ### Despliegue con Docker
 
@@ -67,11 +66,11 @@ El proyecto incluye Dockerfiles para contenerizar el stack completo:
 
 ```bash
 # Despliegue completo con un solo comando
-docker-compose up -d
+docker compose up -d --build
 # Servicios disponibles:
-#   Frontend → http://localhost:4200
+#   Frontend → http://localhost:80
 #   Backend  → http://localhost:8080
-#   SQL Server → localhost:1433
+#   SQL Server → localhost:1434
 ```
 
 ---
@@ -84,7 +83,7 @@ docker-compose up -d
 | **Docker / Docker Compose** | Contenedores de SQL Server 2022, backend Spring Boot y frontend Nginx para desarrollo y despliegue. |
 | **H2 Database** | Base de datos en memoria para pruebas automatizadas (MODE=MSSQLServer). |
 | **Maven Wrapper** (`mvnw`) | Gestión de dependencias y build del backend sin requerir Maven instalado. |
-| **npm / pnpm** | Gestión de paquetes del frontend Angular. |
+| **npm / pnpm** | Gestión de paquetes del frontend Angular. pnpm 10 para build, corepack para activación. |
 | **Bruno CLI** | Ejecución de pruebas de integración API desde línea de comandos. |
 
 ---

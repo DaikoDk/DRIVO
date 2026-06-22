@@ -9,7 +9,6 @@ import java.time.LocalDate;
 
 public record LicenciaRequest(
 
-        @NotBlank(message = "El número de licencia es obligatorio")
         String numeroLicencia,
 
         @NotBlank(message = "La categoría de licencia es obligatoria")

@@ -46,13 +46,13 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
            "WHERE r.estado.codigo IN (:codigos)")
     List<Reserva> findByEstadoInWithDetails(@Param("codigos") List<String> codigos);
 
-    @Query(value = "SELECT COUNT(*) FROM tb_reserva WHERE CAST(fechaCreacion AS DATE) = CAST(GETDATE() AS DATE)", nativeQuery = true)
-    long countReservasHoy();
+    default long countReservasHoy() {
+        return findReservasHoy().size();
+    }
 
-    @Query(value = "SELECT ISNULL(SUM(total), 0) FROM tb_reserva WHERE id_estado = " +
-           "(SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO') " +
-           "AND MONTH(fechaFinalizacion) = MONTH(GETDATE()) AND YEAR(fechaFinalizacion) = YEAR(GETDATE())", nativeQuery = true)
-    java.math.BigDecimal sumIngresosMesActual();
+    @Query("SELECT COALESCE(SUM(r.total), 0) FROM Reserva r WHERE r.estado.codigo = 'ALQUILER_FINALIZADO' " +
+           "AND r.fechaFinalizacion >= :inicioMes AND r.fechaFinalizacion < :inicioMesSiguiente")
+    java.math.BigDecimal sumIngresosMesActual(@Param("inicioMes") LocalDateTime inicioMes, @Param("inicioMesSiguiente") LocalDateTime inicioMesSiguiente);
 
     @Query("SELECT r FROM Reserva r WHERE r.auto.idAuto = :idAuto " +
             "AND r.estado.codigo IN ('RESERVA_PENDIENTE', 'RESERVA_CONFIRMADA', 'ALQUILER_EN_CURSO') " +
@@ -82,13 +82,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer> {
             @Param("idAuto") Integer idAuto,
             @Param("fechaInicio") LocalDate fechaInicio);
 
-    @Query(value = "SELECT CAST(YEAR(fechaFinalizacion) AS VARCHAR) + '-' + " +
-            "RIGHT('0' + CAST(MONTH(fechaFinalizacion) AS VARCHAR), 2) AS mes, " +
-            "ISNULL(SUM(total), 0) AS monto " +
-            "FROM tb_reserva " +
-            "WHERE id_estado = (SELECT id_estado FROM tb_estado WHERE entidad = 'RESERVA' AND codigo = 'ALQUILER_FINALIZADO') " +
-            "AND fechaFinalizacion >= DATEADD(MONTH, -5, CAST(CONCAT(YEAR(GETDATE()), '-', MONTH(GETDATE()), '-01') AS DATE)) " +
-            "GROUP BY CAST(YEAR(fechaFinalizacion) AS VARCHAR) + '-' + RIGHT('0' + CAST(MONTH(fechaFinalizacion) AS VARCHAR), 2) " +
-            "ORDER BY mes", nativeQuery = true)
-    List<Object[]> findIngresosMensuales();
+    @Query("SELECT r FROM Reserva r WHERE r.estado.codigo = 'ALQUILER_FINALIZADO' " +
+           "AND r.fechaFinalizacion >= :desde ORDER BY r.fechaFinalizacion")
+    List<Reserva> findFinalizadasDesde(@Param("desde") LocalDateTime desde);
 }

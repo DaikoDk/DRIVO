@@ -4,9 +4,12 @@
 
 | Elemento | Valor |
 |---|---|
-| URL Frontend | http://localhost:4200 |
-| URL Backend API | http://localhost:8080 |
-| H2 Console | http://localhost:8080/h2-console |
+| URL Frontend (local) | http://localhost |
+| URL Frontend (producción) | https://drivo-1-lsbr.onrender.com |
+| URL Backend API (local) | http://localhost:8080 |
+| URL Backend API (producción) | https://drivo-8ti4.onrender.com |
+| H2 Console (local) | http://localhost:8080/h2-console |
+| H2 Console (producción) | https://drivo-8ti4.onrender.com/h2-console |
 
 ### Credenciales
 

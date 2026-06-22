@@ -15,8 +15,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +47,9 @@ public class DashboardService {
         long reservasActivas = reservaRepository.findByEstadoInWithDetails(
                 List.of("RESERVA_PENDIENTE", "RESERVA_CONFIRMADA", "ALQUILER_EN_CURSO")).size();
         long reservasHoy = reservaRepository.countReservasHoy();
-        BigDecimal ingresosMes = reservaRepository.sumIngresosMesActual();
+        BigDecimal ingresosMes = reservaRepository.sumIngresosMesActual(
+                LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0),
+                LocalDateTime.now().plusMonths(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0));
 
         return new DashboardResponse(totalAutos, autosDisponibles, autosAlquilados,
                 autosMantenimiento, totalClientes, clientesActivos, reservasActivas,
@@ -86,13 +93,24 @@ public class DashboardService {
     }
 
     public List<IngresoMensualResponse> getIngresosMensuales() {
-        List<Object[]> rows = reservaRepository.findIngresosMensuales();
+        java.time.LocalDate hoy = java.time.LocalDate.now();
+        LocalDateTime desde = hoy.minusMonths(5).withDayOfMonth(1).atStartOfDay();
+        List<Reserva> reservas = reservaRepository.findFinalizadasDesde(desde);
+
+        Map<YearMonth, BigDecimal> porMes = reservas.stream()
+                .filter(r -> r.getFechaFinalizacion() != null)
+                .collect(Collectors.groupingBy(
+                        r -> YearMonth.from(r.getFechaFinalizacion()),
+                        LinkedHashMap::new,
+                        Collectors.reducing(BigDecimal.ZERO, Reserva::getTotal, BigDecimal::add)));
+
         List<IngresoMensualResponse> result = new ArrayList<>();
-        for (Object[] row : rows) {
-            result.add(new IngresoMensualResponse(
-                    (String) row[0],
-                    (BigDecimal) row[1]
-            ));
+        YearMonth cursor = YearMonth.from(hoy).minusMonths(5);
+        YearMonth actual = YearMonth.from(hoy);
+        while (!cursor.isAfter(actual)) {
+            BigDecimal monto = porMes.getOrDefault(cursor, BigDecimal.ZERO);
+            result.add(new IngresoMensualResponse(cursor.toString(), monto));
+            cursor = cursor.plusMonths(1);
         }
         return result;
     }

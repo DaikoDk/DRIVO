@@ -46,7 +46,7 @@ public class ClienteService {
         }
 
         Licencia licencia = new Licencia();
-        licencia.setNumeroLicencia(request.licencia().numeroLicencia());
+        licencia.setNumeroLicencia("Q" + request.dni());
         licencia.setCategoria(request.licencia().categoria());
         licencia.setFechaVencimiento(request.licencia().fechaVencimiento());
         licencia = licenciaService.create(licencia);
@@ -74,6 +74,18 @@ public class ClienteService {
         }
 
         clienteMapper.updateEntity(request, cliente);
+
+        Licencia licencia = cliente.getLicencia();
+        if (licencia == null) {
+            licencia = new Licencia();
+            cliente.setLicencia(licencia);
+        }
+        licencia.setNumeroLicencia("Q" + request.dni());
+        licencia.setCategoria(request.licencia().categoria());
+        if (request.licencia().fechaVencimiento() != null) {
+            licencia.setFechaVencimiento(request.licencia().fechaVencimiento());
+        }
+
         return clienteMapper.toResponse(clienteRepository.save(cliente));
     }
 

@@ -519,7 +519,10 @@ public class ReservaService {
 
     @Transactional(readOnly = true)
     public BigDecimal sumIngresosMesActual() {
-        return reservaRepository.sumIngresosMesActual();
+        java.time.LocalDate hoy = java.time.LocalDate.now();
+        java.time.LocalDateTime inicioMes = hoy.withDayOfMonth(1).atStartOfDay();
+        java.time.LocalDateTime inicioMesSiguiente = inicioMes.plusMonths(1);
+        return reservaRepository.sumIngresosMesActual(inicioMes, inicioMesSiguiente);
     }
 
     public ReservaResponse createDesdePortal(ReservaPortalRequest request, String correo) {

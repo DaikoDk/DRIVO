@@ -9,7 +9,7 @@ Sistema de alquiler de autos con gestión de reservas, pagos, mantenimiento y da
 | Frontend   | Angular 21, Tailwind CSS, Signals                   |
 | Backend    | Java 17, Spring Boot 3.5, JPA, JWT                  |
 | BD         | SQL Server 2022 / H2 (dev)                          |
-| Infra      | Docker Compose                                      |
+| Infra      | Docker Compose, Render (Web Service + Static Site)   |
 
 ## Setup rápido
 
@@ -36,6 +36,15 @@ pnpm install
 ng serve
 ```
 
+### Opción 3: Render (producción — $0/mes)
+
+| Servicio | URL |
+|---|---|
+| Frontend | `https://drivo-1-lsbr.onrender.com` |
+| Backend API | `https://drivo-8ti4.onrender.com/api` |
+
+El backend duerme tras 15 min de inactividad (plan gratuito). Primera visita del día tarda ~50s en responder.
+
 ## Credenciales default
 
 | Rol      | Email             | Clave       |
@@ -45,12 +54,21 @@ ng serve
 
 ## Puerto y URLs
 
+### Local (Docker Compose)
+
 | Servicio   | URL                              |
 |------------|----------------------------------|
 | Frontend   | http://localhost                 |
 | Backend    | http://localhost:8080            |
 | H2 Console | http://localhost:8080/h2-console |
-| SQL Server | localhost:1433                   |
+
+### Producción (Render)
+
+| Servicio   | URL                                        |
+|------------|--------------------------------------------|
+| Frontend   | https://drivo-1-lsbr.onrender.com          |
+| Backend    | https://drivo-8ti4.onrender.com            |
+| H2 Console | https://drivo-8ti4.onrender.com/h2-console |
 
 ## Estructura
 
@@ -62,24 +80,34 @@ DRIVO/
 │   ├── Dockerfile                  # Build multi-stage Maven → JRE
 │   └── src/main/resources/
 │       ├── application.yaml        # Config principal
-│       ├── application-h2.yaml     # Perfil H2
+│       ├── application-h2.yaml     # Perfil H2 (desarrollo local)
+│       ├── application-render.yaml # Perfil H2 (producción Render)
 │       └── data.sql                # Seed para H2
 ├── alquilerauto-frontend/          # Frontend Angular
 │   ├── Dockerfile                  # Build multi-stage Node → Nginx
 │   ├── nginx.conf                  # SPA routing + proxy a backend
 │   └── src/
 │       ├── app/                    # Componentes y servicios
-│       └── environments/           # Config de entorno
+│       └── environments/           # Config de entorno (dev, prod, render)
 ├── docs/diagrams/                  # DER y diagrama de arquitectura
 └── bruno/                          # Colección Bruno (API tests)
 ```
 
 ## Persistencia
 
+### Docker Compose (local)
+
 | Dato      | Volumen Docker      | Sobrevive a                  |
 |-----------|---------------------|------------------------------|
 | BD        | `sqlserver-data`    | `docker compose down`        |
 | Fotos     | `uploads-data`      | Reinicio de backend          |
+
+### Render (producción)
+
+| Dato      | Persistencia                                         |
+|-----------|------------------------------------------------------|
+| BD        | H2 en memoria — se pierde al dormir/despertar        |
+| Seed data | `data.sql` se recarga automáticamente en cada inicio |
 
 ## Comandos útiles
 

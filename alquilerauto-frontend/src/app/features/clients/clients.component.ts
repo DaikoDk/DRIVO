@@ -152,11 +152,7 @@ import { Cliente } from '../../models';
         </div>
         <div class="border-t border-slate-100 pt-4 mt-2">
           <p class="text-sm font-semibold text-slate-700 mb-3">Licencia de Conducir</p>
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label class="input-label" for="cli-licencia-numero">Numero</label>
-              <input class="input-field" id="cli-licencia-numero" [(ngModel)]="formData.numeroLicencia" />
-            </div>
+          <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="input-label" for="cli-licencia-categoria">Categoría</label>
               <input class="input-field" id="cli-licencia-categoria" [(ngModel)]="formData.categoriaLicencia" />
@@ -258,7 +254,6 @@ export class ClientsComponent implements OnInit {
       telefono: client.telefono,
       email: client.email,
       direccion: client.direccion,
-      numeroLicencia: client.numeroLicencia,
       categoriaLicencia: client.categoriaLicencia,
       fechaVencimientoLicencia: client.fechaVencimientoLicencia,
     };
@@ -292,7 +287,7 @@ export class ClientsComponent implements OnInit {
     const body = {
       ...this.formData,
       licencia: {
-        numeroLicencia: this.formData.numeroLicencia || '',
+        numeroLicencia: "",
         categoria: this.formData.categoriaLicencia || '',
         fechaVencimiento: this.formData.fechaVencimientoLicencia || null
       }

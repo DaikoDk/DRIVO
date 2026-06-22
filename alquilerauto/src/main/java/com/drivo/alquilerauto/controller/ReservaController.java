@@ -74,6 +74,13 @@ public class ReservaController {
         return ResponseEntity.ok(ApiResponse.ok(finalizada, "Pago procesado y reserva finalizada exitosamente"));
     }
 
+    @PatchMapping("/{id}/checkin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ReservaResponse>> checkin(@PathVariable Integer id) {
+        ReservaResponse checkin = reservaService.confirmarCheckIn(id);
+        return ResponseEntity.ok(ApiResponse.ok(checkin, "Check-in confirmado exitosamente"));
+    }
+
     @PatchMapping("/{id}/entregar")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ReservaResponse>> entregar(

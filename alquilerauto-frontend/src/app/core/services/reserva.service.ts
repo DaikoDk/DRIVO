@@ -68,6 +68,10 @@ export class ReservaService {
     return this.api.patchCustom<Reserva>(`/reservas/${id}/cancelar`);
   }
 
+  checkIn(id: number): Observable<Reserva> {
+    return this.api.patchCustom<Reserva>(`/reservas/${id}/checkin`);
+  }
+
   finalizarPago(id: number): Observable<Reserva> {
     return this.api.patchCustom<Reserva>(`/reservas/${id}/finalizar-pago`);
   }

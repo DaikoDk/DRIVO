@@ -135,7 +135,7 @@ import { Cliente } from '../../models';
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="input-label" for="cli-dni">DNI *</label>
-            <input class="input-field" id="cli-dni" [(ngModel)]="formData.dni" placeholder="12345678" />
+            <input class="input-field" id="cli-dni" [(ngModel)]="formData.dni" (ngModelChange)="onDniChange($event)" placeholder="12345678" />
           </div>
           <div>
             <label class="input-label" for="cli-telefono">Teléfono</label>
@@ -152,16 +152,33 @@ import { Cliente } from '../../models';
         </div>
         <div class="border-t border-slate-100 pt-4 mt-2">
           <p class="text-sm font-semibold text-slate-700 mb-3">Licencia de Conducir</p>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="input-label" for="cli-licencia-categoria">Categoría</label>
-              <input class="input-field" id="cli-licencia-categoria" [(ngModel)]="formData.categoriaLicencia" />
+          @if (editingClient()) {
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="input-label" for="cli-licencia-numero">Número</label>
+                <p class="text-slate-700 font-medium py-2">{{ formData.numeroLicencia || '—' }}</p>
+              </div>
+              <div>
+                <label class="input-label" for="cli-licencia-categoria">Categoría</label>
+                <input class="input-field" id="cli-licencia-categoria" [(ngModel)]="formData.categoriaLicencia" />
+              </div>
+              <div>
+                <label class="input-label" for="cli-licencia-vencimiento">Vencimiento</label>
+                <input class="input-field" id="cli-licencia-vencimiento" type="date" [(ngModel)]="formData.fechaVencimientoLicencia" />
+              </div>
             </div>
-            <div>
-              <label class="input-label" for="cli-licencia-vencimiento">Vencimiento</label>
-              <input class="input-field" id="cli-licencia-vencimiento" type="date" [(ngModel)]="formData.fechaVencimientoLicencia" />
+          } @else {
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="input-label" for="cli-licencia-categoria">Categoría</label>
+                <input class="input-field" id="cli-licencia-categoria" [(ngModel)]="formData.categoriaLicencia" />
+              </div>
+              <div>
+                <label class="input-label" for="cli-licencia-vencimiento">Vencimiento</label>
+                <input class="input-field" id="cli-licencia-vencimiento" type="date" [(ngModel)]="formData.fechaVencimientoLicencia" />
+              </div>
             </div>
-          </div>
+          }
         </div>
         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button class="btn-secondary" (click)="closeForm()">Cancelar</button>
@@ -254,11 +271,16 @@ export class ClientsComponent implements OnInit {
       telefono: client.telefono,
       email: client.email,
       direccion: client.direccion,
+      numeroLicencia: client.numeroLicencia,
       categoriaLicencia: client.categoriaLicencia,
       fechaVencimientoLicencia: client.fechaVencimientoLicencia,
     };
     this.editingClient.set(client);
     this.showForm.set(true);
+  }
+
+  onDniChange(dni: string): void {
+    this.formData.numeroLicencia = /^\d{8}$/.test(dni) ? 'Q' + dni : '';
   }
 
   closeForm(): void {

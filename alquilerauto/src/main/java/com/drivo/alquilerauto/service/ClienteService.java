@@ -80,10 +80,7 @@ public class ClienteService {
             licencia = new Licencia();
             cliente.setLicencia(licencia);
         }
-        boolean dniCambio = !request.dni().equals(cliente.getDni());
-        if (dniCambio) {
-            licencia.setNumeroLicencia("Q" + request.dni());
-        }
+        licencia.setNumeroLicencia("Q" + request.dni());
         licencia.setCategoria(request.licencia().categoria());
         if (request.licencia().fechaVencimiento() != null) {
             licencia.setFechaVencimiento(request.licencia().fechaVencimiento());

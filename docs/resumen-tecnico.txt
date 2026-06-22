@@ -1,0 +1,219 @@
+RESUMEN TÉCNICO — DRIVO Rent-a-Car
+===================================
+
+1. ¿QUÉ HACE EL SISTEMA?
+-----------------------------------------------------
+DRIVO es una plataforma web para alquilar autos. Tiene dos caras:
+- Un panel de administración donde los empleados gestionan vehículos,
+  clientes, reservas, pagos, reparaciones y mantenimientos.
+- Un portal de autoservicio donde los clientes pueden registrarse,
+  explorar autos disponibles, hacer reservas y ver su historial.
+
+Además incluye un chatbot (asistente virtual) que responde preguntas
+frecuentes sobre precios, disponibilidad y cómo reservar. Funciona
+incluso sin conexión a internet en el servidor.
+
+
+2. EL EQUIPO Y CÓMO TRABAJARON
+-----------------------------------------------------
+El proyecto lo desarrollaron 3 personas usando una metodología
+llamada Scrum, que consiste en dividir el trabajo en bloques
+pequeños llamados "Historias de Usuario" (HU). Cada HU es una
+funcionalidad concreta, por ejemplo: "el cliente puede crear una
+reserva desde el portal".
+
+Se usó GitHub como plataforma de trabajo. GitHub es un sitio web
+donde se guarda el código fuente y se lleva el control de cambios.
+Por cada HU, un desarrollador:
+  1. Crea una "rama" (copia aislada del código para trabajar sin
+     romper lo que ya funciona)
+  2. Escribe el código de esa funcionalidad
+  3. Abre un "Pull Request" (PR), que es una propuesta de cambio
+     que otro compañero revisa antes de aceptar
+  4. Si la revisión es aprobada, el código se fusiona con el
+     proyecto principal
+
+En total se completaron 12 Historias de Usuario con más de 100
+pruebas automáticas que verifican que todo funcione correctamente.
+
+
+3. LAS CAPAS DEL SISTEMA
+-----------------------------------------------------
+Un sistema web moderno se divide en capas, como las capas del
+modelo OSI en redes. Cada capa tiene una responsabilidad específica:
+
+┌─────────────────────┬───────────────┬──────────────────────────┐
+│ CAPA                │ TECNOLOGÍA    │ ¿QUÉ HACE?               │
+├─────────────────────┼───────────────┼──────────────────────────┤
+│ Lo que ve el        │ Angular +     │ La interfaz gráfica que  │
+│ usuario (Frontend)  │ Tailwind CSS  │ ves en el navegador.     │
+│                     │               │ Como la GUI de un router.│
+├─────────────────────┼───────────────┼──────────────────────────┤
+│ El cerebro          │ Java +        │ Procesa las reglas de    │
+│ (Backend)           │ Spring Boot   │ negocio, cálculos de     │
+│                     │               │ precios, seguridad.      │
+│                     │               │ Como el SO del router.   │
+├─────────────────────┼───────────────┼──────────────────────────┤
+│ Donde se guardan    │ SQL Server /  │ Base de datos que        │
+│ los datos           │ H2            │ almacena clientes, autos,│
+│                     │               │ reservas, pagos. Como una│
+│                     │               │ tabla de enrutamiento.   │
+├─────────────────────┼───────────────┼──────────────────────────┤
+│ El empaque          │ Docker        │ "Caja" que contiene la   │
+│                     │               │ app y todo lo que        │
+│                     │               │ necesita para funcionar. │
+│                     │               │ Como una VM pero ligera. │
+├─────────────────────┼───────────────┼──────────────────────────┤
+│ El chatbot          │ IBM Watson    │ Inteligencia Artificial  │
+│                     │ Assistant     │ que responde preguntas   │
+│                     │               │ de los usuarios. Como un │
+│                     │               │ helpdesk automático.     │
+└─────────────────────┴───────────────┴──────────────────────────┘
+
+
+4. ¿POR QUÉ ESTAS TECNOLOGÍAS?
+-----------------------------------------------------
+
+TECNOLOGÍA       VENTAJA                          PROBLEMA QUE RESUELVE
+─────────────────────────────────────────────────────────────────────────
+Java +           Robusto, usado por bancos        El backend no se cae
+Spring Boot      y grandes empresas. Maduro.      con muchos usuarios.
+
+Angular +        Interfaces rápidas y             La página no se
+Tailwind         mantenibles. Tipado fuerte       recarga entera, solo
+                 evita errores comunes.           cambia lo necesario.
+
+SQL Server       Transaccional, seguro,           Los datos no se
+                 estándar en empresas.            pierden ni corrompen.
+
+H2               Base de datos en memoria RAM.    Se puede desarrollar
+                 No necesita instalación.         sin tener SQL Server.
+
+Docker           La app corre igual en            "En mi PC sí
+                 desarrollo y producción.         funciona" deja de
+                 Evita problemas de entorno.      ser un problema.
+
+Watson Assistant IA de IBM ya entrenada.          Chatbot funcional en
+                 Funciona con o sin internet.     minutos, sin entrenar
+                                                 un modelo desde cero.
+
+GitHub Actions   Pruebas automáticas al subir     Errores se detectan
+                 código. Gratis en repo público.  antes de llegar a
+                                                 producción.
+
+
+5. LO QUE HACE DIFERENTE A NUESTRO SISTEMA
+-----------------------------------------------------
+Cosas que salen del esquema típico de una web y que implementamos
+porque realmente aportan valor:
+
+• CHATBOT CON DOBLE MODO (online/offline)
+  - Online: conectado a Watson Assistant de IBM (servicio en la nube)
+  - Offline: si no hay conexión o no están configuradas las
+    credenciales de IBM, el chatbot igual responde usando palabras
+    clave predefinidas. El usuario nunca ve un error, siempre
+    obtiene respuesta.
+
+• PERFIL H2: ARRANCA SIN INSTALAR NADA
+  - Normalmente necesitas SQL Server instalado y configurado para
+    que el backend funcione. Nosotros creamos un perfil alternativo
+    con H2 (base de datos en memoria) que permite levantar TODO el
+    sistema con un solo comando, sin instalar ningún motor de base
+    de datos. Ideal para demos, pruebas y desarrollo rápido.
+
+• DOCKER COMPOSE: TODO EL STACK CON 1 COMANDO
+  - Un solo archivo (docker-compose.yml) define los 3 servicios:
+    SQL Server + Backend Java + Frontend Angular con Nginx.
+  - Con ejecutar "docker-compose up -d" todo el sistema arranca
+    automáticamente. No hay que configurar IPs, puertos ni
+    dependencias manualmente.
+
+• CI/CD CON GITHUB ACTIONS
+  - Cada vez que alguien sube código, GitHub ejecuta automáticamente
+    las pruebas. En menos de 1 minuto sabemos si algo se rompió.
+  - El pipeline compila el backend, compila el frontend y ejecuta
+    los tests. Todo sin intervención humana.
+
+• 101 PRUEBAS DE API AUTOMATIZADAS
+  - Cada funcionalidad tiene pruebas que simulan a un usuario real
+    llamando a los endpoints. Se prueba: login, permisos, creación
+    de datos, validaciones de errores y seguridad con tokens JWT.
+
+
+6. GLOSARIO
+-----------------------------------------------------
+Términos que aparecen en este documento y en el informe:
+
+• API: mecanismo para que dos sistemas se comuniquen entre sí.
+       El frontend le pide datos al backend mediante URLs (endpoints).
+
+• Endpoint: una URL específica del backend que recibe o devuelve datos.
+            Ej: "GET /api/autos" devuelve la lista de vehículos.
+
+• JWT (JSON Web Token): token digital que identifica al usuario sin
+       necesidad de guardar la sesión en el servidor. El frontend lo
+       envía en cada solicitud como un pase de entrada.
+
+• Docker: herramienta que empaqueta una aplicación y todas sus
+         dependencias en un "contenedor" que funciona igual en
+         cualquier computadora.
+
+• Contenedor: similar a una máquina virtual, pero mucho más ligero.
+             Comparte el sistema operativo del host. Docker usa
+             contenedores.
+
+• CI/CD (Integración Continua / Despliegue Continuo): práctica de
+       automatizar pruebas y despliegue cada vez que se sube código.
+
+• Git: sistema de control de versiones. Guarda el historial completo
+      de cambios del código. Como los checkpoints de un videojuego:
+      puedes volver a cualquier punto anterior.
+
+• Rama (branch): copia aislada del código donde un desarrollador
+       trabaja sin afectar la versión principal. Al terminar, se
+       fusiona (merge) con la rama principal.
+
+• PR (Pull Request): propuesta de cambio de código que otro miembro
+       del equipo revisa antes de aceptar y fusionar.
+
+• GitHub: plataforma web basada en Git. Además de guardar código,
+        permite gestionar issues (tareas), PRs (revisiones) y
+        ejecutar CI/CD con GitHub Actions.
+
+• Stack tecnológico: combinación de tecnologías usadas en un proyecto.
+       Ej: "nuestro stack es Angular + Java + SQL Server + Docker".
+
+• Scrum: metodología de trabajo ágil donde el proyecto se divide en
+        ciclos cortos (sprints) y el trabajo se organiza en historias
+        de usuario priorizadas.
+
+• HU (Historia de Usuario): funcionalidad descrita desde el punto de
+       vista del usuario final. Ej: "Como cliente, quiero ver mis
+       reservas anteriores".
+
+• Spring Boot: framework de Java que simplifica la creación de
+       servidores web. Maneja automáticamente la configuración,
+       conexiones a base de datos y seguridad.
+
+• Angular: framework de TypeScript para construir interfaces web
+       interactivas. Permite crear "single page applications" donde
+       la página no se recarga completa al navegar.
+
+• Tailwind CSS: framework de estilos que permite diseñar interfaces
+       directamente en el código HTML usando clases predefinidas,
+       sin escribir archivos CSS separados.
+
+• H2 Database: base de datos relacional escrita en Java que vive
+       completamente en memoria RAM. Al apagar la aplicación, los
+       datos se pierden. Perfecta para desarrollo y pruebas.
+
+• SQL Server: motor de base de datos relacional de Microsoft.
+       Robusto, transaccional, usado en entornos corporativos.
+
+• Watson Assistant: servicio de inteligencia artificial conversacional
+       de IBM Cloud. Permite crear chatbots que entienden lenguaje
+       natural sin programar reglas complejas.
+
+• Nginx: servidor web ligero usado para servir archivos estáticos
+       (HTML, CSS, JS) del frontend en producción. Más rápido y
+       eficiente que el servidor de desarrollo de Angular.

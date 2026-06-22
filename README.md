@@ -11,45 +11,29 @@ Sistema de alquiler de autos con gestión de reservas, pagos, mantenimiento y da
 | BD         | SQL Server 2022 / H2 (dev)                          |
 | Infra      | Docker Compose                                      |
 
-## Setup rápido (3 opciones)
+## Setup rápido
 
-### Opción 1: Docker + SQL Server (recomendado)
+### Opción 1: Docker Compose (recomendado)
 
 ```bash
-# 1. Levantar SQL Server
-docker-compose up -d
+# 1. Levantar todo (BD + backend + frontend)
+docker compose up --build -d
 
-# 2. Crear BD, tablas y datos de prueba
-sqlcmd -S localhost -U sa -P "Drivo2026!" -i setup.sql
+# 2. Crear BD, tablas y datos de prueba (solo primera vez)
+docker exec -i drivo-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Drivo2026!" -C < setup.sql
 
-# 3. Configurar .env para el backend
-cd alquilerauto
-cp .env.example .env
-  # Editar DB_RENTCAR, DB_USERNAME, DB_PASSWORD
-
-# 4. Iniciar backend
-.\mvnw spring-boot:run
-
-# 5. Iniciar frontend (otra terminal)
-cd alquilerauto-frontend
-npm install
-ng serve
+# App en http://localhost
 ```
 
-### Opción 2: H2 en memoria (sin SQL Server)
+### Opción 2: H2 en memoria (desarrollo sin Docker)
 
 ```bash
 cd alquilerauto
 .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=h2
-# Frontend igual que arriba
-```
 
-### Opción 3: SQL Server local (sin Docker)
-
-Instalar SQL Server 2022, luego ejecutar:
-
-```bash
-sqlcmd -S localhost -U sa -P "tuPassword" -i setup.sql
+cd alquilerauto-frontend
+pnpm install
+ng serve
 ```
 
 ## Credenciales default
@@ -63,7 +47,7 @@ sqlcmd -S localhost -U sa -P "tuPassword" -i setup.sql
 
 | Servicio   | URL                              |
 |------------|----------------------------------|
-| Frontend   | http://localhost:4200            |
+| Frontend   | http://localhost                 |
 | Backend    | http://localhost:8080            |
 | H2 Console | http://localhost:8080/h2-console |
 | SQL Server | localhost:1433                   |
@@ -72,37 +56,47 @@ sqlcmd -S localhost -U sa -P "tuPassword" -i setup.sql
 
 ```
 DRIVO/
-├── alquilerauto/                  # Backend Spring Boot
+├── docker-compose.yml              # Stack completo (BD + backend + frontend)
+├── setup.sql                       # Script unificado BD + SPs + seed
+├── alquilerauto/                   # Backend Spring Boot
+│   ├── Dockerfile                  # Build multi-stage Maven → JRE
 │   └── src/main/resources/
-│       ├── application.yaml       # Config principal
-│       ├── application-h2.yaml    # Perfil H2
-│       └── data.sql               # Seed para H2
-├── alquilerauto-frontend/         # Frontend Angular
+│       ├── application.yaml        # Config principal
+│       ├── application-h2.yaml     # Perfil H2
+│       └── data.sql                # Seed para H2
+├── alquilerauto-frontend/          # Frontend Angular
+│   ├── Dockerfile                  # Build multi-stage Node → Nginx
+│   ├── nginx.conf                  # SPA routing + proxy a backend
 │   └── src/
-│       ├── app/                   # Componentes y servicios
-│       └── environments/          # Config de entorno
-├── docs/diagrams/                 # DER y diagrama de arquitectura
-├── bruno/                         # Colección Bruno (API tests)
-├── setup.sql                      # Script unificado BD + SPs + seed
-└── docker-compose.yml             # SQL Server container
+│       ├── app/                    # Componentes y servicios
+│       └── environments/           # Config de entorno
+├── docs/diagrams/                  # DER y diagrama de arquitectura
+└── bruno/                          # Colección Bruno (API tests)
 ```
+
+## Persistencia
+
+| Dato      | Volumen Docker      | Sobrevive a                  |
+|-----------|---------------------|------------------------------|
+| BD        | `sqlserver-data`    | `docker compose down`        |
+| Fotos     | `uploads-data`      | Reinicio de backend          |
 
 ## Comandos útiles
 
 ```bash
-# Backend (perfil SQL Server)
-.\mvnw spring-boot:run
+# Stack completo (producción)
+docker compose up --build -d
+docker compose down
 
-# Backend (perfil H2)
-.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=h2
-
-# Frontend
-cd alquilerauto-frontend && ng serve
-
-# SQL Server en Docker
-docker-compose up -d
-docker-compose down
-
-# Ejecutar setup.sql en Docker
+# Ejecutar setup.sql contra la BD
 docker exec -i drivo-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Drivo2026!" -C < setup.sql
+
+# Backend solo (desarrollo con SQL Server en Docker)
+cd alquilerauto && .\mvnw spring-boot:run
+
+# Backend solo (desarrollo con H2)
+cd alquilerauto && .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=h2
+
+# Frontend solo (desarrollo)
+cd alquilerauto-frontend && ng serve
 ```

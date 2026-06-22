@@ -61,8 +61,8 @@ import { Auto, Marca } from '../../../models';
             @for (auto of filteredAutos(); track auto.idAuto) {
               <a class="card group cursor-pointer" [routerLink]="['/portal/auto', auto.idAuto]">
                 <div class="w-full aspect-[3/2] rounded-lg mb-4 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden">
-                  @if (auto.fotoUrl) {
-                    <img [src]="fotoCompleta(auto.fotoUrl)" alt="{{ auto.marca }} {{ auto.modelo }}" class="w-full h-full object-cover" />
+                  @if (auto.fotoUrl && !erroredImages().has(auto.idAuto)) {
+                    <img [src]="fotoCompleta(auto.fotoUrl)" (error)="onImgError(auto.idAuto)" alt="{{ auto.marca }} {{ auto.modelo }}" class="w-full h-full object-cover" />
                   } @else {
                     <span class="material-symbols-outlined text-6xl text-slate-400">directions_car</span>
                   }
@@ -102,6 +102,11 @@ export class CatalogoComponent implements OnInit {
   readonly filterPrecioMax = signal(500);
 
   readonly loading = signal(true);
+  readonly erroredImages = signal<Set<number>>(new Set());
+
+  onImgError(id: number): void {
+    this.erroredImages.update(s => { s.add(id); return new Set(s); });
+  }
 
   constructor(
     private readonly autoService: AutoService,

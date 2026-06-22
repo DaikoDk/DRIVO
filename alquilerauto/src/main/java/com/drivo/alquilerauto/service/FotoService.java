@@ -3,13 +3,16 @@ package com.drivo.alquilerauto.service;
 import com.drivo.alquilerauto.entity.Auto;
 import com.drivo.alquilerauto.exception.BadRequestException;
 import com.drivo.alquilerauto.repository.AutoRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,7 +23,9 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FotoService {
@@ -32,6 +37,49 @@ public class FotoService {
 
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
     private static final String[] FORMATOS_PERMITIDOS = {"image/jpeg", "image/png", "image/webp"};
+
+    @PostConstruct
+    public void init() {
+        try {
+            ImageIO.scanForPlugins();
+            Path dir = Paths.get(directorioFotos);
+            if (Files.exists(dir)) return;
+            Files.createDirectories(dir);
+
+            BufferedImage img = new BufferedImage(800, 600, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = img.createGraphics();
+            g.setColor(new Color(220, 220, 220));
+            g.fillRect(0, 0, 800, 600);
+            g.setColor(new Color(120, 120, 120));
+            g.setFont(new Font("Arial", Font.BOLD, 56));
+            FontMetrics fm = g.getFontMetrics();
+            String text = "DRIVO";
+            int x = (800 - fm.stringWidth(text)) / 2;
+            int y = (600 - fm.getHeight()) / 2 + fm.getAscent();
+            g.drawString(text, x, y);
+            g.setFont(new Font("Arial", Font.PLAIN, 24));
+            fm = g.getFontMetrics();
+            text = "Rent-a-Car";
+            x = (800 - fm.stringWidth(text)) / 2;
+            g.drawString(text, x, y + 50);
+            g.dispose();
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(img, "webp", baos);
+            Files.write(dir.resolve("default.webp"), baos.toByteArray());
+            log.info("Directorio de fotos creado en: {}", dir.toAbsolutePath());
+
+            List<Auto> sinFoto = autoRepository.findAll().stream()
+                    .filter(a -> a.getFotoUrl() == null).toList();
+            if (!sinFoto.isEmpty()) {
+                sinFoto.forEach(a -> a.setFotoUrl("/uploads/fotos/default.webp"));
+                autoRepository.saveAll(sinFoto);
+                log.info("Asignada foto default a {} auto(s)", sinFoto.size());
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo inicializar el directorio de fotos: {}", e.getMessage());
+        }
+    }
 
     @Transactional
     public String guardarArchivo(Integer idAuto, MultipartFile archivo) {

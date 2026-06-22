@@ -26,30 +26,30 @@ INSERT INTO tb_estado (entidad, codigo, nombre, descripcion, orden) VALUES
 ('REPARACION', 'CANCELADA',        'Cancelada',   'Reparacion cancelada',                                   4);
 
 -- 2. Marcas
-INSERT INTO tb_marca (nombre, paisOrigen) VALUES
-('Toyota', 'Japon'),
-('Hyundai', 'Corea del Sur'),
-('Kia', 'Corea del Sur');
+INSERT INTO tb_marca (nombre, paisOrigen, activo) VALUES
+('Toyota', 'Japon', 1),
+('Hyundai', 'Corea del Sur', 1),
+('Kia', 'Corea del Sur', 1);
 
 -- 3. Modelos
-INSERT INTO tb_modelo (idMarca, nombre, categoria, numeroPasajeros)
-SELECT m.idMarca, 'Yaris', 'Sedan', 5 FROM tb_marca m WHERE m.nombre = 'Toyota';
-INSERT INTO tb_modelo (idMarca, nombre, categoria, numeroPasajeros)
-SELECT m.idMarca, 'Accent', 'Sedan', 5 FROM tb_marca m WHERE m.nombre = 'Hyundai';
-INSERT INTO tb_modelo (idMarca, nombre, categoria, numeroPasajeros)
-SELECT m.idMarca, 'Rio', 'Hatchback', 5 FROM tb_marca m WHERE m.nombre = 'Kia';
+INSERT INTO tb_modelo (idMarca, nombre, categoria, numeroPasajeros, activo)
+SELECT m.idMarca, 'Yaris', 'Sedan', 5, 1 FROM tb_marca m WHERE m.nombre = 'Toyota';
+INSERT INTO tb_modelo (idMarca, nombre, categoria, numeroPasajeros, activo)
+SELECT m.idMarca, 'Accent', 'Sedan', 5, 1 FROM tb_marca m WHERE m.nombre = 'Hyundai';
+INSERT INTO tb_modelo (idMarca, nombre, categoria, numeroPasajeros, activo)
+SELECT m.idMarca, 'Rio', 'Hatchback', 5, 1 FROM tb_marca m WHERE m.nombre = 'Kia';
 
 -- 4. Autos
-INSERT INTO tb_auto (placa, idMarca, idModelo, anio, color, kilometrajeActual, ultimaRevisionKm, proximaRevisionKm, precioPorDia, precioPorHora, moraPorDia, estado)
-SELECT 'ABC-123', m.idMarca, mo.idModelo, 2020, 'Blanco', 45500, 40000, 50000, 120.00, 15.00, 30.00, 'Disponible'
+INSERT INTO tb_auto (placa, idMarca, idModelo, anio, color, kilometrajeActual, ultimaRevisionKm, proximaRevisionKm, precioPorDia, precioPorHora, moraPorDia, estado, activo)
+SELECT 'ABC-123', m.idMarca, mo.idModelo, 2020, 'Blanco', 45500, 40000, 50000, 120.00, 15.00, 30.00, 'Disponible', 1
 FROM tb_marca m, tb_modelo mo WHERE m.nombre = 'Toyota' AND mo.nombre = 'Yaris';
 
-INSERT INTO tb_auto (placa, idMarca, idModelo, anio, color, kilometrajeActual, ultimaRevisionKm, proximaRevisionKm, precioPorDia, precioPorHora, moraPorDia, estado)
-SELECT 'DEF-456', m.idMarca, mo.idModelo, 2019, 'Negro', 52300, 48000, 58000, 110.00, 13.00, 25.00, 'En proceso'
+INSERT INTO tb_auto (placa, idMarca, idModelo, anio, color, kilometrajeActual, ultimaRevisionKm, proximaRevisionKm, precioPorDia, precioPorHora, moraPorDia, estado, activo)
+SELECT 'DEF-456', m.idMarca, mo.idModelo, 2019, 'Negro', 52300, 48000, 58000, 110.00, 13.00, 25.00, 'En proceso', 1
 FROM tb_marca m, tb_modelo mo WHERE m.nombre = 'Hyundai' AND mo.nombre = 'Accent';
 
-INSERT INTO tb_auto (placa, idMarca, idModelo, anio, color, kilometrajeActual, ultimaRevisionKm, proximaRevisionKm, precioPorDia, precioPorHora, moraPorDia, estado)
-SELECT 'GHI-789', m.idMarca, mo.idModelo, 2021, 'Rojo', 38000, 35000, 40000, 130.00, 16.00, 30.00, 'En reparacion'
+INSERT INTO tb_auto (placa, idMarca, idModelo, anio, color, kilometrajeActual, ultimaRevisionKm, proximaRevisionKm, precioPorDia, precioPorHora, moraPorDia, estado, activo)
+SELECT 'GHI-789', m.idMarca, mo.idModelo, 2021, 'Rojo', 38000, 35000, 40000, 130.00, 16.00, 30.00, 'En reparacion', 1
 FROM tb_marca m, tb_modelo mo WHERE m.nombre = 'Kia' AND mo.nombre = 'Rio';
 
 -- 5. Licencias
@@ -59,21 +59,21 @@ INSERT INTO tb_licencia (numeroLicencia, categoria, fechaVencimiento) VALUES
 ('Q11223344', 'A-I',   '2028-03-10');
 
 -- 6. Usuarios
-INSERT INTO tb_usuario (Nombre, Correo, Clave, Rol) VALUES
-('Admin DRIVO',  'admin@drivo.com',  '$2a$10$txCV75IDyzhVolXP1WiHxO8yKJz578AtDfaEbTRPLww3RfvIf3D9y', 'ADMIN'),
-('Carlos Lopez', 'carlos@email.com', '$2a$10$GJKccfi4IMsR1n.Qkim30eLsBURpVGBdo3dsxqs9YxUIhBmgJU/hi', 'CLIENTE');
+INSERT INTO tb_usuario (Nombre, Correo, Clave, Rol, Activo) VALUES
+('Admin DRIVO',  'admin@drivo.com',  '$2a$10$txCV75IDyzhVolXP1WiHxO8yKJz578AtDfaEbTRPLww3RfvIf3D9y', 'ADMIN', 1),
+('Carlos Lopez', 'carlos@email.com', '$2a$10$GJKccfi4IMsR1n.Qkim30eLsBURpVGBdo3dsxqs9YxUIhBmgJU/hi', 'CLIENTE', 1);
 
 -- 7. Clientes
-INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado)
-SELECT 'Juan', 'Perez', 'Garcia', '12345678', '987654321', 'juanperez@example.com', 'Av. Los Olivos 123, Lima', l.idLicencia, 1, 'activo'
+INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado, activo)
+SELECT 'Juan', 'Perez', 'Garcia', '12345678', '987654321', 'juanperez@example.com', 'Av. Los Olivos 123, Lima', l.idLicencia, 1, 'activo', 1
 FROM tb_licencia l WHERE l.numeroLicencia = 'Q12345678';
 
-INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado)
-SELECT 'Maria', 'Lopez', 'Flores', '87654321', '912345678', 'marialopez@example.com', 'Jr. Las Palmeras 456, Lima', l.idLicencia, 1, 'activo'
+INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado, activo)
+SELECT 'Maria', 'Lopez', 'Flores', '87654321', '912345678', 'marialopez@example.com', 'Jr. Las Palmeras 456, Lima', l.idLicencia, 1, 'activo', 1
 FROM tb_licencia l WHERE l.numeroLicencia = 'Q87654321';
 
-INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado)
-SELECT 'Carlos', 'Gomez', 'Rios', '11223344', '999555444', 'carlosgomez@example.com', 'Calle Real 789, Callao', l.idLicencia, 1, 'activo'
+INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado, activo)
+SELECT 'Carlos', 'Gomez', 'Rios', '11223344', '999555444', 'carlosgomez@example.com', 'Calle Real 789, Callao', l.idLicencia, 1, 'activo', 1
 FROM tb_licencia l WHERE l.numeroLicencia = 'Q11223344';
 
 -- 8. Reservas
@@ -111,10 +111,10 @@ FROM tb_reserva r JOIN tb_cliente c ON r.idCliente = c.idCliente
 WHERE c.email = 'carlosgomez@example.com' AND r.fechaInicio = '2026-05-20';
 
 -- 11. Catalogo de reparaciones
-INSERT INTO tb_catalogo_reparacion (descripcion, costoEstimado, tiempoEstimadoHoras) VALUES
-('Rayon de pintura', 200.00, 4),
-('Abolladura de carroceria', 500.00, 8),
-('Rotura de espejo lateral', 150.00, 2);
+INSERT INTO tb_catalogo_reparacion (descripcion, costoEstimado, tiempoEstimadoHoras, activo) VALUES
+('Rayon de pintura', 200.00, 4, 1),
+('Abolladura de carroceria', 500.00, 8, 1),
+('Rotura de espejo lateral', 150.00, 2, 1);
 
 -- 12. Reparaciones
 INSERT INTO tb_reparacion (idReserva, idAuto, idCatalogoReparacion, descripcion, costo, estado, responsable, fechaReporte, usuarioReporte)

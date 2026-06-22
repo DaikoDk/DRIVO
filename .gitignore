@@ -38,5 +38,11 @@ application-local.properties
 opencode.json
 AGENTS.md
 
+# Runtime data
+alquilerauto/uploads/
+
+# Temp scripts
+imports/
+
 # Issues tracker local (no trackear en commits)
 issues-ux-ui.csv

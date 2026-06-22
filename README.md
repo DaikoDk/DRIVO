@@ -76,8 +76,7 @@ DRIVO/
 │   └── src/main/resources/
 │       ├── application.yaml       # Config principal
 │       ├── application-h2.yaml    # Perfil H2
-│       ├── data.sql               # Seed para H2
-│       └── bd_rentcar.sql         # Versión anterior (BD sin tb_estado)
+│       └── data.sql               # Seed para H2
 ├── alquilerauto-frontend/         # Frontend Angular
 │   └── src/
 │       ├── app/                   # Componentes y servicios
@@ -85,9 +84,6 @@ DRIVO/
 ├── docs/diagrams/                 # DER y diagrama de arquitectura
 ├── bruno/                         # Colección Bruno (API tests)
 ├── setup.sql                      # Script unificado BD + SPs + seed
-├── DRIVO_BD.sql                   # BD: estructura + seed inicial
-├── DRIVO_SP.sql                   # Stored procedures (9 SPs)
-├── DRIVO_SEED_MAS_DATOS.sql       # Seed adicional (14 reservas)
 └── docker-compose.yml             # SQL Server container
 ```
 

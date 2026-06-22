@@ -64,31 +64,31 @@ INSERT INTO tb_usuario (Nombre, Correo, Clave, Rol, Activo) VALUES
 ('Carlos Lopez', 'carlos@email.com', '$2a$10$GJKccfi4IMsR1n.Qkim30eLsBURpVGBdo3dsxqs9YxUIhBmgJU/hi', 'CLIENTE', 1);
 
 -- 7. Clientes
-INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado, activo)
-SELECT 'Juan', 'Perez', 'Garcia', '12345678', '987654321', 'juanperez@example.com', 'Av. Los Olivos 123, Lima', l.idLicencia, 1, 'activo', 1
+INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, bloqueado, numeroIncidentes, estado, activo)
+SELECT 'Juan', 'Perez', 'Garcia', '12345678', '987654321', 'juanperez@example.com', 'Av. Los Olivos 123, Lima', l.idLicencia, 1, 'activo', 1, 0, 0
 FROM tb_licencia l WHERE l.numeroLicencia = 'Q12345678';
 
-INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado, activo)
-SELECT 'Maria', 'Lopez', 'Flores', '87654321', '912345678', 'marialopez@example.com', 'Jr. Las Palmeras 456, Lima', l.idLicencia, 1, 'activo', 1
+INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, bloqueado, numeroIncidentes, estado, activo)
+SELECT 'Maria', 'Lopez', 'Flores', '87654321', '912345678', 'marialopez@example.com', 'Jr. Las Palmeras 456, Lima', l.idLicencia, 1, 'activo', 1, 0, 0
 FROM tb_licencia l WHERE l.numeroLicencia = 'Q87654321';
 
-INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, estado, activo)
-SELECT 'Carlos', 'Gomez', 'Rios', '11223344', '999555444', 'carlosgomez@example.com', 'Calle Real 789, Callao', l.idLicencia, 1, 'activo', 1
+INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, bloqueado, numeroIncidentes, estado, activo)
+SELECT 'Carlos', 'Gomez', 'Rios', '11223344', '999555444', 'carlosgomez@example.com', 'Calle Real 789, Callao', l.idLicencia, 1, 'activo', 1, 0, 0
 FROM tb_licencia l WHERE l.numeroLicencia = 'Q11223344';
 
 -- 8. Reservas
-INSERT INTO tb_reserva (idCliente, idAuto, id_estado, fechaInicio, horaInicio, fechaFin, horaFin, kilometrajeInicio, subtotal, total, estadoEntrega, fechaCreacion, usuarioCreacion, fechaHoraInicioReal, fechaFinalizacion, usuarioFinalizacion)
-SELECT c.idCliente, a.idAuto, e.id_estado, '2026-05-10', '09:00', '2026-05-12', '18:00', 45000, 360.00, 360.00, 'Entregado OK', '2026-05-08 10:30:00', 'admin', '2026-05-10 09:00:00', '2026-05-12 17:45:00', 'admin'
+INSERT INTO tb_reserva (idCliente, idAuto, id_estado, fechaInicio, horaInicio, fechaFin, horaFin, kilometrajeInicio, costoReparaciones, mora, subtotal, total, estadoEntrega, fechaCreacion, usuarioCreacion, fechaHoraInicioReal, fechaFinalizacion, usuarioFinalizacion)
+SELECT c.idCliente, a.idAuto, e.id_estado, '2026-05-10', '09:00', '2026-05-12', '18:00', 45000, 0, 0, 360.00, 360.00, 'Entregado OK', '2026-05-08 10:30:00', 'admin', '2026-05-10 09:00:00', '2026-05-12 17:45:00', 'admin'
 FROM tb_cliente c, tb_auto a, tb_estado e
 WHERE c.email = 'marialopez@example.com' AND a.placa = 'ABC-123' AND e.codigo = 'ALQUILER_FINALIZADO';
 
-INSERT INTO tb_reserva (idCliente, idAuto, id_estado, fechaInicio, horaInicio, fechaFin, horaFin, kilometrajeInicio, subtotal, total, estadoEntrega, fechaCreacion, usuarioCreacion, fechaHoraInicioReal, fechaFinalizacion, usuarioFinalizacion)
-SELECT c.idCliente, a.idAuto, e.id_estado, '2026-05-20', '08:00', '2026-05-22', '20:00', 45500, 450.00, 520.00, 'Entregado con danos', '2026-05-18 14:00:00', 'admin', '2026-05-20 08:00:00', '2026-05-22 18:00:00', 'admin'
+INSERT INTO tb_reserva (idCliente, idAuto, id_estado, fechaInicio, horaInicio, fechaFin, horaFin, kilometrajeInicio, costoReparaciones, mora, subtotal, total, estadoEntrega, fechaCreacion, usuarioCreacion, fechaHoraInicioReal, fechaFinalizacion, usuarioFinalizacion)
+SELECT c.idCliente, a.idAuto, e.id_estado, '2026-05-20', '08:00', '2026-05-22', '20:00', 45500, 0, 0, 450.00, 520.00, 'Entregado con danos', '2026-05-18 14:00:00', 'admin', '2026-05-20 08:00:00', '2026-05-22 18:00:00', 'admin'
 FROM tb_cliente c, tb_auto a, tb_estado e
 WHERE c.email = 'carlosgomez@example.com' AND a.placa = 'ABC-123' AND e.codigo = 'ALQUILER_FINALIZADO';
 
-INSERT INTO tb_reserva (idCliente, idAuto, id_estado, fechaInicio, horaInicio, fechaFin, horaFin, kilometrajeInicio, subtotal, total, estadoEntrega, fechaCreacion, usuarioCreacion, fechaHoraInicioReal)
-SELECT c.idCliente, a.idAuto, e.id_estado, '2026-06-15', '10:00', '2026-06-20', '16:00', 52300, 660.00, 660.00, 'Sin entregar', '2026-06-14 09:00:00', 'admin', '2026-06-15 10:00:00'
+INSERT INTO tb_reserva (idCliente, idAuto, id_estado, fechaInicio, horaInicio, fechaFin, horaFin, kilometrajeInicio, costoReparaciones, mora, subtotal, total, estadoEntrega, fechaCreacion, usuarioCreacion, fechaHoraInicioReal)
+SELECT c.idCliente, a.idAuto, e.id_estado, '2026-06-15', '10:00', '2026-06-20', '16:00', 52300, 0, 0, 660.00, 660.00, 'Sin entregar', '2026-06-14 09:00:00', 'admin', '2026-06-15 10:00:00'
 FROM tb_cliente c, tb_auto a, tb_estado e
 WHERE c.email = 'juanperez@example.com' AND a.placa = 'DEF-456' AND e.codigo = 'ALQUILER_EN_CURSO';
 

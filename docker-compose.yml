@@ -18,6 +18,43 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    networks:
+      - drivo-net
+
+  backend:
+    build: ./alquilerauto
+    container_name: drivo-backend
+    environment:
+      SERVER_PORT: "8080"
+      DB_RENTCAR: "jdbc:sqlserver://sqlserver:1433;databaseName=BD_RentCar;encrypt=true;trustServerCertificate=true"
+      DB_USERNAME: "sa"
+      DB_PASSWORD: "Drivo2026!"
+      JWT_SECRET: "drivo-alquilerauto-jwt-secret-key-2026-must-be-256-bits-minimum"
+      APP_FOTOS_DIRECTORIO: "/app/uploads/fotos"
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads-data:/app/uploads
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - drivo-net
+
+  frontend:
+    build: ./alquilerauto-frontend
+    container_name: drivo-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - drivo-net
 
 volumes:
   sqlserver-data:
+  uploads-data:
+
+networks:
+  drivo-net:
+    driver: bridge

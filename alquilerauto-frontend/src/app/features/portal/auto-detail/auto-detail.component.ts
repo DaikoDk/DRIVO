@@ -17,8 +17,8 @@ import { Auto } from '../../../models';
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div class="lg:col-span-2">
             <div class="w-full aspect-[16/9] rounded-xl mb-6 flex items-center justify-center bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden">
-              @if (auto()?.fotoUrl) {
-                <img [src]="fotoCompleta(auto()?.fotoUrl)" alt="{{ auto()?.marca }} {{ auto()?.modelo }}" class="w-full h-full object-cover" />
+              @if (auto()?.fotoUrl && !erroredImages().has(auto()!.idAuto)) {
+                <img [src]="fotoCompleta(auto()?.fotoUrl)" (error)="onImgError(auto()!.idAuto)" alt="{{ auto()?.marca }} {{ auto()?.modelo }}" class="w-full h-full object-cover" />
               } @else {
                 <span class="material-symbols-outlined text-8xl text-slate-400">directions_car</span>
               }
@@ -210,7 +210,12 @@ export class AutoDetailComponent implements OnInit, OnDestroy {
   readonly bufferMensaje = signal('');
   readonly bufferAcepto = signal(false);
   readonly bufferTimer = signal(10);
+  readonly erroredImages = signal<Set<number>>(new Set());
   private bufferInterval: ReturnType<typeof setInterval> | null = null;
+
+  onImgError(id: number): void {
+    this.erroredImages.update(s => { s.add(id); return new Set(s); });
+  }
 
   readonly duracionSeleccionada = signal<number | null>(null);
   readonly duraciones = [

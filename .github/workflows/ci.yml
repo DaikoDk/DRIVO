@@ -19,7 +19,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build & Test Backend
-        run: cd alquilerauto && ./mvnw test -Dspring-boot.run.profiles=h2
+        run: cd alquilerauto && chmod +x mvnw && ./mvnw test -Dspring-boot.run.profiles=h2
 
   frontend-build:
     runs-on: ubuntu-latest

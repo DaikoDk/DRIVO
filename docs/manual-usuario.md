@@ -225,6 +225,20 @@ npm install
 ng serve
 ```
 
+### Opción 3: Docker Compose (stack completo)
+
+```bash
+git clone https://github.com/DaikoDk/DRIVO.git
+cd DRIVO
+
+# Un solo comando levanta SQL Server, backend y frontend
+docker-compose up -d
+
+# Ejecutar script de BD una sola vez
+docker exec -i drivo-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P "Drivo2026!" -C < setup.sql
+```
+
 ### URLs de acceso
 
 | Servicio | URL |
@@ -246,7 +260,12 @@ DRIVO/
 ├── docs/                      # Documentación
 │   └── diagrams/              # DER y diagrama de arquitectura
 ├── .github/workflows/         # Pipeline CI/CD
-├── docker-compose.yml         # Contenedor SQL Server
+├── docker-compose.yml         # Stack completo (BD + backend + frontend)
+├── Dockerfile                 # Imagen backend (Java 17)
+├── alquilerauto-frontend/
+│   ├── Dockerfile             # Imagen frontend (Nginx + Angular)
+│   └── nginx.conf             # Configuración Nginx para producción
+├── .github/workflows/         # Pipeline CI/CD
 ├── setup.sql                  # Script de base de datos
 └── README.md
 ```

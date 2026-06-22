@@ -55,6 +55,25 @@ Automatizar la construcción, pruebas y despliegue del proyecto DRIVO Rent-a-Car
 | Backend (Spring Boot) | Railway | Dockerfile o buildpack automático desde el repositorio |
 | Base de datos | SQL Server en Docker | `docker-compose up -d` para entorno local |
 
+### Despliegue con Docker
+
+El proyecto incluye Dockerfiles para contenerizar el stack completo:
+
+| Componente | Dockerfile | Descripción |
+|---|---|---|
+| Backend | `alquilerauto/Dockerfile` | Imagen Java 17 con el JAR empaquetado |
+| Frontend | `alquilerauto-frontend/Dockerfile` | Imagen Nginx sirviendo los estáticos de Angular |
+| Stack completo | `docker-compose.yml` | Orquesta SQL Server + backend + frontend en una sola red |
+
+```bash
+# Despliegue completo con un solo comando
+docker-compose up -d
+# Servicios disponibles:
+#   Frontend → http://localhost:4200
+#   Backend  → http://localhost:8080
+#   SQL Server → localhost:1433
+```
+
 ---
 
 ## 4. Herramientas
@@ -62,7 +81,7 @@ Automatizar la construcción, pruebas y despliegue del proyecto DRIVO Rent-a-Car
 | Herramienta | Uso |
 |---|---|
 | **GitHub Actions** | Orquestador del pipeline CI/CD. Gratuito para repositorios públicos. |
-| **Docker / Docker Compose** | Contenedor de SQL Server 2022 para entorno de desarrollo y pruebas locales. |
+| **Docker / Docker Compose** | Contenedores de SQL Server 2022, backend Spring Boot y frontend Nginx para desarrollo y despliegue. |
 | **H2 Database** | Base de datos en memoria para pruebas automatizadas (MODE=MSSQLServer). |
 | **Maven Wrapper** (`mvnw`) | Gestión de dependencias y build del backend sin requerir Maven instalado. |
 | **npm / pnpm** | Gestión de paquetes del frontend Angular. |

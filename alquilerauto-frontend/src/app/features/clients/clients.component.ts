@@ -289,9 +289,21 @@ export class ClientsComponent implements OnInit {
       return;
     }
 
+    const body = {
+      ...this.formData,
+      licencia: {
+        numeroLicencia: this.formData.numeroLicencia || '',
+        categoria: this.formData.categoriaLicencia || '',
+        fechaVencimiento: this.formData.fechaVencimientoLicencia || null
+      }
+    };
+    delete (body as any).numeroLicencia;
+    delete (body as any).categoriaLicencia;
+    delete (body as any).fechaVencimientoLicencia;
+
     const request = this.editingClient()
-      ? this.clienteService.update(this.editingClient()!.idCliente, this.formData)
-      : this.clienteService.create(this.formData);
+      ? this.clienteService.update(this.editingClient()!.idCliente, body)
+      : this.clienteService.create(body);
 
     request.subscribe({
       next: () => {

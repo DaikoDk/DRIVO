@@ -40,7 +40,7 @@ ng serve
 
 ```bash
 cd alquilerauto
-.\mvnw spring-boot:run -Dspring.profiles.active=h2
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=h2
 # Frontend igual que arriba
 ```
 
@@ -98,7 +98,7 @@ DRIVO/
 .\mvnw spring-boot:run
 
 # Backend (perfil H2)
-.\mvnw spring-boot:run -Dspring.profiles.active=h2
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=h2
 
 # Frontend
 cd alquilerauto-frontend && ng serve

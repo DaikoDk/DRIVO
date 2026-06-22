@@ -102,7 +102,75 @@ GitHub Actions   Pruebas automáticas al subir     Errores se detectan
                                                  producción.
 
 
-5. LO QUE HACE DIFERENTE A NUESTRO SISTEMA
+5. HERRAMIENTAS DE DESARROLLO
+-----------------------------------------------------
+Además de las tecnologías del stack, usamos estas herramientas
+durante todo el desarrollo del proyecto:
+
+HERRAMIENTA        ¿PARA QUÉ SIRVE?                 ANALOGÍA DE REDES
+─────────────────────────────────────────────────────────────────────
+IntelliJ IDEA      Editor de código para Java.      Como PuTTY pero
+                   Autocompleta, detecta errores    para escribir
+                   al vuelo, depura el backend.     código en vez de
+                                                    conectarse a
+                                                    servidores.
+
+Visual Studio      Editor de código para el         Como WireShark:
+Code (VS Code)     frontend (Angular/TypeScript).   inspecciona y
+                   Ligero, con extensiones.         navega el código
+                                                    igual que Wireshark
+                                                    inspecciona paquetes.
+
+Git                Control de versiones. Guarda     Como el historial
+                   el historial completo de         de cambios de un
+                   cambios del código.              router. Puedes ver
+                                                    quién cambió qué
+                                                    y cuándo.
+
+GitHub             Plataforma web donde se aloja    Como un servidor
+                   el repositorio Git. Issues,      TFTP pero para
+                   PRs, Actions, Projects.          código, con panel
+                                                    de control web.
+
+Docker Desktop     Interfaz gráfica para manejar    Como VirtualBox
+                   contenedores Docker. Permite     pero para
+                   construir, ejecutar y detener    contenedores en
+                   los servicios con un clic.       vez de VMs.
+
+Postman / Bruno    Herramientas para probar APIs.   Como hacer ping o
+                   Envían solicitudes HTTP al       telnet a un puerto
+                   backend y muestran la respuesta. para ver si responde,
+                                                    pero con datos
+                                                    estructurados.
+
+Maven (mvnw)       Gestor de dependencias y         Como un script de
+                   constructor del backend Java.    instalación
+                   Descarga librerías, compila,     automatizado que
+                   empaqueta el proyecto.           resuelve todas las
+                                                    dependencias.
+
+npm                Gestor de paquetes del           Similar a Maven
+                   frontend. Descarga librerías     pero para el
+                   JavaScript (Angular, Tailwind).  frontend.
+
+draw.io            Herramienta de diagramas.        Como Visio o
+                   Hicimos el DER (diagrama de      Packet Tracer para
+                   base de datos) y el diagrama     dibujar la
+                   de arquitectura del sistema.     topología del
+                                                    sistema.
+
+IBM Cloud          Plataforma cloud de IBM.         Como Azure o AWS.
+                   Allí está alojado el servicio    Usamos solo el
+                   Watson Assistant que usa el      servicio Watson
+                   chatbot.                         Assistant.
+
+Terminal / CMD     Línea de comandos para           Como la CLI de un
+                   ejecutar Maven, Git, Docker,     router o switch.
+                   npm. Todo se controla desde      Todo se controla
+                   aquí.                            con comandos.
+
+
+6. LO QUE HACE DIFERENTE A NUESTRO SISTEMA
 -----------------------------------------------------
 Cosas que salen del esquema típico de una web y que implementamos
 porque realmente aportan valor:
@@ -140,7 +208,7 @@ porque realmente aportan valor:
     de datos, validaciones de errores y seguridad con tokens JWT.
 
 
-6. GLOSARIO
+7. GLOSARIO
 -----------------------------------------------------
 Términos que aparecen en este documento y en el informe:
 

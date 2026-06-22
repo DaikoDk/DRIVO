@@ -65,15 +65,15 @@ INSERT INTO tb_usuario (Nombre, Correo, Clave, Rol, Activo) VALUES
 
 -- 7. Clientes
 INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, bloqueado, numeroIncidentes, estado, activo)
-SELECT 'Juan', 'Perez', 'Garcia', '12345678', '987654321', 'juanperez@example.com', 'Av. Los Olivos 123, Lima', l.idLicencia, 1, 'activo', 1, 0, 0
+SELECT 'Juan', 'Perez', 'Garcia', '12345678', '987654321', 'juanperez@example.com', 'Av. Los Olivos 123, Lima', l.idLicencia, 1, 0, 0, 'activo', 1
 FROM tb_licencia l WHERE l.numeroLicencia = 'Q12345678';
 
 INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, bloqueado, numeroIncidentes, estado, activo)
-SELECT 'Maria', 'Lopez', 'Flores', '87654321', '912345678', 'marialopez@example.com', 'Jr. Las Palmeras 456, Lima', l.idLicencia, 1, 'activo', 1, 0, 0
+SELECT 'Maria', 'Lopez', 'Flores', '87654321', '912345678', 'marialopez@example.com', 'Jr. Las Palmeras 456, Lima', l.idLicencia, 1, 0, 0, 'activo', 1
 FROM tb_licencia l WHERE l.numeroLicencia = 'Q87654321';
 
 INSERT INTO tb_cliente (nombre, apellidoPaterno, apellidoMaterno, dni, telefono, email, direccion, idLicencia, numeroReservas, bloqueado, numeroIncidentes, estado, activo)
-SELECT 'Carlos', 'Gomez', 'Rios', '11223344', '999555444', 'carlosgomez@example.com', 'Calle Real 789, Callao', l.idLicencia, 1, 'activo', 1, 0, 0
+SELECT 'Carlos', 'Gomez', 'Rios', '11223344', '999555444', 'carlosgomez@example.com', 'Calle Real 789, Callao', l.idLicencia, 1, 0, 0, 'activo', 1
 FROM tb_licencia l WHERE l.numeroLicencia = 'Q11223344';
 
 -- 8. Reservas

@@ -1,0 +1,232 @@
+// ============================================================
+//  DRIVO Rent-a-Car — Diagrama Entidad-Relación (DBML)
+//  Ir a https://dbdiagram.io y pegar este código
+// ============================================================
+
+Table tb_usuario {
+  IdUsuario integer [pk, increment]
+  Nombre varchar(100) [not null]
+  Correo varchar(100) [not null, unique]
+  Clave varchar(255) [not null]
+  Rol varchar(30) [not null, note: 'ADMIN o CLIENTE']
+  Activo boolean [not null, default: true]
+  FechaRegistro timestamp [default: `GETDATE()`]
+}
+
+Table tb_cliente {
+  idCliente integer [pk, increment]
+  nombre varchar(50) [not null]
+  apellidoPaterno varchar(50) [not null]
+  apellidoMaterno varchar(50)
+  dni varchar(15) [not null, unique]
+  telefono varchar(20)
+  email varchar(100) [not null, unique]
+  direccion varchar(200)
+  idLicencia integer
+  idUsuario integer
+  numeroReservas integer [not null, default: 0]
+  numeroIncidentes integer [not null, default: 0]
+  bloqueado boolean [not null, default: false]
+  activo boolean [not null, default: true]
+  estado varchar(20) [not null, default: 'ACTIVO']
+  fechaRegistro timestamp
+}
+
+Table tb_licencia {
+  idLicencia integer [pk, increment]
+  numeroLicencia varchar(30) [not null, unique]
+  categoria varchar(10) [not null]
+  fechaVencimiento date [not null]
+}
+
+Table tb_marca {
+  idMarca integer [pk, increment]
+  nombre varchar(50) [not null, unique]
+  paisOrigen varchar(50)
+  activo boolean [not null, default: true]
+  fechaRegistro timestamp
+}
+
+Table tb_modelo {
+  idModelo integer [pk, increment]
+  idMarca integer [not null]
+  nombre varchar(50) [not null]
+  categoria varchar(30)
+  numeroPasajeros integer [not null]
+  activo boolean [not null, default: true]
+  fechaRegistro timestamp
+}
+
+Table tb_auto {
+  idAuto integer [pk, increment]
+  placa varchar(10) [not null, unique]
+  idMarca integer [not null]
+  idModelo integer [not null]
+  anio integer [not null]
+  color varchar(30)
+  numeroMotor varchar(50)
+  numeroChasis varchar(50)
+  kilometrajeActual integer [not null]
+  ultimaRevisionKm integer
+  proximaRevisionKm integer
+  precioPorDia decimal(10,2) [not null]
+  precioPorHora decimal(10,2)
+  moraPorDia decimal(10,2) [not null]
+  fotoUrl varchar(500)
+  activo boolean [not null, default: true]
+  estado varchar(20) [not null, default: 'DISPONIBLE']
+  fechaRegistro timestamp
+  fechaUltimaActualizacion timestamp
+}
+
+Table tb_estado {
+  id_estado integer [pk, increment]
+  entidad varchar(20) [not null, note: 'RESERVA, AUTO, CLIENTE, REPARACION']
+  codigo varchar(30) [not null, unique]
+  nombre varchar(50) [not null]
+  descripcion varchar(200)
+  orden integer
+  activo boolean
+}
+
+Table tb_reserva {
+  idReserva integer [pk, increment]
+  idCliente integer [not null]
+  idAuto integer [not null]
+  id_estado integer [not null]
+  fechaInicio date [not null]
+  horaInicio time [not null]
+  fechaFin date [not null]
+  horaFin time [not null]
+  fechaHoraInicioReal timestamp
+  fechaHoraFinReal timestamp
+  fechaHoraCheckIn timestamp
+  kilometrajeInicio integer
+  kilometrajeFin integer
+  subtotal decimal(10,2) [not null]
+  mora decimal(10,2) [not null, default: 0]
+  costoReparaciones decimal(10,2) [not null, default: 0]
+  total decimal(10,2) [not null]
+  estadoEntrega varchar(30) [not null]
+  observacionesEntrega varchar(500)
+  fechaCreacion timestamp
+  fechaFinalizacion timestamp
+  usuarioCreacion varchar(100)
+  usuarioFinalizacion varchar(100)
+}
+
+Table tb_pago {
+  idPago integer [pk, increment]
+  idReserva integer [not null]
+  montoBase decimal(10,2) [not null]
+  montoMora decimal(10,2) [not null, default: 0]
+  montoDanos decimal(10,2) [not null, default: 0]
+  montoTotalPagado decimal(10,2) [not null]
+  fechaPago timestamp
+  metodoPago varchar(30) [not null, note: 'Tarjeta, Efectivo, Transferencia']
+}
+
+Table tb_catalogo_reparacion {
+  idCatalogoReparacion integer [pk, increment]
+  descripcion varchar(200) [not null]
+  costoEstimado decimal(10,2) [not null]
+  tiempoEstimadoHoras integer [not null]
+  activo boolean [not null, default: true]
+  fechaRegistro timestamp
+}
+
+Table tb_reparacion {
+  idReparacion integer [pk, increment]
+  idReserva integer [not null]
+  idAuto integer [not null]
+  idCatalogoReparacion integer
+  descripcion varchar(500) [not null]
+  costo decimal(10,2) [not null]
+  estado varchar(20) [not null, note: 'Pendiente, En Proceso, Completada, Cancelada']
+  responsable varchar(30)
+  fechaReporte timestamp
+  fechaInicio timestamp
+  fechaFin timestamp
+  usuarioReporte varchar(100)
+}
+
+Table tb_mantenimiento {
+  idMantenimiento integer [pk, increment]
+  idAuto integer [not null]
+  fechaIngreso date [not null]
+  fechaSalida date
+  tipo varchar(20) [not null, note: 'Preventivo o Correctivo']
+  costo decimal(10,2) [not null]
+  detalle clob
+}
+
+Table tb_historial_kilometraje {
+  idHistorial integer [pk, increment]
+  idAuto integer [not null]
+  idReserva integer
+  kilometrajeAnterior integer [not null]
+  kilometrajeNuevo integer [not null]
+  diferencia integer
+  tipoRegistro varchar(30) [not null]
+  observaciones varchar(300)
+  usuarioRegistro varchar(100)
+  fechaRegistro timestamp
+}
+
+Table tb_configuracion {
+  idConfiguracion integer [pk, increment]
+  clave varchar(50) [not null, unique]
+  valor varchar(200) [not null]
+  descripcion varchar(300)
+  tipo varchar(20)
+  fechaActualizacion timestamp
+}
+
+// ============================================================
+//  RELACIONES (Foreign Keys)
+// ============================================================
+
+// Usuario -> Cliente (1:1)
+Ref: tb_usuario.IdUsuario - tb_cliente.idUsuario
+
+// Licencia -> Cliente (1:1)
+Ref: tb_licencia.idLicencia - tb_cliente.idLicencia
+
+// Marca -> Modelo (1:N)
+Ref: tb_marca.idMarca - tb_modelo.idMarca
+
+// Marca -> Auto (1:N)
+Ref: tb_marca.idMarca - tb_auto.idMarca
+
+// Modelo -> Auto (1:N)
+Ref: tb_modelo.idModelo - tb_auto.idModelo
+
+// Cliente -> Reserva (1:N)
+Ref: tb_cliente.idCliente - tb_reserva.idCliente
+
+// Auto -> Reserva (1:N)
+Ref: tb_auto.idAuto - tb_reserva.idAuto
+
+// Estado -> Reserva (1:N)
+Ref: tb_estado.id_estado - tb_reserva.id_estado
+
+// Reserva -> Pago (1:1)
+Ref: tb_reserva.idReserva - tb_pago.idReserva
+
+// Auto -> Historial Km (1:N)
+Ref: tb_auto.idAuto - tb_historial_kilometraje.idAuto
+
+// Reserva -> Historial Km (1:N)
+Ref: tb_reserva.idReserva - tb_historial_kilometraje.idReserva
+
+// Reserva -> Reparacion (1:N)
+Ref: tb_reserva.idReserva - tb_reparacion.idReserva
+
+// Auto -> Reparacion (1:N)
+Ref: tb_auto.idAuto - tb_reparacion.idAuto
+
+// Catalogo Reparacion -> Reparacion (1:N)
+Ref: tb_catalogo_reparacion.idCatalogoReparacion - tb_reparacion.idCatalogoReparacion
+
+// Auto -> Mantenimiento (1:N)
+Ref: tb_auto.idAuto - tb_mantenimiento.idAuto

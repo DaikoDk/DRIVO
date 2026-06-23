@@ -115,9 +115,9 @@ uploads/fotos/
 <mxCell id="n122" value="FLUJO DE RESERVAS
 → Cliente crea reserva en portal
 → Auto cambia a 'Reservado'
-→ Admin confirma → "Confirmada"
-→ Check-in → "En proceso" (km inicio)
-→ Check-out → "Finalizada"
+→ Admin confirma → 'Confirmada'
+→ Check-in → 'En proceso' (km inicio)
+→ Check-out → 'Finalizada'
    → Auto vuelve a 'Disponible'
    → Se registra historial km
    → Se genera pago" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=top;" vertex="1" parent="1"><mxGeometry x="760" y="750" width="300" height="100" as="geometry"/></mxCell>

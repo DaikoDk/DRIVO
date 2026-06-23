@@ -1,0 +1,482 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>DRIVO — Diagrama de Clases UML</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+mermaid.initialize({
+    startOnLoad:true, theme:'dark',
+    class: { useMaxWidth: true }
+});
+
+function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+              document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+function ajustarDiagrama() {
+    var svg = document.querySelector('.mermaid svg');
+    var box = document.querySelector('.diagram-box');
+    if (!svg || !box) return;
+    var fs = isFullscreen();
+    document.body.classList.toggle('fullscreen', fs);
+    var el = svg.parentElement;
+    el.style.transform = '';
+    el.style.marginBottom = '';
+    el.style.height = '';
+    requestAnimationFrame(function() {
+        var svgH = svg.getBoundingClientRect().height;
+        var boxH = box.clientHeight;
+        if (svgH > 0 && svgH > boxH) {
+            var s = boxH / svgH;
+            el.style.transform = 'scale(' + s + ')';
+            el.style.transformOrigin = 'top center';
+            el.style.marginBottom = -(svgH * (1 - s)) + 'px';
+        }
+    });
+}
+
+window.addEventListener('load', function() {
+    setTimeout(ajustarDiagrama, 800);
+    setTimeout(ajustarDiagrama, 1500);
+});
+window.addEventListener('resize', ajustarDiagrama);
+document.addEventListener('fullscreenchange', ajustarDiagrama);
+document.addEventListener('webkitfullscreenchange', ajustarDiagrama);
+document.addEventListener('mozfullscreenchange', ajustarDiagrama);
+document.addEventListener('MSFullscreenChange', ajustarDiagrama);
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', ajustarDiagrama);
+}
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;overflow:hidden;background:#0b131a}
+body{font-family:'Segoe UI',Arial,sans-serif;color:#fff;display:flex;flex-direction:column;padding:10px 8px}
+.header{flex-shrink:0;text-align:center}
+.header h1{color:#4a6b82;font-size:1.5rem;margin-bottom:1px;font-weight:400}
+.header h2{color:#6a8ba2;font-size:0.85rem;font-weight:300;margin-bottom:8px}
+.diagram-box{flex:1;min-height:0;overflow:hidden;width:100%}
+.diagram-box .mermaid{width:100%}
+
+body.fullscreen .header h1{font-size:2.2rem}
+body.fullscreen .header h2{font-size:1.2rem}
+.dl-btn{display:none;position:fixed;bottom:15px;right:15px;background:#2B579A;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:12px;z-index:9999}.dl-btn:hover{background:#4472C4}.dl{display:none;position:fixed;bottom:15px;right:15px;background:#2B579A;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:12px;z-index:9999}.dl:hover{background:#4472C4}
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>Diagrama de Clases — Backend DRIVO</h1>
+    <h2>Controllers • Services • Repositories • Entities • Security • DTOs</h2>
+</div>
+<div class="diagram-box"><pre class="mermaid">
+classDiagram
+
+    %% ====== CONTROLLERS ======
+    class AuthController {
+        +login(request) ApiResponse
+        +register(dto) ApiResponse
+    }
+    class AutoController {
+        +listar() ApiResponse
+        +listarDisponibles(fechas) ApiResponse
+        +crear(dto) ApiResponse
+        +actualizar(id,dto) ApiResponse
+        +desactivar(id) ApiResponse
+    }
+    class ClienteController {
+        +listar() ApiResponse
+        +crear(dto) ApiResponse
+        +getMe() ApiResponse
+        +updateMe(dto) ApiResponse
+        +bloquear(id) ApiResponse
+    }
+    class ReservaController {
+        +crear(dto) ApiResponse
+        +iniciar(id) ApiResponse
+        +finalizar(id) ApiResponse
+        +cancelar(id) ApiResponse
+        +listar() ApiResponse
+        +misReservas() ApiResponse
+    }
+    class PagoController {
+        +registrar(dto) ApiResponse
+        +listar() ApiResponse
+    }
+    class DashboardController {
+        +stats() ApiResponse
+        +reservasHoy() ApiResponse
+        +ingresosMensuales() ApiResponse
+    }
+    class ReparacionController {
+        +crear(dto) ApiResponse
+        +cambiarEstado(id,estado) ApiResponse
+        +listar() ApiResponse
+    }
+    class MantenimientoController {
+        +crear(dto) ApiResponse
+        +finalizar(id) ApiResponse
+        +listar() ApiResponse
+    }
+    class ConfiguracionController {
+        +crear(dto) ApiResponse
+        +listar() ApiResponse
+        +eliminar(id) ApiResponse
+    }
+    class WatsonController {
+        +mensaje(request) WatsonResponse
+    }
+
+    %% ====== SERVICES ======
+    class AutoService {
+        +listarActivos() List
+        +listarDisponibles(fechas) List
+        +crear(dto) Auto
+        +actualizar(id,dto) Auto
+        +desactivar(id) void
+        +cambiarEstado(id,estado) void
+        +verificarDisponibilidad(id,fechas) boolean
+    }
+    class ClienteService {
+        +listarActivos() List
+        +crear(dto) Cliente
+        +getByEmail(email) Cliente
+        +bloquear(id) void
+    }
+    class ReservaService {
+        +crear(dto) Reserva
+        +iniciar(id,kmInicial) Reserva
+        +finalizar(id,kmFinal,danos) Reserva
+        +cancelar(id) void
+        +listarPorCliente(clienteId) List
+        +calcularCostos(reserva) void
+    }
+    class PagoService {
+        +registrar(dto) Pago
+        +listar() List
+    }
+    class DashboardService {
+        +getStats() Map
+        +getIngresosMensuales() List
+    }
+    class ReparacionService {
+        +crear(dto) Reparacion
+        +cambiarEstado(id,estado) Reparacion
+    }
+    class MantenimientoService {
+        +crear(dto) Mantenimiento
+        +finalizar(id) Mantenimiento
+    }
+    class ConfiguracionService {
+        +crear(dto) Configuracion
+        +listar() List
+    }
+    class WatsonService {
+        +procesarMensaje(texto,sessionId) WatsonResponse
+        +onlineMode(texto,sid) WatsonResponse
+        +offlineMode(texto) WatsonResponse
+    }
+    class UserDetailsServiceImpl {
+        +loadUserByUsername(email) UserDetails
+    }
+
+    %% ====== REPOSITORIES (interfaces JPA) ======
+    class AutoRepository {
+        +findByActivoTrue() List
+        +findDisponiblesEnRango(inicio,fin) List
+    }
+    class ClienteRepository {
+        +findByDni(dni) Optional
+        +findByEmail(email) Optional
+    }
+    class ReservaRepository {
+        +findByClienteId(id) List
+        +findIngresosMensuales() List
+        +existsSolapamiento(auto,fechas) boolean
+    }
+    class PagoRepository {
+        +findByReservaId(id) List
+    }
+    class ReparacionRepository {
+        +findByEstado(estado) List
+    }
+    class MantenimientoRepository {
+        +findEnCurso() List
+    }
+    class UsuarioRepository {
+        +findByCorreo(email) Optional
+    }
+    class LicenciaRepository {
+    }
+    class MarcaRepository {
+        +findByActivoTrue() List
+    }
+    class ModeloRepository {
+        +findByMarcaId(id) List
+    }
+    class EstadoRepository {
+        +findByEntidadAndCodigo(e,c) Optional
+    }
+    class ConfiguracionRepository {
+        +findByClave(clave) Optional
+    }
+    class HistorialKmRepository {
+        +findByAutoId(id) List
+    }
+    class CatalogoRepRepository {
+    }
+
+    %% ====== ENTITIES ======
+    class Usuario {
+        +IdUsuario : Integer
+        +Nombre : String
+        +Correo : String
+        +Clave : String
+        +Rol : String
+        +Activo : Boolean
+    }
+    class Cliente {
+        +idCliente : Integer
+        +nombre : String
+        +apellidoPaterno : String
+        +dni : String
+        +email : String
+        +telefono : String
+        +idLicencia : Integer
+        +idUsuario : Integer
+        +numeroReservas : Integer
+        +numeroIncidentes : Integer
+        +bloqueado : Boolean
+        +activo : Boolean
+    }
+    class Licencia {
+        +idLicencia : Integer
+        +numeroLicencia : String
+        +categoria : String
+        +fechaVencimiento : Date
+    }
+    class Auto {
+        +idAuto : Integer
+        +placa : String
+        +idMarca : Integer
+        +idModelo : Integer
+        +anio : Integer
+        +color : String
+        +kilometrajeActual : Integer
+        +precioPorDia : BigDecimal
+        +precioPorHora : BigDecimal
+        +moraPorDia : BigDecimal
+        +activo : Boolean
+        +estado : String
+    }
+    class Marca {
+        +idMarca : Integer
+        +nombre : String
+        +paisOrigen : String
+        +activo : Boolean
+    }
+    class Modelo {
+        +idModelo : Integer
+        +idMarca : Integer
+        +nombre : String
+        +categoria : String
+        +numeroPasajeros : Integer
+        +activo : Boolean
+    }
+    class Reserva {
+        +idReserva : Integer
+        +idCliente : Integer
+        +idAuto : Integer
+        +id_estado : Integer
+        +fechaInicio : Date
+        +fechaFin : Date
+        +kilometrajeInicio : Integer
+        +kilometrajeFin : Integer
+        +subtotal : BigDecimal
+        +mora : BigDecimal
+        +costoReparaciones : BigDecimal
+        +total : BigDecimal
+    }
+    class Estado {
+        +id_estado : Integer
+        +entidad : String
+        +codigo : String
+        +nombre : String
+        +orden : Integer
+    }
+    class Pago {
+        +idPago : Integer
+        +idReserva : Integer
+        +montoBase : BigDecimal
+        +montoMora : BigDecimal
+        +montoDanos : BigDecimal
+        +montoTotalPagado : BigDecimal
+        +metodoPago : String
+    }
+    class Reparacion {
+        +idReparacion : Integer
+        +idReserva : Integer
+        +idAuto : Integer
+        +idCatalogoReparacion : Integer
+        +descripcion : String
+        +costo : BigDecimal
+        +estado : String
+        +responsable : String
+    }
+    class CatalogoReparacion {
+        +idCatalogoReparacion : Integer
+        +descripcion : String
+        +costoEstimado : BigDecimal
+        +tiempoEstimadoHoras : Integer
+    }
+    class Mantenimiento {
+        +idMantenimiento : Integer
+        +idAuto : Integer
+        +fechaIngreso : Date
+        +fechaSalida : Date
+        +tipo : String
+        +costo : BigDecimal
+    }
+    class HistorialKilometraje {
+        +idHistorial : Integer
+        +idAuto : Integer
+        +idReserva : Integer
+        +kilometrajeAnterior : Integer
+        +kilometrajeNuevo : Integer
+        +diferencia : Integer
+        +tipoRegistro : String
+    }
+    class Configuracion {
+        +idConfiguracion : Integer
+        +clave : String
+        +valor : String
+        +tipo : String
+    }
+
+    %% ====== SECURITY ======
+    class JwtTokenProvider {
+        +generateToken(email,rol) String
+        +validateToken(token) boolean
+        +getEmailFromToken(token) String
+        +getRolFromToken(token) String
+    }
+    class JwtAuthenticationFilter {
+        +doFilter(request,response,chain) void
+    }
+    class SecurityConfig {
+        +securityFilterChain(http) SecurityFilterChain
+        +passwordEncoder() BCryptPasswordEncoder
+    }
+
+    %% ====== DTOs ======
+    class ApiResponse {
+        +success : Boolean
+        +message : String
+        +data : Object
+    }
+    class LoginRequest {
+        +email : String
+        +password : String
+    }
+    class ReservaRequest {
+        +clienteId : Integer
+        +autoId : Integer
+        +fechaInicio : Date
+        +fechaFin : Date
+    }
+    class PagoRequest {
+        +reservaId : Integer
+        +montoBase : BigDecimal
+        +metodoPago : String
+    }
+    class WatsonRequest {
+        +mensaje : String
+        +sessionId : String
+    }
+    class WatsonResponse {
+        +respuesta : String
+        +acciones : List
+        +esOffline : Boolean
+    }
+
+    %% ====== RELACIONES: Controller → Service → Repository → Entity ======
+    AuthController ..> ClienteService
+    AutoController ..> AutoService
+    ClienteController ..> ClienteService
+    ReservaController ..> ReservaService
+    PagoController ..> PagoService
+    DashboardController ..> DashboardService
+    ReparacionController ..> ReparacionService
+    MantenimientoController ..> MantenimientoService
+    ConfiguracionController ..> ConfiguracionService
+    WatsonController ..> WatsonService
+
+    AutoService ..> AutoRepository
+    ClienteService ..> ClienteRepository
+    ClienteService ..> UsuarioRepository
+    ClienteService ..> LicenciaRepository
+    ReservaService ..> ReservaRepository
+    ReservaService ..> AutoService
+    PagoService ..> PagoRepository
+    DashboardService ..> ReservaRepository
+    ReparacionService ..> ReparacionRepository
+    MantenimientoService ..> MantenimientoRepository
+    ConfiguracionService ..> ConfiguracionRepository
+    WatsonService ..> WatsonRequest
+    WatsonService ..> WatsonResponse
+
+    AutoRepository --> Auto
+    ClienteRepository --> Cliente
+    ReservaRepository --> Reserva
+    PagoRepository --> Pago
+    ReparacionRepository --> Reparacion
+    MantenimientoRepository --> Mantenimiento
+    UsuarioRepository --> Usuario
+    LicenciaRepository --> Licencia
+    MarcaRepository --> Marca
+    ModeloRepository --> Modelo
+    EstadoRepository --> Estado
+    ConfiguracionRepository --> Configuracion
+    HistorialKmRepository --> HistorialKilometraje
+    CatalogoRepRepository --> CatalogoReparacion
+
+    %% ====== RELACIONES: Entidades entre sí ======
+    Cliente --> Licencia : idLicencia
+    Cliente --> Usuario : idUsuario
+    Cliente --> Reserva : idCliente
+    Reserva --> Auto : idAuto
+    Reserva --> Estado : id_estado
+    Reserva --> Pago : idReserva
+    Reserva --> HistorialKilometraje : idReserva
+    Reserva --> Reparacion : idReserva
+    Auto --> Reserva : idAuto
+    Auto --> HistorialKilometraje : idAuto
+    Auto --> Marca : idMarca
+    Auto --> Modelo : idModelo
+    Auto --> Mantenimiento : idAuto
+    Reparacion --> CatalogoReparacion : idCatalogoReparacion
+    Marca --> Modelo : idMarca
+
+    %% ====== SECURITY ======
+    JwtAuthenticationFilter ..> JwtTokenProvider
+    SecurityConfig ..> UserDetailsServiceImpl
+</pre></div>
+<a id="dl-png" class="dl" download="diagrama.png" style="bottom:15px">⬇ Descargar PNG</a><script>window.addEventListener('load',function(){setTimeout(function(){
+var orig=document.querySelector('.mermaid svg');if(!orig)return;
+var pngClone=orig.cloneNode(true);pngClone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+var bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+bg.setAttribute('width','100%');bg.setAttribute('height','100%');
+bg.setAttribute('fill','#0b131a');pngClone.insertBefore(bg,pngClone.firstChild);
+var svgStr=new XMLSerializer().serializeToString(pngClone);
+var img=new Image();
+img.onload=function(){
+var rect=orig.getBoundingClientRect();var scale=4;
+var canvas=document.createElement('canvas');
+canvas.width=Math.ceil(rect.width*scale);canvas.height=Math.ceil(rect.height*scale);
+var ctx=canvas.getContext('2d');ctx.fillStyle='#0b131a';ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.drawImage(img,0,0,canvas.width,canvas.height);
+canvas.toBlob(function(blob){var url=URL.createObjectURL(blob);var b=document.getElementById('dl-png');if(b){b.href=url;b.style.display='inline-block'}},'image/png')};
+img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr)},1500)});</script>
+</body>
+</html>

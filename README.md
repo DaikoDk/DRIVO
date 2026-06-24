@@ -27,7 +27,7 @@ Sistema de alquiler de autos con gestión de reservas, pagos, mantenimiento y da
 | Frontend | `https://drivo-1-lsbr.onrender.com` |
 | Backend API | `https://drivo-8ti4.onrender.com/api` |
 
-El backend duerme tras 15 min de inactividad (plan gratuito). Primera visita del día tarda ~50s en responder.
+El backend duerme tras 15 min de inactividad (plan gratuito). Primera visita del día tarda ~50s en responder. *
 
 ### Opción 2: Docker Compose (recomendado)
 
@@ -113,8 +113,11 @@ DRIVO/
 
 | Dato      | Persistencia                                         |
 |-----------|------------------------------------------------------|
-| BD        | H2 en memoria — se pierde al dormir/despertar        |
+| BD        | H2 en memoria — se pierde al dormir/despertar \*      |
 | Seed data | `data.sql` se recarga automáticamente en cada inicio |
+| Fotos     | No persisten — se pierden al reiniciar \*            |
+
+> \* El plan gratuito de Render usa H2 en memoria y disco efímero. Las fotos subidas y los datos se pierden al reiniciar el servicio. Para persistencia real se requiere SQL Server + almacenamiento externo (S3, Cloudinary, etc.).
 
 ## Comandos útiles
 

@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json .npmrc ./
 RUN pnpm install
 COPY . .
-RUN pnpm build --configuration=production
+RUN pnpm build --configuration=render
 
 FROM nginx:alpine
 COPY --from=build /app/dist/alquilerauto-frontend/browser /usr/share/nginx/html

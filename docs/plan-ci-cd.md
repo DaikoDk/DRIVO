@@ -73,25 +73,6 @@ docker compose up -d --build
 #   SQL Server → localhost:1434
 ```
 
-### Despliegue con Docker
-
-El proyecto incluye Dockerfiles para contenerizar el stack completo:
-
-| Componente | Dockerfile | Descripción |
-|---|---|---|
-| Backend | `alquilerauto/Dockerfile` | Imagen Java 17 con el JAR empaquetado |
-| Frontend | `alquilerauto-frontend/Dockerfile` | Imagen Nginx sirviendo los estáticos de Angular |
-| Stack completo | `docker-compose.yml` | Orquesta SQL Server + backend + frontend en una sola red |
-
-```bash
-# Despliegue completo con un solo comando
-docker-compose up -d
-# Servicios disponibles:
-#   Frontend → http://localhost:4200
-#   Backend  → http://localhost:8080
-#   SQL Server → localhost:1433
-```
-
 ---
 
 ## 4. Herramientas

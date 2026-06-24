@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>DRIVO Rent-a-Car — Diagrama de Casos de Uso</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            flowchart: {
+                nodeSpacing: 20,
+                rankSpacing: 25,
+                diagramPadding: 15,
+                useMaxWidth: false
+            }
+        });
+    </script>
+    <style>
+        html, body {
+            width: 100%;
+            overflow-x: hidden; 
+            overflow-y: auto;
+            background: #0b131a;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            font-family: Arial, sans-serif;
+        }
+        .diagram-wrapper {
+            background: #0b131a;
+            padding: 15px;
+            border-radius: 6px;
+            max-width: 1920px;
+            width: 100%;
+            position: relative;
+            box-sizing: border-box;
+        }
+        .diagram-title {
+            color: #c8d6e5;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin: 4px 0 16px 0;
+            padding: 0;
+            letter-spacing: 2px;
+        }
+        .admin rect, .admin .label { fill: #e8a838 !important; stroke: #e8a838 !important; color: #1a1a2e !important; font-weight: bold; }
+        .admin text { fill: #1a1a2e !important; }
+        .cliente rect, .cliente .label { fill: #4ecdc4 !important; stroke: #4ecdc4 !important; color: #1a1a2e !important; font-weight: bold; }
+        .cliente text { fill: #1a1a2e !important; }
+        .usecase rect { fill: #162435 !important; stroke: #3a6080 !important; stroke-width: 1.5px !important; rx: 16px !important; ry: 16px !important; }
+        .usecase .label { color: #c8d6e5 !important; font-size: 11px !important; }
+        .edgePath .path { stroke: #4a6a8a !important; stroke-width: 1.3px !important; }
+        .dl {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: #2B579A;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            z-index: 9999;
+            display: none;
+        }
+        .dl:hover { background: #4472C4; }
+    </style>
+</head>
+<body>
+
+<div class="diagram-wrapper">
+    <div class="diagram-title">SISTEMA DRIVO</div>
+    <pre class="mermaid">
+    graph LR
+
+        Admin["👤 ADMINISTRADOR"]
+        Cliente["👤 CLIENTE"]
+
+        class Admin admin;
+        class Cliente cliente;
+
+        classDef usecase fill:#162435,stroke:#3a6080,stroke-width:1.5px,color:#c8d6e5;
+
+        subgraph DRIVO[" "]
+            UC01("Iniciar Sesión")
+            UC02("Gestionar Vehículos")
+            UC03("Gestionar Clientes")
+            UC04("Gestionar Reservas")
+            UC05("Registrar Pagos")
+            UC06("Ver Dashboard")
+            UC07("Gestionar Reparaciones")
+            UC08("Gestionar Mantenimientos")
+            UC09("Configurar Sistema")
+            UC10("Registrarse")
+            UC11("Explorar Autos")
+            UC12("Reservar Auto")
+            UC13("Mis Reservas")
+            UC14("Gestionar Perfil")
+            UC15("Chatbot Watson")
+        end
+
+        Admin --> UC01
+        Admin --> UC02
+        Admin --> UC03
+        Admin --> UC04
+        Admin --> UC05
+        Admin --> UC06
+        Admin --> UC07
+        Admin --> UC08
+        Admin --> UC09
+
+        Cliente --> UC01
+        Cliente --> UC10
+        Cliente --> UC11
+        Cliente --> UC12
+        Cliente --> UC13
+        Cliente --> UC14
+        Cliente --> UC15
+
+        class UC01,UC02,UC03,UC04,UC05,UC06,UC07,UC08,UC09,UC10,UC11,UC12,UC13,UC14,UC15 usecase;
+
+        style DRIVO fill:#162435,stroke:#3a6080,stroke-width:2px,color:#c8d6e5
+    </pre>
+</div>
+
+<a id="dl-png" class="dl" download="diagrama.png" style="bottom:15px">⬇ Descargar PNG</a>
+<script>
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        var orig = document.querySelector('.mermaid svg');
+        if (!orig) return;
+
+        var pngClone = orig.cloneNode(true);
+        pngClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+        var styleElement = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        var pageStyles = document.querySelector('style').innerHTML;
+        styleElement.textContent = pageStyles;
+        pngClone.appendChild(styleElement);
+
+        var bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bg.setAttribute('width', '100%');
+        bg.setAttribute('height', '100%');
+        bg.setAttribute('fill', '#0b131a');
+        pngClone.insertBefore(bg, pngClone.firstChild);
+
+        var svgStr = new XMLSerializer().serializeToString(pngClone);
+        var img = new Image();
+
+        img.onload = function() {
+            var rect = orig.getBoundingClientRect();
+            var scale = 4;
+            var canvas = document.createElement('canvas');
+            canvas.width = Math.ceil(rect.width * scale);
+            canvas.height = Math.ceil(rect.height * scale);
+
+            var ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#0b131a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(function(blob) {
+                var url = URL.createObjectURL(blob);
+                var b = document.getElementById('dl-png');
+                if (b) {
+                    b.href = url;
+                    b.style.display = 'inline-block';
+                }
+            }, 'image/png');
+        };
+
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
+    }, 2000);
+});
+</script>
+</body>
+</html>

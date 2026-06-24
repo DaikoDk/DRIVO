@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Flujo de Registro de Cliente</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    flowchart: { htmlLabels: false },
+    er: { useMaxWidth: false }
+});
+
+function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+              document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+function ajustarDiagrama() {
+    var svg = document.querySelector('.mermaid svg');
+    var box = document.querySelector('.diagram-box');
+    if (!svg || !box) return;
+
+    var fs = isFullscreen();
+    document.body.classList.toggle('fullscreen', fs);
+
+    var el = svg.parentElement;
+    el.style.transform = '';
+    el.style.marginBottom = '';
+    el.style.height = '';
+
+    requestAnimationFrame(function() {
+        var svgH = svg.getBoundingClientRect().height;
+        var boxH = box.clientHeight;
+        if (svgH > 0 && svgH > boxH) {
+            var s = boxH / svgH;
+            el.style.transform = 'scale(' + s + ')';
+            el.style.transformOrigin = 'top center';
+            el.style.marginBottom = -(svgH * (1 - s)) + 'px';
+        }
+    });
+}
+
+window.addEventListener('load', function() {
+    setTimeout(ajustarDiagrama, 800);
+    setTimeout(ajustarDiagrama, 1500);
+});
+window.addEventListener('resize', ajustarDiagrama);
+document.addEventListener('fullscreenchange', ajustarDiagrama);
+document.addEventListener('webkitfullscreenchange', ajustarDiagrama);
+document.addEventListener('mozfullscreenchange', ajustarDiagrama);
+document.addEventListener('MSFullscreenChange', ajustarDiagrama);
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', ajustarDiagrama);
+}
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;overflow:hidden;background:#0b131a}
+body{font-family:'Segoe UI',Arial,sans-serif;color:#fff;display:flex;flex-direction:column;padding:10px 8px}
+.header{flex-shrink:0;text-align:center}
+.header h1{color:#4a6b82;font-size:1.5rem;margin-bottom:1px;font-weight:400}
+.header h2{color:#6a8ba2;font-size:0.85rem;font-weight:300;margin-bottom:8px}
+.diagram-box{flex:1;min-height:0;overflow:hidden;width:100%}
+.diagram-box .mermaid{width:100%}
+.actor{stroke:#a0aab2!important;fill:#1e252b!important}
+.actor-line{stroke:#444!important}
+.messageLine0,.messageLine1{stroke:#a0aab2!important;stroke-width:1.2px!important}
+.messageText{fill:#fff!important;font-family:monospace!important;font-size:11px!important}
+.note{fill:#2c353d!important;stroke:#4a6b82!important}
+.noteText{fill:#e0e0e0!important;font-size:10px!important}
+
+body.fullscreen .header h1{font-size:2.2rem}
+body.fullscreen .header h2{font-size:1.2rem}
+body.fullscreen .messageText{font-size:16px!important}
+body.fullscreen .noteText{font-size:14px!important}
+.dl-btn{display:none;position:fixed;bottom:15px;right:15px;background:#2B579A;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:12px;z-index:9999}.dl-btn:hover{background:#4472C4}.dl{display:none;position:fixed;bottom:15px;right:15px;background:#2B579A;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:12px;z-index:9999}.dl:hover{background:#4472C4}
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>Flujo de Registro de Cliente</h1>
+    <h2>Validaciones • JWT Auto-login • Redirección al Portal</h2>
+</div>
+<div class="diagram-box"><pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Cliente
+    participant Frontend
+    participant AuthController
+    participant ClienteService
+    participant BD
+
+    Cliente->>Frontend: Completa formulario (datos + licencia + contraseña)
+    Frontend->>AuthController: POST /api/auth/register (público)
+    AuthController->>ClienteService: registrarCliente(dto)
+
+    ClienteService->>BD: SELECT COUNT(*) FROM tb_cliente WHERE dni = ?
+    BD-->>ClienteService: Resultado
+
+    alt DNI ya registrado
+        ClienteService-->>AuthController: 409 Conflict (DNI duplicado)
+        AuthController-->>Frontend: 409
+        Frontend-->>Cliente: ❌ DNI ya existe
+    else DNI disponible
+        ClienteService->>BD: SELECT COUNT(*) FROM tb_usuario WHERE Correo = ?
+        BD-->>ClienteService: Resultado
+
+        alt Email ya registrado
+            ClienteService-->>AuthController: 409 Conflict (Email duplicado)
+            AuthController-->>Frontend: 409
+            Frontend-->>Cliente: ❌ Email ya existe
+        else Email disponible
+            ClienteService->>ClienteService: Valida contraseña (mínimo 6)
+
+            alt Contraseña muy corta
+                ClienteService-->>AuthController: 400 Bad Request
+                Frontend-->>Cliente: ❌ Contraseña muy corta
+            else Contraseña válida
+                ClienteService->>BD: INSERT usuario (BCrypt) + licencia + cliente
+                ClienteService->>AuthController: generarToken(email, CLIENTE)
+                AuthController->>AuthController: Firma JWT (expiración 24h)
+                AuthController-->>Frontend: 201 Created + { token, rol: "CLIENTE" }
+                Frontend->>Frontend: Guarda token, redirige al portal
+                Frontend-->>Cliente: ✅ Sesión iniciada automáticamente
+            end
+        end
+    end
+    Note over ClienteService,BD: 🔐 JWT auto-login: sin paso extra de login tras registrarse.
+</pre></div>
+
+
+<a id="dl-png" class="dl" download="diagrama.png" style="bottom:15px">⬇ Descargar PNG</a><script>window.addEventListener('load',function(){setTimeout(function(){
+var orig=document.querySelector('.mermaid svg');if(!orig)return;
+var pngClone=orig.cloneNode(true);pngClone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+var bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+bg.setAttribute('width','100%');bg.setAttribute('height','100%');
+bg.setAttribute('fill','#0b131a');pngClone.insertBefore(bg,pngClone.firstChild);
+var svgStr=new XMLSerializer().serializeToString(pngClone);
+var img=new Image();
+img.onload=function(){
+var rect=orig.getBoundingClientRect();var scale=4;
+var canvas=document.createElement('canvas');
+canvas.width=Math.ceil(rect.width*scale);canvas.height=Math.ceil(rect.height*scale);
+var ctx=canvas.getContext('2d');ctx.fillStyle='#0b131a';ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.drawImage(img,0,0,canvas.width,canvas.height);
+canvas.toBlob(function(blob){var url=URL.createObjectURL(blob);var b=document.getElementById('dl-png');if(b){b.href=url;b.style.display='inline-block'}},'image/png')};
+img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr)},1500)});</script>
+</body>
+</html>

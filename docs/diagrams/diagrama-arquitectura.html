@@ -1,0 +1,182 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>DRIVO — Diagrama de Arquitectura del Sistema</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>
+mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    flowchart: { htmlLabels: false },
+    er: { useMaxWidth: false }
+});
+
+function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+              document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+function ajustarDiagrama() {
+    var svg = document.querySelector('.mermaid svg');
+    var box = document.querySelector('.diagram-box');
+    if (!svg || !box) return;
+    var fs = isFullscreen();
+    document.body.classList.toggle('fullscreen', fs);
+    var el = svg.parentElement;
+    el.style.transform = '';
+    el.style.marginBottom = '';
+    el.style.height = '';
+    requestAnimationFrame(function() {
+        var svgH = svg.getBoundingClientRect().height;
+        var boxH = box.clientHeight;
+        if (svgH > 0 && svgH > boxH) {
+            var s = boxH / svgH;
+            el.style.transform = 'scale(' + s + ')';
+            el.style.transformOrigin = 'top center';
+            el.style.marginBottom = -(svgH * (1 - s)) + 'px';
+        }
+    });
+}
+
+window.addEventListener('load', function() {
+    setTimeout(ajustarDiagrama, 800);
+    setTimeout(ajustarDiagrama, 1500);
+});
+window.addEventListener('resize', ajustarDiagrama);
+document.addEventListener('fullscreenchange', ajustarDiagrama);
+document.addEventListener('webkitfullscreenchange', ajustarDiagrama);
+document.addEventListener('mozfullscreenchange', ajustarDiagrama);
+document.addEventListener('MSFullscreenChange', ajustarDiagrama);
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', ajustarDiagrama);
+}
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;width:100%;overflow:hidden;background:#0b131a}
+body{font-family:'Segoe UI',Arial,sans-serif;color:#fff;display:flex;flex-direction:column;padding:10px 8px}
+.header{flex-shrink:0;text-align:center}
+.header h1{color:#4a6b82;font-size:1.5rem;margin-bottom:1px;font-weight:400}
+.header h2{color:#6a8ba2;font-size:0.85rem;font-weight:300;margin-bottom:8px}
+.diagram-box{flex:1;min-height:0;overflow:hidden;width:100%}
+.diagram-box .mermaid{width:100%}
+
+body.fullscreen .header h1{font-size:2.2rem}
+body.fullscreen .header h2{font-size:1.2rem}
+.dl-btn{display:none;position:fixed;bottom:15px;right:15px;background:#2B579A;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:12px;z-index:9999}.dl-btn:hover{background:#4472C4}.dl{display:none;position:fixed;bottom:15px;right:15px;background:#2B579A;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:12px;z-index:9999}.dl:hover{background:#4472C4}
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>Diagrama de Arquitectura del Sistema</h1>
+    <h2>Angular 21 • Spring Boot 3.5 • SQL Server 2022 • Docker Compose • Watson Assistant</h2>
+</div>
+<div class="diagram-box"><pre class="mermaid">
+graph TD
+
+    subgraph CLIENTE["🌐 CLIENTE"]
+        Nav[Navegador Web<br/>Chrome / Edge / Firefox]
+    end
+
+    subgraph FRONTEND["🖥️ FRONTEND — Angular 21 + Tailwind CSS"]
+        direction LR
+        Core[Core<br/>Auth Service JWT<br/>API Service<br/>Guards / Interceptors]
+        Layouts[Layouts<br/>admin-layout<br/>portal-layout<br/>sidebar / topbar]
+        Features[Features<br/>Dashboard / Vehicles<br/>Clients / Reservations<br/>Payments / Repairs<br/>Maintenance / Settings<br/>Portal / Auto Detail<br/>Mis Reservas]
+        Shared[Shared Components<br/>Modal / Toast<br/>Confirm Dialog<br/>Status Badge<br/>Stat Card / Skeleton]
+    end
+
+    subgraph HTTP["🔗 HTTP — REST API"]
+        API[JSON<br/>JWT Bearer Token<br/>CORS localhost:4200]
+    end
+
+    subgraph BACKEND["⚙️ BACKEND — Spring Boot 3.5 / Java 17 / Maven"]
+        direction LR
+        Security[Security Layer<br/>JwtTokenProvider<br/>JwtAuthFilter<br/>SecurityConfig<br/>TokenBlacklist<br/>UserDetailsService]
+        Controllers[Controllers REST<br/>Auth / Auto / Cliente<br/>Reserva / Pago<br/>Dashboard / Watsson<br/>Reparacion / Mantto<br/>Config / Marca / Modelo]
+        Services[Services<br/>Business Logic<br/>AutoService / ClienteService<br/>ReservaService / PagoService<br/>DashboardService<br/>ReparacionService<br/>WatsonService / FotoService]
+        Repos[Repositories JPA<br/>Interfaces Spring Data<br/>AutoRepository<br/>ClienteRepository<br/>ReservaRepository<br/>PagoRepository<br/>+ 9 repositorios]
+        Entities[Entities JPA<br/>14 tablas mapeadas<br/>Usuario / Cliente / Auto<br/>Reserva / Pago<br/>Reparacion / Mantto<br/>HistorialKm / Estado]
+    end
+
+    subgraph BD["🗄️ BASE DE DATOS"]
+        SQLServer[SQL Server 2022<br/>BD_RentCar<br/>14 tablas]
+        H2[H2 Memory<br/>Perfil desarrollo<br/>MODE=MSSQLServer]
+        Uploads[uploads/fotos/<br/>Imagenes WebP]
+    end
+
+    subgraph EXTERNAL["☁️ SERVICIOS EXTERNOS"]
+        Watson[IBM Watson Assistant<br/>API v2<br/>Chatbot IA<br/>Modo Online]
+        WatsonOnline[Watson Online<br/>IBM Cloud]
+    end
+
+    subgraph DEVOPS["🔧 DEVOPS / INFRA"]
+        Docker[Docker Compose<br/>3 servicios<br/>BD + Backend + Frontend]
+        CI[GitHub Actions<br/>CI Pipeline<br/>Test Backend H2<br/>Build Frontend]
+        Nginx[Nginx<br/>Proxy Inverso<br/>SPA Routing]
+    end
+
+    Nav --> Core
+    Core --> Layouts
+    Core --> Features
+    Core --> Shared
+
+    Frontend --> API
+    API --> Security
+    Security --> Controllers
+    Controllers --> Services
+    Services --> Repos
+    Repos --> Entities
+    Entities --> SQLServer
+    Entities -.-> H2
+    Services --> Uploads
+    Services --> Watson
+    Watson --> WatsonOnline
+    Docker -.-> SQLServer
+    Docker -.-> Frontend
+    Docker -.-> Backend
+    CI -.-> Backend
+    CI -.-> Frontend
+    Frontend -.-> Nginx
+
+    style Nav fill:#4a86e8,stroke:#4a86e8,color:#fff
+    style Core fill:#2d5a27,stroke:#6aa84f,color:#fff
+    style Layouts fill:#2d5a27,stroke:#6aa84f,color:#fff
+    style Features fill:#2d5a27,stroke:#6aa84f,color:#fff
+    style Shared fill:#2d5a27,stroke:#6aa84f,color:#fff
+    style API fill:#444,stroke:#999,color:#ccc
+    style Security fill:#5a1a1a,stroke:#e06666,color:#fff
+    style Controllers fill:#5a1a1a,stroke:#e06666,color:#fff
+    style Services fill:#5a1a1a,stroke:#e06666,color:#fff
+    style Repos fill:#5a1a1a,stroke:#e06666,color:#fff
+    style Entities fill:#5a1a1a,stroke:#e06666,color:#fff
+    style SQLServer fill:#1a3a5c,stroke:#2B579A,color:#fff
+    style H2 fill:#1a3a5c,stroke:#2B579A,color:#fff
+    style Uploads fill:#1a3a5c,stroke:#2B579A,color:#fff
+    style Watson fill:#3d1a5c,stroke:#9B59B6,color:#fff
+    style WatsonOnline fill:#3d1a5c,stroke:#9B59B6,color:#fff
+    style Docker fill:#2d5a5a,stroke:#4ecdc4,color:#fff
+    style CI fill:#2d5a5a,stroke:#4ecdc4,color:#fff
+    style Nginx fill:#2d5a5a,stroke:#4ecdc4,color:#fff
+</pre></div>
+
+
+<a id="dl-png" class="dl" download="diagrama.png" style="bottom:15px">⬇ Descargar PNG</a><script>window.addEventListener('load',function(){setTimeout(function(){
+var orig=document.querySelector('.mermaid svg');if(!orig)return;
+var pngClone=orig.cloneNode(true);pngClone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+var bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+bg.setAttribute('width','100%');bg.setAttribute('height','100%');
+bg.setAttribute('fill','#0b131a');pngClone.insertBefore(bg,pngClone.firstChild);
+var svgStr=new XMLSerializer().serializeToString(pngClone);
+var img=new Image();
+img.onload=function(){
+var rect=orig.getBoundingClientRect();var scale=4;
+var canvas=document.createElement('canvas');
+canvas.width=Math.ceil(rect.width*scale);canvas.height=Math.ceil(rect.height*scale);
+var ctx=canvas.getContext('2d');ctx.fillStyle='#0b131a';ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.drawImage(img,0,0,canvas.width,canvas.height);
+canvas.toBlob(function(blob){var url=URL.createObjectURL(blob);var b=document.getElementById('dl-png');if(b){b.href=url;b.style.display='inline-block'}},'image/png')};
+img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr)},1500)});</script>
+</body>
+</html>

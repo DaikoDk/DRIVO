@@ -20,7 +20,16 @@ Sistema de alquiler de autos con gestión de reservas, pagos, mantenimiento y da
 
 ## Setup rápido
 
-### Opción 1: Docker Compose (recomendado)
+### Opción 1: Render (producción — sin setup)
+
+| Servicio | URL |
+|---|---|
+| Frontend | `https://drivo-1-lsbr.onrender.com` |
+| Backend API | `https://drivo-8ti4.onrender.com/api` |
+
+El backend duerme tras 15 min de inactividad (plan gratuito). Primera visita del día tarda ~50s en responder.
+
+### Opción 2: Docker Compose (recomendado)
 
 ```bash
 # 1. Levantar todo (BD + backend + frontend)
@@ -32,7 +41,7 @@ docker exec -i drivo-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa 
 # App en http://localhost
 ```
 
-### Opción 2: H2 en memoria (desarrollo sin Docker)
+### Opción 3: H2 en memoria (desarrollo sin Docker)
 
 ```bash
 cd alquilerauto
@@ -42,15 +51,6 @@ cd alquilerauto-frontend
 pnpm install
 ng serve
 ```
-
-### Opción 3: Render (producción — $0/mes)
-
-| Servicio | URL |
-|---|---|
-| Frontend | `https://drivo-1-lsbr.onrender.com` |
-| Backend API | `https://drivo-8ti4.onrender.com/api` |
-
-El backend duerme tras 15 min de inactividad (plan gratuito). Primera visita del día tarda ~50s en responder.
 
 ## Credenciales default
 

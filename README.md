@@ -1,5 +1,12 @@
 # DRIVO Rent-a-Car 🚗
 
+[![CI](https://img.shields.io/github/actions/workflow/status/DaikoDk/DRIVO/ci.yml?label=CI&logo=githubactions)](https://github.com/DaikoDk/DRIVO/actions)
+[![Java](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk)](https://adoptium.net)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?logo=springboot)](https://spring.io)
+[![Angular](https://img.shields.io/badge/Angular-21-DD0031?logo=angular)](https://angular.dev)
+[![Docker](https://img.shields.io/badge/Docker-✓-2496ED?logo=docker)](https://docker.com)
+[![License](https://img.shields.io/badge/License-MIT-lightgrey)](LICENSE)
+
 Sistema de alquiler de autos con gestión de reservas, pagos, mantenimiento y dashboard de reportes.
 
 ## Stack

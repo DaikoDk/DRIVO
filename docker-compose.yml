@@ -6,14 +6,14 @@ services:
     container_name: drivo-sqlserver
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "Drivo2026!"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Drivo2026!}
       MSSQL_PID: Developer
     ports:
       - "1434:1433"
     volumes:
       - sqlserver-data:/var/opt/mssql
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Drivo2026!" -C -Q "SELECT 1" || exit 1
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD:-Drivo2026!}" -C -Q "SELECT 1" || exit 1
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,8 +28,8 @@ services:
       SERVER_PORT: "8080"
       DB_RENTCAR: "jdbc:sqlserver://sqlserver:1433;databaseName=BD_RentCar;encrypt=true;trustServerCertificate=true"
       DB_USERNAME: "sa"
-      DB_PASSWORD: "Drivo2026!"
-      JWT_SECRET: "drivo-alquilerauto-jwt-secret-key-2026-must-be-256-bits-minimum"
+      DB_PASSWORD: ${DB_PASSWORD:-Drivo2026!}
+      JWT_SECRET: ${JWT_SECRET:-drivo-alquilerauto-jwt-secret-key-2026-must-be-256-bits-minimum}
       APP_FOTOS_DIRECTORIO: "/app/uploads/fotos"
     ports:
       - "8080:8080"

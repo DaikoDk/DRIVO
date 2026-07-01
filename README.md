@@ -32,10 +32,14 @@ El backend duerme tras 15 min de inactividad (plan gratuito). Primera visita del
 ### Opción 2: Docker Compose (recomendado)
 
 ```bash
-# 1. Levantar todo (BD + backend + frontend)
+# 1. (Opcional) Personalizar credenciales
+cp alquilerauto/.env.example alquilerauto/.env
+# Editar .env con tus valores
+
+# 2. Levantar todo (BD + backend + frontend)
 docker compose up --build -d
 
-# 2. Crear BD, tablas y datos de prueba (solo primera vez)
+# 3. Crear BD, tablas y datos de prueba (solo primera vez)
 docker exec -i drivo-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Drivo2026!" -C < setup.sql
 
 # App en http://localhost
